@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบบันทึกผลการศึกษานักศึกษา</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
     <style>
         body {
             font-family: 'Nunito', sans-serif;
@@ -82,6 +85,16 @@
         .btn-custom:hover {
             background-color: #0056b3;
         }
+
+        .gpa-container {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .gpa-container strong {
+            font-size: 1.5rem;
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -105,6 +118,11 @@
         <div class="container mt-5">
             <h2>กรอกผลการศึกษา</h2>
 
+            <!-- ปุ่ม "เพิ่มวิชา" -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCourseModal">
+                เพิ่มวิชา
+            </button>
+
             @if (session('success'))
                 <div class="alert alert-success">
                     {{ session('success') }}
@@ -127,6 +145,7 @@
                                 <th>ชื่อวิชา</th>
                                 <th>หน่วยกิต</th>
                                 <th>เกรด</th>
+                                <th></th> <!-- ปุ่ม "+" -->
                             </tr>
                         </thead>
                         <tbody id="courses-table-body">
@@ -141,7 +160,7 @@
                                     <input type="number" class="form-control" name="total_credits[]" id="total_credits_0" placeholder="หน่วยกิต" readonly>
                                 </td>
                                 <td>
-                                    <select class="form-control" name="grade[]" required>
+                                    <select class="form-control" name="grade[]" id="grade_0" required>
                                         <option value="">เลือกเกรด</option>
                                         <option value="A">A</option>
                                         <option value="B+">B+</option>
@@ -153,11 +172,20 @@
                                         <option value="F">F</option>
                                     </select>
                                 </td>
+                                <td>
+                                    <button type="button" class="btn btn-success btn-add-course">+</button> <!-- ปุ่มเพิ่มแถว -->
+                                    <button type="button" class="btn btn-danger btn-remove-course">-</button> <!-- ปุ่มลบ -->
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <button type="button" class="btn btn-custom" id="add-course-row">เพิ่มวิชา</button>
+
+                <!-- GPA รวม -->
+                <div class="gpa-container">
+                    GPA รวม: <strong id="gpa-total">0.00</strong>
+                </div>
+
                 <button type="submit" class="btn btn-custom">บันทึกผลการเรียน</button>
             </form>
 
@@ -199,37 +227,44 @@
 
     <script>
         $(document).ready(function() {
-            let courseIndex = 1; // Starting index for new rows
+            let courseIndex = 1; // เริ่มต้นจาก index 1 สำหรับแถวใหม่
 
-            // Autocomplete for course codes
+            // Autocomplete สำหรับรหัสวิชา
             $(document).on('input', 'input[name="course_code[]"]', function() {
                 const courseCode = $(this).val();
-                const rowIndex = $(this).attr('id').split('_')[2]; // Get the row index
+                const rowIndex = $(this).attr('id').split('_')[2]; // ดึง index ของแถว
 
-                if (courseCode.length > 2) {
+                // เพิ่มเงื่อนไขเพื่อตรวจสอบความยาวของ courseCode
+                if (courseCode.length > 0) {
                     $.ajax({
-                        url: '{{ route('courses.autocomplete') }}', // Your route for autocomplete
+                        url: '{{ route('courses.autocomplete') }}',
                         method: 'GET',
-                        data: { course_code: courseCode },
-                        success: function(data) {
-                            if (data) {
-                                $('#course_name_' + rowIndex).val(data.course_name);
-                                $('#total_credits_' + rowIndex).val(data.total_credits);
-                            } else {
-                                $('#course_name_' + rowIndex).val('');
-                                $('#total_credits_' + rowIndex).val('');
-                            }
+                        data: { term: courseCode },
+                        success: function(response) {
+                            const courseCodes = response.map(course => {
+                                return {
+                                    label: course.course_code + ' - ' + course.course_name,
+                                    value: course.course_code,
+                                    course_name: course.course_name,
+                                    total_credits: course.total_credits
+                                };
+                            });
+
+                            $('#course_code_' + rowIndex).autocomplete({
+                                source: courseCodes,
+                                select: function(event, ui) {
+                                    $('#course_name_' + rowIndex).val(ui.item.course_name);
+                                    $('#total_credits_' + rowIndex).val(ui.item.total_credits);
+                                }
+                            });
                         }
                     });
-                } else {
-                    $('#course_name_' + rowIndex).val('');
-                    $('#total_credits_' + rowIndex).val('');
                 }
             });
 
-            // Add new row for courses
-            $('#add-course-row').click(function() {
-                $('#courses-table-body').append(`
+            // ปุ่มเพิ่มแถว
+            $('.btn-add-course').click(function() {
+                const newRow = `
                     <tr>
                         <td>
                             <input type="text" class="form-control" name="course_code[]" id="course_code_${courseIndex}" placeholder="กรอกรหัสวิชา" autocomplete="off" required>
@@ -241,7 +276,7 @@
                             <input type="number" class="form-control" name="total_credits[]" id="total_credits_${courseIndex}" placeholder="หน่วยกิต" readonly>
                         </td>
                         <td>
-                            <select class="form-control" name="grade[]" required>
+                            <select class="form-control" name="grade[]" id="grade_${courseIndex}" required>
                                 <option value="">เลือกเกรด</option>
                                 <option value="A">A</option>
                                 <option value="B+">B+</option>
@@ -253,11 +288,25 @@
                                 <option value="F">F</option>
                             </select>
                         </td>
-                    </tr>
-                `);
+                        <td>
+                            <button type="button" class="btn btn-success btn-add-course">+</button>
+                            <button type="button" class="btn btn-danger btn-remove-course">-</button>
+                        </td>
+                    </tr>`;
+                $('#courses-table-body').append(newRow);
                 courseIndex++;
+            });
+
+            // ปุ่มลบแถว
+            $(document).on('click', '.btn-remove-course', function() {
+                if ($('#courses-table-body tr').length > 1) {
+                    $(this).closest('tr').remove();
+                } else {
+                    alert('ต้องมีอย่างน้อยหนึ่งแถวในตาราง!');
+                }
             });
         });
     </script>
+
 </body>
 </html>
