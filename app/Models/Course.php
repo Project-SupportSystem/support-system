@@ -9,15 +9,6 @@ class Course extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'course_code',
-        'course_name',
-        'total_credits',
-    ];
-
-    public function academicRecords()
-    {
-        return $this->hasMany(AcademicRecord::class);
-    }
+    // ระบุฟิลด์ที่สามารถเพิ่มลงในฐานข้อมูลได้
+    protected $fillable = ['course_code', 'course_name', 'total_credits'];
 }
-

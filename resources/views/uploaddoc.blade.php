@@ -93,8 +93,10 @@
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <a href="#">อัปโหลดเอกสาร</a>
+        <a href="{{ route('report') }}">รายงานผลการศึกษา</a>
+        <a href="{{ route('upload.document') }}">อัปโหลดเอกสาร</a>
     </div>
+
 
     <!-- Main content -->
     <div class="content">
