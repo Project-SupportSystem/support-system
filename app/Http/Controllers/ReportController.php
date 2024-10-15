@@ -17,19 +17,26 @@ class ReportController extends Controller
 
     public function submit(Request $request)
     {
-        // ตรวจสอบข้อมูลที่ส่งมา
+        // ตรวจสอบความถูกต้องของข้อมูลจากฟอร์ม
         $request->validate([
             'student_id' => 'required|exists:students,id',
-            'course_id' => 'required|exists:courses,id',
-            'grade' => 'required|in:A,B+,B,C+,C,D+,D,F',
+            'semester' => 'required|string',
+            'course_code.*' => 'required|string|exists:courses,course_code',
+            'grade.*' => 'required|in:A,B+,B,C+,C,D+,D,F',
         ]);
 
-        // บันทึกผลการเรียนลงในตาราง academic_records
-        AcademicRecord::create([
-            'student_id' => $request->student_id,
-            'course_id' => $request->course_id,
-            'grade' => $request->grade,
-        ]);
+        // ลูปบันทึกผลการเรียนของแต่ละวิชา
+        foreach ($request->course_code as $index => $courseCode) {
+            $course = Course::where('course_code', $courseCode)->first();
+
+            // บันทึกข้อมูลแต่ละวิชาลงในตาราง academic_records
+            AcademicRecord::create([
+                'student_id' => $request->student_id,
+                'course_id' => $course->id,
+                'semester' => $request->semester,
+                'grade' => $request->grade[$index],
+            ]);
+        }
 
         return redirect()->back()->with('success', 'บันทึกผลการเรียนสำเร็จ!');
     }

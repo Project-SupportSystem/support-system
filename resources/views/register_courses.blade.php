@@ -49,6 +49,18 @@
 
             <form id="reportForm" action="{{ route('report.submit') }}" method="POST">
                 @csrf
+                <div class="mb-3">
+                    <label for="semester" class="form-label">ภาคการศึกษา</label>
+                    <select class="form-control" name="semester" required>
+                        <option value="">เลือกภาคการศึกษา</option>
+                        <option value="1/2566">1/2566</option>
+                        <option value="2/2566">2/2566</option>
+                        <option value="1/2567">1/2567</option>
+                        <option value="2/2567">2/2567</option>
+                    </select>
+                </div>
+                
+                <!-- ส่วนของตารางกรอกข้อมูลวิชา -->
                 <div class="table-responsive">
                     <table class="table table-bordered">
                         <thead>
