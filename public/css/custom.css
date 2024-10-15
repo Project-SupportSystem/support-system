@@ -1,0 +1,85 @@
+/* public\css\custom.css */
+body {
+    font-family: 'Nunito', sans-serif;
+    background-color: #fdf6e3;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar {
+    width: 100%;
+    background-color: #ffe0b2;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 80px;
+    z-index: 1000;
+}
+
+.navbar-logo img {
+    height: 40px;
+}
+
+.navbar-user {
+    font-size: 1rem;
+    margin-right: 20px;
+}
+
+.sidebar {
+    height: 100vh;
+    width: 250px;
+    background-color: #fff;
+    padding-top: 10px;
+    position: fixed;
+    left: 0;
+    top: 80px;
+    border-right: 1px solid #ddd;
+}
+
+.sidebar a {
+    display: block;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: #333;
+    font-size: 1rem;
+}
+
+.sidebar a:hover {
+    background-color: #ffe0b2;
+    color: #333;
+}
+
+.content {
+    margin-left: 250px;
+    padding: 20px;
+    flex: 1;
+    margin-top: 80px;
+    background-color: #ffffff;
+}
+
+h2 {
+    color: black;
+}
+
+.btn-custom {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+.btn-custom:hover {
+    background-color: #0056b3;
+}
+
+.gpa-container {
+    text-align: right;
+    margin-top: 20px;
+}
+
+.gpa-container strong {
+    font-size: 1.5rem;
+    color: #000;
+}
