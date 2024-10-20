@@ -34,6 +34,6 @@ class StudentController extends Controller
             'advisor_id' => $request->advisor_id,
         ]);
 
-        return redirect()->route('student.create')->with('success', 'บันทึกข้อมูลสำเร็จ');
+        return redirect()->route('student-profile')->with('success', 'บันทึกข้อมูลสำเร็จ');
     }
 }
