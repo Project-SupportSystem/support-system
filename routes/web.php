@@ -5,6 +5,8 @@ use App\Http\Controllers\UploadController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\Auth\SocialiteController;
+use App\Http\Controllers\StudentController;
+
 
 // Group เส้นทางที่ต้องการ Auth
 Route::middleware('auth')->group(function () {
@@ -13,9 +15,11 @@ Route::middleware('auth')->group(function () {
     })->name('table_report');
 
     Route::get('/register-courses', function () {
-        //dd(Auth::user()); // ตรวจสอบข้อมูลผู้ใช้
         return view('register_courses');
     })->name('register_courses');
+
+    Route::get('/student-profile', [StudentController::class, 'create'])->name('student-profile');
+    Route::post('/student-profile', [StudentController::class, 'store'])->name('student.store');
 
     Route::get('/upload-documents', function () {
         return view('uploaddoc');
@@ -24,7 +28,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/upload-doc', [UploadController::class, 'handleUpload'])->name('upload.handle');
 });
 
-// Route รายงานผลการศึกษา
+
+
+// Route ประวัติส่วนตัว
 Route::get('/report', [ReportController::class, 'index'])->name('report');
 Route::post('/report/submit', [ReportController::class, 'submit'])->name('report.submit');
 

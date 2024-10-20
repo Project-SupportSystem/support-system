@@ -48,6 +48,7 @@
     <div class="sidebar">
         <a href="{{ route('report') }}">รายงานผลการศึกษา</a>
         <a href="{{ route('upload.document') }}">อัปโหลดเอกสาร</a>
+        <a href="{{ route('student-profile') }}">ประวัตินักศึกษา</a>
     </div>
 
     <!-- Main content -->
