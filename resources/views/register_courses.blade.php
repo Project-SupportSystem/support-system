@@ -17,11 +17,31 @@
 <body>
 
     <!-- Navbar -->
-    <div class="navbar">
+    <div class="navbar d-flex justify-content-between align-items-center p-2 bg-light">
         <div class="navbar-logo">
-            <img src="C:\Users\ACER\Desktop\example-app\img\KKU_Logo.png" alt="โลโก้ระบบ">
+            <img src="{{ asset('img/KKU_Logo.png') }}" alt="โลโก้ระบบ" style="height: 50px;">
         </div>
-        <div class="navbar-user">ชื่อผู้ใช้: นักศึกษา</div>
+
+        <!-- User Icon Dropdown -->
+        <div class="dropdown">
+            <a class="btn btn-light dropdown-toggle" href="#" role="button" id="userDropdown" 
+               data-bs-toggle="dropdown" aria-expanded="false">
+                <img src="{{ asset('img/user-icon.png') }}" alt="User Icon" 
+                     style="width: 30px; height: 30px; border-radius: 50%;">
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li>
+                    <a class="dropdown-item" href="#">
+                        {{ Auth::user()->username ?? 'ไม่พบข้อมูลผู้ใช้' }} <!-- แสดงอีเมลของผู้ใช้ -->
+                        ({{ Auth::user()->role ?? 'ไม่มีสิทธิ์' }})
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item" href="{{ route('logout') }}">Log Out</a>
+                </li>
+            </ul>
+        </div>
     </div>
 
     <!-- Sidebar -->
@@ -150,7 +170,7 @@
 
             // ฟังก์ชันเพิ่มแถว
             $('.btn-add-course').click(function() {
-                const newRow = `<tr>
+                const newRow = <tr>
                     <td><input type="text" class="form-control" name="course_code[]" id="course_code_${courseIndex}" required maxlength="8"></td>
                     <td><input type="text" class="form-control" name="course_name[]" id="course_name_${courseIndex}" readonly></td>
                     <td><input type="number" class="form-control" name="total_credits[]" id="total_credits_${courseIndex}" readonly></td>
@@ -169,7 +189,7 @@
                         <button type="button" class="btn btn-success btn-add-course">+</button>
                         <button type="button" class="btn btn-danger btn-remove-course">-</button>
                     </td>
-                </tr>`;
+                </tr>;
                 $('#courses-table-body').append(newRow);
                 courseIndex++;
 
