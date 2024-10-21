@@ -37,17 +37,11 @@ class CourseController extends Controller
     {
         $term = $request->input('term');
 
-        // Check if the term is not empty and limit results
-        if (!empty($term)) {
-                $courses = Course::where('course_code', 'LIKE', '%' . $term . '%')
-                ->orWhere('course_name', 'LIKE', '%' . $term . '%') // เพิ่มการค้นหาชื่อวิชา
-                ->take(10) // จำกัดผลลัพธ์ที่ส่งกลับ
-                ->get();
-        } else {
-            $courses = collect(); // ถ้า term ว่าง ให้ส่งผลลัพธ์เป็นคอลเล็กชันว่าง
-        }
+        $courses = Course::where('course_code', 'LIKE', '%' . $term . '%')
+            ->orWhere('course_name', 'LIKE', '%' . $term . '%')
+            ->take(10)
+            ->get(['course_code', 'course_name', 'total_credits']); // ดึงเฉพาะฟิลด์ที่จำเป็น
 
-        // Return the search results as JSON
-        return response()->json($courses);
+    return response()->json($courses);
     }
 }
