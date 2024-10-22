@@ -15,7 +15,10 @@ class CreateDocumentsTable extends Migration
     {
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained();
+
+            $table->string('student_id', 10);
+            $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
+
             $table->enum('document_type', ['transcript', 'KEPT_result', 'DQ_result', 'internship']);
             $table->string('file_path');
             $table->timestamp('upload_date')->useCurrent();

@@ -14,7 +14,8 @@ class CreateStudentsTable extends Migration
     public function up()
     {
         Schema::create('students', function (Blueprint $table) {
-            $table->id();
+            // เปลี่ยนจาก $table->id(); เป็น string สำหรับเก็บ ID ของนักเรียนที่ผู้ใช้กรอกเอง
+            $table->string('id')->primary();  // ใช้ string สำหรับเก็บ student ID และตั้งเป็น primary key
             $table->foreignId('user_id')->constrained()->unique();
             $table->string('first_name');
             $table->string('phone')->nullable();

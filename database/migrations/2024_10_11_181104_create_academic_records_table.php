@@ -15,7 +15,10 @@ class CreateAcademicRecordsTable extends Migration
     {
         Schema::create('academic_records', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained();
+        
+            $table->string('student_id', 10);
+            $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
+
             $table->foreignId('course_id')->constrained();
             $table->string('semester');
             $table->string('grade', 2);
