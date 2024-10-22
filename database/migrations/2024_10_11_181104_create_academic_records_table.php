@@ -19,7 +19,7 @@ class CreateAcademicRecordsTable extends Migration
             $table->string('student_id', 10);
             $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
 
-            $table->foreignId('course_id')->constrained();
+            $table->foreignId('course_id')->constrained()->onDelete('cascade');
             $table->string('semester');
             $table->string('grade', 2);
             $table->decimal('gpa', 3, 2);

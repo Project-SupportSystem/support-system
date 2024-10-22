@@ -16,7 +16,7 @@ class CreateDocumentsTable extends Migration
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
 
-            $table->string('student_id', 10);
+            $table->string('student_id', 10); // ขนาดสอดคล้องกับ students table
             $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
 
             $table->enum('document_type', ['transcript', 'KEPT_result', 'DQ_result', 'internship']);

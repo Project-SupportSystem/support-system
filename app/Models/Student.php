@@ -9,7 +9,12 @@ class Student extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'id'; // ใช้ student_id เป็น primary key
+    public $incrementing = false; // ตั้งค่าเป็น false เพราะ student_id ไม่ใช่ auto-increment
+    protected $keyType = 'string'; // ถ้า student_id เป็น string
+
     protected $fillable = [
+        'id',
         'user_id',
         'first_name',
         'phone',
@@ -37,4 +42,3 @@ class Student extends Model
         return $this->hasMany(Document::class);
     }
 }
-
