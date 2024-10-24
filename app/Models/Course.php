@@ -9,13 +9,15 @@ class Course extends Model
 {
     use HasFactory;
 
-    // ระบุชื่อ Table ให้ชัดเจน
-    protected $table = 'courses';
+    // ระบุ Primary Key เป็น 'id' ที่เป็น String
+    protected $primaryKey = 'id';  
+    public $incrementing = false;  // ปิดการเพิ่มค่าอัตโนมัติ
+    protected $keyType = 'string'; // ระบุว่า Primary Key เป็น String
 
-    // ฟิลด์ที่สามารถทำ Mass Assignment ได้
+    // ฟิลด์ที่อนุญาตให้ทำ Mass Assignment
     protected $fillable = [
-        'course_code',
-        'course_name',
+        'id',           // ID วิชาที่เป็น Primary Key
+        'course_name',  
         'total_credits',
     ];
 

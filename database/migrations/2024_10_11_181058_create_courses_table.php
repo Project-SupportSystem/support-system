@@ -14,8 +14,8 @@ class CreateCoursesTable extends Migration
     public function up()
     {
         Schema::create('courses', function (Blueprint $table) {
-            $table->id();
-            $table->string('course_code', 8)->unique();
+            // เปลี่ยน id เป็น string ความยาว 8 แทน integer แบบเดิม
+            $table->string('id', 8)->primary(); // ใช้เป็น primary key
             $table->string('course_name', 255);
             $table->integer('total_credits');
             $table->timestamps();

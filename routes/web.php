@@ -6,6 +6,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\AcademicRecordController;
+
 
 
 // Group เส้นทางที่ต้องการ Auth
@@ -20,6 +22,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/student-profile', [StudentController::class, 'create'])->name('student-profile');
     Route::post('/student-profile', [StudentController::class, 'store'])->name('student.store');
+    Route::put('/student/{id}', [StudentController::class, 'update'])->name('student.update');
+
 
     Route::get('/upload-documents', function () {
         return view('uploaddoc');
@@ -30,7 +34,7 @@ Route::middleware('auth')->group(function () {
 
 
 
-// Route ประวัติส่วนตัว
+// Route บันทึกผลการเรียน
 Route::get('/report', [ReportController::class, 'index'])->name('report');
 Route::post('/report/submit', [ReportController::class, 'submit'])->name('report.submit');
 
@@ -48,3 +52,6 @@ Route::get('/auth/google/call-back', [SocialiteController::class, 'handleGoogleC
 
 // Route Logout
 Route::get('/logout', [SocialiteController::class, 'logout'])->name('logout');
+
+
+

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
-    
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -30,6 +30,11 @@
                     <a class="dropdown-item" href="#">
                         {{ Auth::user()->username ?? 'ไม่พบข้อมูลผู้ใช้' }} 
                         ({{ Auth::user()->role ?? 'ไม่มีสิทธิ์' }})
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#">
+                        รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}
                     </a>
                 </li>
                 <li><hr class="dropdown-divider"></li>
@@ -56,8 +61,9 @@
                 </div>
             @endif
 
-            <form action="{{ route('student.store') }}" method="POST" id="studentForm">
+            <form action="{{ route('student.update', $student->id ?? '') }}" method="POST" id="studentForm">
                 @csrf
+                @method('PUT') <!-- ใช้ PUT สำหรับการอัปเดตข้อมูล -->
 
                 <div class="mb-3">
                     <label for="student_id" class="form-label">รหัสนักศึกษา</label>
@@ -74,27 +80,32 @@
                 <div class="mb-3">
                     <label for="phone" class="form-label">เบอร์โทร</label>
                     <input type="text" class="form-control" id="phone" name="phone" 
-                           value="{{ old('phone', $student->phone ?? '') }}" readonly>
+                           value="{{ old('phone', $student->phone ?? '') }}" readonly required >
                 </div>
 
                 <div class="mb-3">
                     <label for="school_location" class="form-label">จบการศึกษาจาก</label>
                     <input type="text" class="form-control" id="school_location" name="school_location" 
-                           value="{{ old('school_location', $student->school_location ?? '') }}" readonly>
+                           value="{{ old('school_location', $student->school_location ?? '') }}" readonly required >
                 </div>
 
                 <div class="mb-3">
                     <label for="advisor_id" class="form-label">อาจารย์ที่ปรึกษา</label>
-                    <select class="form-control" id="advisor_id" name="advisor_id" required disabled>
+                    <select class="form-control" id="advisor_id" name="advisor_id" readonly required>
                         <option value="">-- เลือกอาจารย์ที่ปรึกษา --</option>
                         @foreach ($advisors as $advisor)
-                            <option value="{{ $advisor->id }}" {{ (old('advisor_id', $student->advisor_id ?? '') == $advisor->id) ? 'selected' : '' }}>{{ $advisor->first_name }}</option>
+                            <option value="{{ $advisor->id }}" 
+                                {{ (old('advisor_id', $student->advisor_id ?? '') == $advisor->id) ? 'selected' : '' }}>
+                                {{ $advisor->first_name }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
 
-                <button type="button" class="btn btn-primary" id="editButton">แก้ไข</button>
-                <button type="submit" class="btn btn-custom" style="display:none;">บันทึกข้อมูล</button>
+                <div class="text-end">
+                    <button type="button" class="btn btn-primary" id="editButton">แก้ไข</button>
+                    <button type="submit" class="btn btn-success" style="display:none;">บันทึกข้อมูล</button>
+                </div>
             </form>
         </div>
     </div>
@@ -102,17 +113,15 @@
     <script>
         $(document).ready(function() {
             $('#editButton').click(function() {
-                // ลบ readonly และ disabled
-                $('#student_id').removeAttr('readonly');
-                $('input').not('#student_id').removeAttr('readonly'); // ทำให้ฟิลด์อื่น ๆ สามารถแก้ไขได้
-                $('select').removeAttr('disabled');
+                // เปิดการแก้ไข
+                $('input, select').removeAttr('readonly').removeAttr('disabled');
 
                 // ซ่อนปุ่มแก้ไข และแสดงปุ่มบันทึก
                 $(this).hide();
                 $('button[type=submit]').show();
             });
 
-            $('form').on('submit', function(e) {
+            $('#studentForm').on('submit', function(e) {
                 e.preventDefault();
                 Swal.fire({
                     title: 'ยืนยันการบันทึก?',

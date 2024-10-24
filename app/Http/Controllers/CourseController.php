@@ -12,22 +12,28 @@ class CourseController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the form data
+        // Validate the form input
         $validated = $request->validate([
-            'course_code' => 'required|string|max:10',
+            'id' => 'required|string|max:8|unique:courses,id',
             'course_name' => 'required|string|max:255',
-            'total_credits' => 'required|integer',
+            'total_credits' => 'required|integer|min:0',
         ]);
 
-        // Save the course to the database
-        Course::create([
-            'course_code' => $validated['course_code'],
-            'course_name' => $validated['course_name'],
-            'total_credits' => $validated['total_credits'],
-        ]);
+        try {
+            // Save the course to the database
+            $course = Course::create($validated);
 
-        // Redirect back with a success message
-        return redirect()->back()->with('success', 'เพิ่มวิชาเรียบร้อยแล้ว');
+            return response()->json([
+                'status' => 'success',
+                'message' => 'วิชาใหม่ถูกเพิ่มแล้ว!',
+                'course' => $course
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'ไม่สามารถเพิ่มวิชาได้: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -37,10 +43,11 @@ class CourseController extends Controller
     {
         $term = $request->input('term');
 
-        $courses = Course::where('course_code', 'LIKE', '%' . $term . '%')
-            ->orWhere('course_name', 'LIKE', '%' . $term . '%')
-            ->take(10)
-            ->get(['course_code', 'course_name', 'total_credits']); // ดึงเฉพาะฟิลด์ที่จำเป็น
+        $courses = Course::where(function ($query) use ($term) {
+            $query->where('course_name', 'LIKE', '%' . $term . '%')
+                  ->orWhere('id', 'LIKE', '%' . $term . '%');
+        })->take(10)->get(['id', 'course_name', 'total_credits']);
+        
 
     return response()->json($courses);
     }

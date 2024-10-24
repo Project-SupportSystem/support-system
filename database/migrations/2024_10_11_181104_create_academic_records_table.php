@@ -18,8 +18,11 @@ class CreateAcademicRecordsTable extends Migration
         
             $table->string('student_id', 10);
             $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
-
-            $table->foreignId('course_id')->constrained()->onDelete('cascade');
+            
+            // เปลี่ยน course_id เป็น string(8) เพื่อให้ตรงกับ id ของ courses
+            $table->string('course_id', 8);
+            $table->foreign('course_id')->references('id')->on('courses')->onDelete('cascade');
+            
             $table->string('semester');
             $table->string('grade', 2);
             $table->decimal('gpa', 3, 2);

@@ -3,105 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบันทึกผลการศึกษานักศึกษา</title>
+    <title>อัปโหลดเอกสาร</title>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
-    <style>
-        body {
-            font-family: 'Nunito', sans-serif;
-            background-color: #fdf6e3;
-            margin: 0;
-            padding: 0;
-        }
+    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 
-        .navbar {
-            width: 100%;
-            background-color: #ffe0b2;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 80px;
-            z-index: 1000;
-        }
-
-        .navbar-logo img {
-            height: 40px;
-        }
-
-        .navbar-user {
-            font-size: 1rem;
-            margin-right: 20px;
-        }
-
-        .sidebar {
-            height: 100vh;
-            width: 250px;
-            background-color: #fff;
-            padding-top: 10px;
-            position: fixed;
-            left: 0;
-            top: 80px;
-            border-right: 1px solid #ddd;
-        }
-
-        .sidebar a {
-            display: block;
-            padding: 10px 15px;
-            text-decoration: none;
-            color: #333;
-            font-size: 1rem;
-        }
-
-        .sidebar a:hover {
-            background-color: #ffe0b2;
-            color: #333;
-        }
-
-        .content {
-            margin-left: 250px;
-            padding: 20px;
-            flex: 1;
-            margin-top: 80px;
-            background-color: #ffffff;
-        }
-
-        h2 {
-            color: black; /* เปลี่ยนสีเป็นสีดำ */
-        }
-
-        .btn-custom {
-            background-color: #007bff;
-            color: #ffffff;
-        }
-        .btn-custom:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
     <!-- Navbar -->
-    <div class="navbar">
+    <div class="navbar d-flex justify-content-between align-items-center p-2 bg-light">
         <div class="navbar-logo">
-            <img src="C:\Users\ACER\Desktop\example-app\img\KKU_Logo.png" alt="โลโก้ระบบ">
+            <img src="{{ asset('img/KKU_Logo.png') }}" alt="โลโก้ระบบ" style="height: 50px;">
         </div>
-        <div class="navbar-user">ชื่อผู้ใช้: นักศึกษา</div>
+
+        <div class="dropdown">
+            <a class="btn btn-light dropdown-toggle" href="#" role="button" id="userDropdown" 
+               data-bs-toggle="dropdown" aria-expanded="false">
+                <img src="{{ asset('img/user-icon.png') }}" alt="User Icon" 
+                     style="width: 30px; height: 30px; border-radius: 50%;">
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li>
+                    <a class="dropdown-item" href="#">
+                        {{ Auth::user()->username ?? 'ไม่พบข้อมูลผู้ใช้' }} 
+                        ({{ Auth::user()->role ?? 'ไม่มีสิทธิ์' }})
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#">
+                        รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item" href="{{ route('logout') }}">Log Out</a>
+                </li>
+            </ul>
+        </div>
     </div>
 
     <!-- Sidebar -->
     <div class="sidebar">
         <a href="{{ route('report') }}">รายงานผลการศึกษา</a>
         <a href="{{ route('upload.document') }}">อัปโหลดเอกสาร</a>
+        <a href="{{ route('student-profile') }}">ประวัตินักศึกษา</a>
     </div>
-
 
     <!-- Main content -->
     <div class="content">
         <div class="container mt-5">
-            <h2>อัปโหลดเอกสาร</h2>
+            <h2 class="text-center">อัปโหลดเอกสาร</h2>
 
             @if (session('success'))
                 <div class="alert alert-success">
@@ -120,10 +75,6 @@
 
             <form action="{{ route('upload.handle') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
                 @csrf
-
-                <div class="mb-3">
-                    <h5>อัปโหลดไฟล์</h5>
-                </div>
 
                 @for ($i = 1; $i <= 5; $i++)
                     <div class="row mb-3">

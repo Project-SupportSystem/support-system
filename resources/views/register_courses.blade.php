@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบบันทึกผลการศึกษานักศึกษา</title>
 
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -29,15 +31,26 @@
                      style="width: 30px; height: 30px; border-radius: 50%;">
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                <li>
-                    <a class="dropdown-item" href="#">
-                        {{ Auth::user()->username ?? 'ไม่พบข้อมูลผู้ใช้' }} ({{ Auth::user()->role ?? 'ไม่มีสิทธิ์' }})
-                    </a>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                    <a class="dropdown-item" href="{{ route('logout') }}">Log Out</a>
-                </li>
+                @auth
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            {{ Auth::user()->username ?? 'ไม่พบข้อมูลผู้ใช้' }} ({{ Auth::user()->role ?? 'ไม่มีสิทธิ์' }})
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#">
+                            รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('logout') }}">Log Out</a>
+                    </li>
+                @else
+                    <li>
+                        <a class="dropdown-item" href="{{ route('login') }}">เข้าสู่ระบบ</a>
+                    </li>
+                @endauth
             </ul>
         </div>
     </div>
@@ -49,7 +62,7 @@
         <a href="{{ route('student-profile') }}">ประวัตินักศึกษา</a>
     </div>
 
-    <!-- Main content -->
+    <!-- Main Content -->
     <div class="content">
         <div class="container mt-5">
             <h2>กรอกผลการศึกษา</h2>
@@ -58,16 +71,24 @@
                 เพิ่มวิชา
             </button>
 
+            <!-- Alerts -->
             @if (session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
-
             @if (session('error'))
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
 
             <form id="reportForm" action="{{ route('report.submit') }}" method="POST">
                 @csrf
+
+                @auth
+                    <p>รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}</p> 
+                    <p>ยินดีต้อนรับ, {{ Auth::user()->username }}</p>
+                @else
+                    <p>กรุณาเข้าสู่ระบบก่อนทำการบันทึกผลการเรียน</p>
+                @endauth
+
                 <div class="mb-3">
                     <label for="semester" class="form-label">ภาคการศึกษา</label>
                     <select class="form-control" name="semester" required>
@@ -92,7 +113,7 @@
                         </thead>
                         <tbody id="courses-table-body">
                             <tr>
-                                <td><input type="text" class="form-control course-code" name="course_code[]" required maxlength="8"></td>
+                                <td><input type="text" class="form-control course-id" name="id[]" required maxlength="8"></td>
                                 <td><input type="text" class="form-control" name="course_name[]" readonly></td>
                                 <td><input type="number" class="form-control" name="total_credits[]" readonly></td>
                                 <td>
@@ -136,8 +157,8 @@
                             <form id="addCourseForm" action="{{ route('courses.store') }}" method="POST">
                                 @csrf
                                 <div class="mb-3">
-                                    <label for="course_code" class="form-label">รหัสวิชา</label>
-                                    <input type="text" name="course_code" class="form-control" required maxlength="8">
+                                    <label for="id" class="form-label">รหัสวิชา</label>
+                                    <input type="text" name="id" class="form-control" required maxlength="8">
                                 </div>
                                 <div class="mb-3">
                                     <label for="course_name" class="form-label">ชื่อวิชา</label>
@@ -160,15 +181,15 @@
     $(document).ready(function () {
         // ฟังก์ชัน Autocomplete สำหรับช่องรหัสวิชา
         function setupAutocomplete() {
-            $('.course-code').autocomplete({
+            $('.course-id').autocomplete({
                 source: function (request, response) {
                     $.ajax({
                         url: '{{ route('courses.autocomplete') }}',
                         data: { term: request.term },
                         success: function (data) {
                             response(data.map(course => ({
-                                label: course.course_code + ' - ' + course.course_name,
-                                value: course.course_code,
+                                label: course.id + ' - ' + course.course_name,
+                                value: course.id,
                                 course_name: course.course_name,
                                 total_credits: course.total_credits
                             })));
@@ -208,7 +229,7 @@
         $('#courses-table-body').on('click', '.btn-add-course', function () {
             const newRow = 
                 `<tr>
-                    <td><input type="text" class="form-control course-code" name="course_code[]" required maxlength="8"></td>
+                    <td><input type="text" class="form-control course-id" name="id[]" required maxlength="8"></td>
                     <td><input type="text" class="form-control" name="course_name[]" readonly></td>
                     <td><input type="number" class="form-control" name="total_credits[]" readonly></td>
                     <td>
@@ -278,10 +299,16 @@
                     // ส่งฟอร์มเมื่อกดตกลง
                     $.ajax({
                         url: $(this).attr('action'),
+                        //method: 'POST',
                         type: $(this).attr('method'),
                         data: $(this).serialize(),
                         success: function(response) {
+                            // Close the modal
                             $('#addCourseModal').modal('hide'); // ซ่อนโมดัล
+
+                            // Clear the form
+                           //$('#addCourseForm')[0].reset();
+                            
                             Swal.fire('สำเร็จ!', 'วิชาใหม่ถูกเพิ่มแล้ว!', 'success');
                             // เพิ่มวิชาใหม่ไปยังตารางหรือทำการอัปเดต UI ตามต้องการ
                         },
