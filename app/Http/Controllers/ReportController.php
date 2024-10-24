@@ -20,7 +20,7 @@ class ReportController extends Controller
 
     public function submit(Request $request)
     {
-        //dd($request->all());
+        // dd($request->all());
         
         // ปรับปรุง validation
         $request->validate([
@@ -34,20 +34,20 @@ class ReportController extends Controller
         try {
             DB::beginTransaction();
 
-            $student = Student::where('username', Auth::user()->username)->firstOrFail();
+            $student = Student::where('id', Auth::user()->student->id)->firstOrFail();
 
-            foreach ($request->course_code as $index => $courseCode) {
-                $course = Course::where('course_code', $courseCode)->firstOrFail();
+            foreach ($request->id as $index => $id) {
+                $course = Course::where('id', $id)->firstOrFail();
                 
                 // ตรวจสอบข้อมูลซ้ำ
                 $existingRecord = AcademicRecord::where([
                     'student_id' => $student->id,
-                    'course_id' => $course->id,
+                    'id' => $course->id,
                     'semester' => $request->semester
                 ])->first();
 
                 if ($existingRecord) {
-                    throw new \Exception("วิชา {$courseCode} มีการลงทะเบียนในภาคการศึกษา {$request->semester} แล้ว");
+                    throw new \Exception("วิชา {$id} มีการลงทะเบียนในภาคการศึกษา {$request->semester} แล้ว");
                 }
 
                 // คำนวณ GPA จากเกรดที่ส่งมา
