@@ -89,6 +89,7 @@
                             <th>KEPT Exits</th>
                             <th>DQ</th>
                             <th>ฝึกงาน</th>
+                            <th>สหกิจศึกษา/โปรเจค</th>
                         </tr>
                     </thead>
                     <tbody id="student-table">
