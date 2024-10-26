@@ -31,11 +31,11 @@
                             {{ Auth::user()->username ?? 'ไม่พบข้อมูลผู้ใช้' }} ({{ Auth::user()->role ?? 'ไม่มีสิทธิ์' }})
                         </a>
                     </li>
-                    <li>
+                    <!-- <li>
                         <a class="dropdown-item" href="#">
                             รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}
                         </a>
-                    </li>
+                    </li> -->
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <a class="dropdown-item" href="{{ route('logout') }}">Log Out</a>
@@ -73,6 +73,8 @@
                     <option value="kept">KEPT Exits</option>
                     <option value="dq">DQ</option>
                     <option value="internship">ฝึกงาน</option>
+                    <option value="internship">สหกิจศึกษา</option>
+                    <option value="internship">โปรเจค</option>
                 </select>
             </div>
 
@@ -85,11 +87,11 @@
                             <th>รหัสนักศึกษา</th>
                             <th>ชื่อนามสกุล</th>
                             <th>เกรดเฉลี่ย</th>
-                            <th>คณะสาขา</th>
+                            <th>สหกิจศึกษา/โปรเจค</th>
                             <th>KEPT Exits</th>
                             <th>DQ</th>
                             <th>ฝึกงาน</th>
-                            <th>สหกิจศึกษา/โปรเจค</th>
+                            <th>คณะสาขา</th>
                         </tr>
                     </thead>
                     <tbody id="student-table">
@@ -103,6 +105,26 @@
                                 <!-- <td>{{ $student->kept_status ?? '-' }}</td>
                                 <td>{{ $student->dq_status ?? '-' }}</td>
                                 <td>{{ $student->internship_status ?? '-' }}</td> -->
+                                <td class="text-center">
+                                    <!-- แสดงข้อมูลในคอลัมน์ 'สหกิจศึกษา/โปรเจค' -->
+                                    @php
+                                        $coopDocs = $student->documents->where('document_type', 'coop_project');
+                                        $projectDocs = $student->documents->where('document_type', 'project');
+                                    @endphp
+
+                                    <!-- ตรวจสอบข้อมูลประเภทสหกิจศึกษา -->
+                                    @if ($coopDocs->isNotEmpty())
+                                        <a href="#" onclick="showFilesModal('{{ $student->id }}', 'coop_project')">สหกิจศึกษา</a>
+                                    @endif
+
+                                    <!-- ตรวจสอบข้อมูลประเภทโปรเจค -->
+                                    @if ($projectDocs->isNotEmpty())
+                                        @if ($coopDocs->isNotEmpty())
+                                            | <!-- แยกด้วยเครื่องหมายขีด -->
+                                        @endif
+                                        <a href="#" onclick="showFilesModal('{{ $student->id }}', 'project')">โปรเจค</a>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -111,7 +133,40 @@
         </div>
     </div>
 
+    <!-- Modal สำหรับแสดงไฟล์เอกสาร -->
+    <div class="modal fade" id="filesModal" tabindex="-1" aria-labelledby="filesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filesModalLabel">ไฟล์เอกสาร</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul id="filesList"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // ฟังก์ชันเปิด Modal พร้อมข้อมูลไฟล์ของประเภทเอกสารที่เลือก
+        function showFilesModal(studentId, docType) {
+            $.ajax({
+                url: `/get-student-documents/${studentId}/${docType}`,
+                type: 'GET',
+                success: function (response) {
+                    $('#filesList').empty();
+                    response.documents.forEach(function (doc) {
+                        $('#filesList').append(`<li><a href="${doc.file_path}" target="_blank">${doc.file_name}</a></li>`);
+                    });
+                    $('#filesModal').modal('show');
+                },
+                error: function () {
+                    alert('ไม่สามารถดึงข้อมูลเอกสารได้');
+                }
+            });
+        }
+
         function searchStudent() {
             var input = document.getElementById('search-input').value.toLowerCase();
             var table = document.getElementById('student-table');

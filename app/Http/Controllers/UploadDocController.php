@@ -63,4 +63,17 @@ class UploadDocController extends Controller
         }
         return redirect()->back()->with('success', 'เอกสารถูกอัปโหลดสำเร็จแล้ว');
     }
+    public function getStudentDocuments($studentId, $docType)
+    {
+        $documents = Document::where('student_id', $studentId)->where('document_type', $docType)->get(['file_path', 'id']);
+
+        return response()->json([
+            'documents' => $documents->map(function ($doc) {
+                return [
+                    'file_path' => Storage::url($doc->file_path),
+                    'file_name' => basename($doc->file_path),
+                ];
+            })
+        ]);
+    }
 }

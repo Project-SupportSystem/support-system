@@ -27,8 +27,8 @@ class SocialiteController extends Controller
             if (str_ends_with($googleUser->email, '@kkumail.com')) {
                 $role = 'student';
                 $redirectRoute = 'register_courses';
-                $redirectRoute = 'table_report';
-            } elseif (str_ends_with($googleUser->email, '@kku.ac.th')) {
+                //$redirectRoute = 'table_report';
+            } elseif (str_ends_with($googleUser->email, '@gmail.com')) {
                 $role = 'advisor';
                 $redirectRoute = 'table_report';
             } else {
