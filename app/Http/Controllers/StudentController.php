@@ -67,4 +67,13 @@ class StudentController extends Controller
 
         return redirect()->back()->with('success', 'ข้อมูลนักศึกษาถูกอัปเดตเรียบร้อยแล้ว');
     }
+
+    public function showReport()
+    {   
+        // ดึงข้อมูลนักศึกษาทั้งหมดจากฐานข้อมูล
+        $students = Student::with(['academicRecords.course'])->get(); // ดึงข้อมูลนักศึกษาและวิชา
+
+        // ส่งข้อมูลไปยัง view 'table_report'
+        return view('table_report', compact('students'));
+    }
 }

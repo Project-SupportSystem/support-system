@@ -16,11 +16,21 @@ class CreateDocumentsTable extends Migration
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
 
-            $table->string('student_id', 10); // ขนาดสอดคล้องกับ students table
+            // Reference to students table with cascade on delete
+            $table->string('student_id', 10);
             $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
 
-            $table->enum('document_type', ['transcript', 'KEPT_result', 'DQ_result', 'internship']);
-            $table->string('file_path');
+            // Expanded document types to support 5 forms from uploaddoc.blade.php
+            $table->enum('document_type', [
+                'coop_project',     // สหกิจศึกษา 
+                'project',          // โปรเจค
+                'kku_dq',           // KKUDQ
+                'kku_kept',         // KKU KEPT
+                'internship',       // ฝึกงาน
+                'transcript'        // ผลการศึกษา
+            ]);
+
+            $table->string('file_path');  // Path to document file
             $table->timestamp('upload_date')->useCurrent();
             $table->timestamps();
         });

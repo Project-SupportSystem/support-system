@@ -7,6 +7,8 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\AcademicRecordController;
+use App\Http\Controllers\UploadDocController;
+
 
 
 
@@ -15,6 +17,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/table-report', function () {
         return view('table_report');
     })->name('table_report');
+    Route::get('/table-report', [StudentController::class, 'showReport'])->name('table_report');
+
 
     Route::get('/register-courses', function () {
         return view('register_courses');
@@ -29,7 +33,8 @@ Route::middleware('auth')->group(function () {
         return view('uploaddoc');
     })->name('upload.document');
 
-    Route::post('/upload-doc', [UploadController::class, 'handleUpload'])->name('upload.handle');
+    Route::get('/upload-doc', [UploadDocController::class, 'index'])->name('upload.doc');
+    Route::post('/upload-doc', [UploadDocController::class, 'uploadDocument'])->name('upload.doc.store');
 });
 
 
@@ -37,6 +42,8 @@ Route::middleware('auth')->group(function () {
 // Route บันทึกผลการเรียน
 Route::get('/report', [ReportController::class, 'index'])->name('report');
 Route::post('/report/submit', [ReportController::class, 'submit'])->name('report.submit');
+Route::get('/report/academic-records', [ReportController::class, 'getAcademicRecords'])->name('report.academic.records');
+
 
 // Route สำหรับบันทึกวิชาใหม่และ autocomplete
 Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');

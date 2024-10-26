@@ -179,79 +179,151 @@
 
     <script>
     $(document).ready(function () {
-        // ฟังก์ชัน Autocomplete สำหรับช่องรหัสวิชา
-        function setupAutocomplete() {
-            $('.course-id').autocomplete({
-                source: function (request, response) {
-                    $.ajax({
-                        url: '{{ route('courses.autocomplete') }}',
-                        data: { term: request.term },
-                        success: function (data) {
-                            response(data.map(course => ({
-                                label: course.id + ' - ' + course.course_name,
-                                value: course.id,
-                                course_name: course.course_name,
-                                total_credits: course.total_credits
-                            })));
-                        }
+    // ฟังก์ชันดึงข้อมูลประวัติการลงทะเบียน
+    function loadAcademicRecords(semester) {
+        // ล้างข้อมูลในตารางก่อนโหลดข้อมูลใหม่
+        $('#courses-table-body').empty();
+
+        $.ajax({
+            url: '{{ route("report.academic.records") }}',
+            method: 'GET',
+            data: { semester: semester },
+            success: function (data) {
+                if (data.length > 0) {
+                    // ถ้ามีข้อมูล ให้แสดงในตาราง
+                    //$('#courses-table-body').empty(); // ล้างข้อมูลในตาราง
+                    $.each(data, function (index, record) {
+                        const row = `
+                            <tr>
+                                <td><input type="text" class="form-control course-id" name="id[]" value="${record.course.id}" readonly></td>
+                                <td><input type="text" class="form-control" name="course_name[]" value="${record.course.course_name}" readonly></td>
+                                <td><input type="number" class="form-control" name="total_credits[]" value="${record.course.total_credits}" readonly></td>
+                                <td>
+                                    <select class="form-control grade-select" name="grade[]" required>
+                                        <option value="4.0" ${record.gpa == 4.0 ? 'selected' : ''}>A</option>
+                                        <option value="3.5" ${record.gpa == 3.5 ? 'selected' : ''}>B+</option>
+                                        <option value="3.0" ${record.gpa == 3.0 ? 'selected' : ''}>B</option>
+                                        <option value="2.5" ${record.gpa == 2.5 ? 'selected' : ''}>C+</option>
+                                        <option value="2.0" ${record.gpa == 2.0 ? 'selected' : ''}>C</option>
+                                        <option value="1.5" ${record.gpa == 1.5 ? 'selected' : ''}>D+</option>
+                                        <option value="1.0" ${record.gpa == 1.0 ? 'selected' : ''}>D</option>
+                                        <option value="0.0" ${record.gpa == 0.0 ? 'selected' : ''}>F</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-warning btn-edit-course">แก้ไขข้อมูล</button>
+                                    <button type="button" class="btn btn-danger btn-remove-course">-</button>
+                                </td>
+                            </tr>`;
+                        $('#courses-table-body').append(row);
                     });
-                },
-                select: function (event, ui) {
-                    const row = $(this).closest('tr');
-                    row.find('input[name="course_name[]"]').val(ui.item.course_name);
-                    row.find('input[name="total_credits[]"]').val(ui.item.total_credits);
-                },
-                minLength: 2
-            });
+                } else {
+                    // กรณีที่ไม่มีข้อมูล ให้แสดงแถวสำหรับกรอกข้อมูล
+                    addEmptyRow();
+                }
+                // คำนวณ GPA ใหม่หลังจากโหลดข้อมูล
+                calculateGPA();
+            },
+            error: function () {
+                Swal.fire('ผิดพลาด!', 'ไม่สามารถดึงข้อมูลผลการเรียนได้', 'error');
+            }
+        });
+    }
+
+    // เมื่อเลือกภาคการศึกษา
+    $('select[name="semester"]').on('change', function () {
+        const selectedSemester = $(this).val();
+        if (selectedSemester) {
+            // เรียกฟังก์ชันโหลดข้อมูลใหม่เมื่อเปลี่ยนภาคการศึกษา
+            loadAcademicRecords(selectedSemester);
         }
+    });
+
+    // ฟังก์ชันเพิ่มแถวเปล่าสำหรับกรอกข้อมูลใหม่ (ใช้เมื่อไม่มีข้อมูล)
+    function addEmptyRow() {
+        const newRow = `
+            <tr>
+                <td><input type="text" class="form-control course-id" name="id[]" required maxlength="8"></td>
+                <td><input type="text" class="form-control" name="course_name[]" readonly></td>
+                <td><input type="number" class="form-control" name="total_credits[]" readonly></td>
+                <td>
+                    <select class="form-control grade-select" name="grade[]" required>
+                        <option value="">เลือกเกรด</option>
+                        <option value="4.0">A</option>
+                        <option value="3.5">B+</option>
+                        <option value="3.0">B</option>
+                        <option value="2.5">C+</option>
+                        <option value="2.0">C</option>
+                        <option value="1.5">D+</option>
+                        <option value="1.0">D</option>
+                        <option value="0.0">F</option>
+                    </select>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-success btn-add-course">+</button>
+                    <button type="button" class="btn btn-danger btn-remove-course">-</button>
+                </td>
+            </tr>`;
+        $('#courses-table-body').append(newRow);
+        setupAutocomplete(); // เรียกใช้ Autocomplete
+    }
+
+    
+    // ฟังก์ชัน Autocomplete สำหรับช่องรหัสวิชา
+    function setupAutocomplete() {
+        $('.course-id').autocomplete({
+            source: function (request, response) {
+                $.ajax({
+                    url: '{{ route('courses.autocomplete') }}',
+                    data: { term: request.term },
+                    success: function (data) {
+                        response(data.map(course => ({
+                            label: course.id + ' - ' + course.course_name,
+                            value: course.id,
+                            course_name: course.course_name,
+                            total_credits: course.total_credits
+                        })));
+                    }
+                });
+            },
+            select: function (event, ui) {
+                const row = $(this).closest('tr');
+                row.find('input[name="course_name[]"]').val(ui.item.course_name);
+                row.find('input[name="total_credits[]"]').val(ui.item.total_credits);
+            },
+            minLength: 2
+        });
+    }
 
         // ฟังก์ชันคำนวณ GPA รวม
-        function calculateGPA() {
-            let totalCredits = 0;
-            let totalWeightedGrades = 0;
+    function calculateGPA() {
+        let totalCredits = 0;
+        let totalWeightedGrades = 0;
 
-            $('#courses-table-body tr').each(function () {
-                const credits = parseFloat($(this).find('input[name="total_credits[]"]').val()) || 0;
-                const grade = parseFloat($(this).find('select[name="grade[]"]').val()) || 0;
+        $('#courses-table-body tr').each(function () {
+            const credits = parseFloat($(this).find('input[name="total_credits[]"]').val()) || 0;
+            const grade = parseFloat($(this).find('select[name="grade[]"]').val()) || 0;
 
-                totalCredits += credits;
-                totalWeightedGrades += grade * credits;
-            });
+            totalCredits += credits;
+            totalWeightedGrades += grade * credits;
+        });
 
-            const gpa = totalCredits > 0 ? (totalWeightedGrades / totalCredits).toFixed(2) : '0.00';
-            $('#gpa-total').text(gpa);
-        }
+        const gpa = totalCredits > 0 ? (totalWeightedGrades / totalCredits).toFixed(2) : '0.00';
+        $('#gpa-total').text(gpa);
+    }
 
-        // เรียกใช้ Autocomplete
-        setupAutocomplete();
+        // ฟังก์ชันสำหรับการแก้ไขข้อมูล
+        $('#courses-table-body').on('click', '.btn-edit-course', function () {
+            const row = $(this).closest('tr');
+            row.find('input[name="id[]"]').removeAttr('readonly'); // ปลดล็อคการแก้ไขรหัสวิชา
+            row.find('input[name="course_name[]"]').val(''); // เคลียร์ชื่อวิชาเก่า
+            row.find('input[name="total_credits[]"]').val(''); // เคลียร์หน่วยกิตเก่า
+            setupAutocomplete(); // เปิดใช้งาน Autocomplete
+        });
 
         // ฟังก์ชันเพิ่มแถวใหม่
-        $('#courses-table-body').on('click', '.btn-add-course', function () {
-            const newRow = 
-                `<tr>
-                    <td><input type="text" class="form-control course-id" name="id[]" required maxlength="8"></td>
-                    <td><input type="text" class="form-control" name="course_name[]" readonly></td>
-                    <td><input type="number" class="form-control" name="total_credits[]" readonly></td>
-                    <td>
-                        <select class="form-control grade-select" name="grade[]" required>
-                            <option value="">เลือกเกรด</option>
-                            <option value="4.0">A</option>
-                            <option value="3.5">B+</option>
-                            <option value="3.0">B</option>
-                            <option value="2.5">C+</option>
-                            <option value="2.0">C</option>
-                            <option value="1.5">D+</option>
-                            <option value="1.0">D</option>
-                            <option value="0.0">F</option>
-                        </select>
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-success btn-add-course">+</button>
-                        <button type="button" class="btn btn-danger btn-remove-course">-</button>
-                    </td>
-                </tr>`;
-            $('#courses-table-body').append(newRow);
-            setupAutocomplete(); // Re-initialize autocomplete
+         $('#courses-table-body').on('click', '.btn-add-course', function () {
+            addEmptyRow();
         });
 
         // ลบแถว
@@ -264,6 +336,9 @@
         $('#courses-table-body').on('change', '.grade-select', function () {
             calculateGPA();
         });
+
+        // เรียกใช้ Autocomplete ครั้งแรก
+        setupAutocomplete();
 
         // เพิ่ม SweetAlert การยืนยันเมื่อบันทึกผลการเรียน
         $('#reportForm').on('submit', function(e) {
