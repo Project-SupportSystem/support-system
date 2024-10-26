@@ -17,6 +17,17 @@ class ReportController extends Controller
         $courses = Course::all();
         return view('register_courses', compact('courses'));
     }
+    public function getAcademicRecords(Request $request)
+    {
+        $request->validate(['semester' => 'required|string']);
+
+        // ดึงข้อมูลประวัติการลงทะเบียนจาก AcademicRecords ตามนักเรียนและภาคการศึกษาที่เลือก
+        $records = AcademicRecord::where('student_id', Auth::user()->student->id)
+            ->where('semester', $request->semester)
+            ->with('course') // ร่วมข้อมูลวิชา
+            ->get();
+        return response()->json($records);
+    }
 
     public function submit(Request $request)
     {
@@ -71,6 +82,42 @@ class ReportController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->with('error', $e->getMessage());
+        }
+    }
+    public function updateCourse(Request $request, $id)
+    {
+        $request->validate([
+            'course_code' => 'required|string|exists:courses,course_code',
+            'grade' => 'required|numeric|between:0,4.0'
+        ]);
+
+        try {
+            $record = AcademicRecord::where('student_id', Auth::user()->student->id)
+                ->where('id', $id)
+                ->firstOrFail();
+
+            $record->course_code = $request->course_code;
+            $record->gpa = $request->grade;
+            $record->grade = $this->convertGPAtoGrade($request->grade);
+            $record->save();
+
+            return response()->json(['success' => true, 'message' => 'แก้ไขข้อมูลเรียบร้อย']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล'], 500);
+        }
+    }
+    public function deleteCourse($id)
+    {
+        try {
+            $record = AcademicRecord::where('student_id', Auth::user()->student->id)
+                ->where('id', $id)
+                ->firstOrFail();
+
+            $record->delete();
+
+            return response()->json(['success' => true, 'message' => 'ลบข้อมูลเรียบร้อย']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการลบข้อมูล'], 500);
         }
     }
 

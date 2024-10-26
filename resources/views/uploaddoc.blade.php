@@ -52,19 +52,20 @@
     <div class="content">
         <div class="container mt-5">
             <h2 class="text-center">อัปโหลดเอกสาร</h2>
-            <form action="{{ route('upload.handle') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <form action="{{ route('upload.doc') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
                 @csrf
 
                 <!-- Form 1: สหกิจศึกษา / โปรเจค -->
                 <div class="mb-4">
                     <label class="form-label">สหกิจศึกษา / โปรเจค</label>
                     <select name="titles[]" class="form-select mb-2" id="coopProjectSelect">
-                        <option value="" disabled selected>-- เลือกแผนการที่จะไป --</option>
+                        <option value="" selected>-- เลือกแผนการที่จะไป --</option>
                         <option value="สหกิจศึกษา">สหกิจศึกษา</option>
                         <option value="โปรเจค">โปรเจค</option>
                     </select>
                     <p id="coopProjectInfo" class="text-muted"></p>
-                    <input type="file" name="files[0][]" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple onchange="addFiles(this, 'fileList0')">
+                    <!-- ปิด input อัปโหลดไฟล์เมื่อไม่ได้เลือกแผน -->
+                    <input type="file" name="files[0][]" id="coopProjectUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple onchange="addFiles(this, 'fileList0')" style="display: none;">
                     <div id="fileList0" class="mt-2"></div>
                 </div>
 
@@ -123,10 +124,34 @@
     </div>
 
     <script>
+        // ตั้งค่าแผนเริ่มต้นของ select option
+        let currentSelection = "";
+
         document.getElementById("coopProjectSelect").addEventListener("change", function() {
             const selectedOption = this.value;
             const coopProjectInfo = document.getElementById("coopProjectInfo");
-            coopProjectInfo.textContent = selectedOption === "สหกิจศึกษา" ? "ไฟล์ประกอบด้วย 1. ใบสมัครออกฝึกปฏิบัติงานรายวิชาสหกิจศึกษา 2. ประวัติย่อ (Resume) 3. ใบรายงานผลการศึกษาฉบับจริง 1 ฉบับ 4. สำเนาบัตรประจำตัวประชาชน นศ. หรือสำเนาบัตรนักศึกษา (รับรองสำเนาถูกต้อง) 1 ฉบับ 5. หนังสือยินยอมจากผู้ปกครอง 6. สำเนาบัตรประชาชนของผู้ปกครอง (ผู้ปกครองลงชื่อและรับรองสํานําถูกต้อง) 1 ฉบับ โดยให้รวมเป็นไฟล์เดียว" : "";
+            const uploadInput = document.getElementById("coopProjectUpload");
+            const fileList = document.getElementById("fileList0");
+            
+            if (selectedOption === "") {
+                // ซ่อน input และล้างไฟล์หากเลือก "-- เลือกแผนการที่จะไป --"
+                uploadInput.style.display = "none";
+                uploadInput.value = "";
+                fileList.innerHTML = "";
+                coopProjectInfo.textContent = "";
+            } else {
+                // หากมีการเปลี่ยนแผนจากที่เคยเลือกไว้ ให้ล้างไฟล์ทั้งหมดที่อัปโหลดไปก่อนหน้า
+                if (selectedOption !== currentSelection) {
+                    uploadInput.value = ""; // รีเซ็ตไฟล์ที่อัปโหลด
+                    fileList.innerHTML = ""; // ล้างรายการไฟล์ที่อัปโหลด
+                }
+                // แสดง input และแสดงข้อความรายละเอียดเมื่อเลือกแผน
+                uploadInput.style.display = "block";
+                coopProjectInfo.textContent = selectedOption === "สหกิจศึกษา"
+                    ? "ไฟล์ประกอบด้วย 1. ใบสมัครออกฝึกปฏิบัติงานรายวิชาสหกิจศึกษา 2. ประวัติย่อ (Resume) 3. ใบรายงานผลการศึกษาฉบับจริง 1 ฉบับ 4. สำเนาบัตรประจำตัวประชาชน นศ. หรือสำเนาบัตรนักศึกษา (รับรองสำเนาถูกต้อง) 1 ฉบับ 5. หนังสือยินยอมจากผู้ปกครอง 6. สำเนาบัตรประชาชนของผู้ปกครอง (ผู้ปกครองลงชื่อและรับรองสํานําถูกต้อง) 1 ฉบับ โดยให้รวมเป็นไฟล์เดียว"
+                    : "ไฟล์ประกอบด้วย 1. รายละเอียดโครงการ โปรเจค ...";
+            }
+            currentSelection = selectedOption; // เก็บแผนที่เลือกปัจจุบัน
         });
 
         function toggleUpload(inputId, enable) {
