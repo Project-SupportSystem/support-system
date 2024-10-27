@@ -159,10 +159,12 @@
                                 <div class="mb-3">
                                     <label for="id" class="form-label">รหัสวิชา</label>
                                     <input type="text" name="id" class="form-control" required maxlength="8">
+                                    <small id="idError" class="text-danger"></small> <!-- ข้อความแจ้งเตือนหากรหัสซ้ำ -->
                                 </div>
                                 <div class="mb-3">
                                     <label for="course_name" class="form-label">ชื่อวิชา</label>
                                     <input type="text" name="course_name" class="form-control" required>
+                                    <small id="nameError" class="text-danger"></small> <!-- ข้อความแจ้งเตือนหากชื่อซ้ำ -->
                                 </div>
                                 <div class="mb-3">
                                     <label for="total_credits" class="form-label">หน่วยกิต</label>
@@ -237,6 +239,40 @@
             // เรียกฟังก์ชันโหลดข้อมูลใหม่เมื่อเปลี่ยนภาคการศึกษา
             loadAcademicRecords(selectedSemester);
         }
+    });
+
+    document.getElementById('addCourseForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // หยุดการส่งฟอร์มอัตโนมัติ
+
+        // รับค่าจาก input
+        const courseId = document.getElementById('course_id').value;
+        const courseName = document.getElementById('course_name').value;
+
+        // ส่งข้อมูลผ่าน AJAX เพื่อตรวจสอบว่ารหัสหรือชื่อวิชาซ้ำหรือไม่
+        fetch("{{ route('courses.check.duplicate') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ id: courseId, course_name: courseName })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // ล้างข้อความแจ้งเตือนก่อนหน้า
+            document.getElementById('idError').textContent = '';
+            document.getElementById('nameError').textContent = '';
+
+            if (data.exists) {
+                // หากข้อมูลซ้ำ แสดงข้อความแจ้งเตือน
+                document.getElementById('idError').textContent = 'รหัสวิชานี้มีอยู่แล้ว';
+                document.getElementById('nameError').textContent = 'ชื่อวิชานี้มีอยู่แล้ว';
+            } else {
+                // ถ้าไม่มีข้อมูลซ้ำ ส่งฟอร์มไปยัง server เพื่อบันทึก
+                document.getElementById('addCourseForm').submit();
+            }
+        })
+        .catch(error => console.error('Error:', error));
     });
 
     // ฟังก์ชันเพิ่มแถวเปล่าสำหรับกรอกข้อมูลใหม่ (ใช้เมื่อไม่มีข้อมูล)
@@ -388,7 +424,7 @@
                             // เพิ่มวิชาใหม่ไปยังตารางหรือทำการอัปเดต UI ตามต้องการ
                         },
                         error: function(xhr) {
-                            Swal.fire('ผิดพลาด!', 'ไม่สามารถเพิ่มวิชาใหม่ได้.', 'error');
+                            Swal.fire('ผิดพลาด!', 'ไม่สามารถเพิ่มวิชาใหม่ได้เนื่องจากอาจ"รหัสวิชา"มีอยู่แล้ว', 'error');
                         }
                     });
                 }

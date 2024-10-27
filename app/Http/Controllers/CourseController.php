@@ -51,4 +51,14 @@ class CourseController extends Controller
 
     return response()->json($courses);
     }
+    
+    public function checkDuplicate(Request $request)
+    {
+        $exists = Course::where('id', $request->id)
+                        ->orWhere('course_name', $request->course_name)
+                        ->exists();
+
+        return response()->json(['exists' => $exists]);
+    }
+
 }

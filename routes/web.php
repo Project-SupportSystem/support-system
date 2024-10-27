@@ -54,6 +54,9 @@ Route::get('/report/academic-records', [ReportController::class, 'getAcademicRec
 Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
 Route::get('/courses/autocomplete', [CourseController::class, 'autocomplete'])->name('courses.autocomplete');
 
+Route::post('/courses/check-duplicate', [CourseController::class, 'checkDuplicate'])->name('courses.check.duplicate');
+
+
 // Route Login และ Socialite Login
 Route::get('/login', function () {
     return view('login');
