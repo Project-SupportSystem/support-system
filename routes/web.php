@@ -13,13 +13,7 @@ use App\Http\Controllers\UploadDocController;
 
 
 // Group เส้นทางที่ต้องการ Auth
-Route::middleware('auth')->group(function () {
-    Route::get('/table-report', function () {
-        return view('table_report');
-    })->name('table_report');
-    Route::get('/table-report', [StudentController::class, 'showReport'])->name('table_report');
-
-
+Route::middleware(['auth', 'role:student'])->group(function () {
     Route::get('/register-courses', function () {
         return view('register_courses');
     })->name('register_courses');
@@ -37,6 +31,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/upload-doc', [UploadDocController::class, 'uploadDocument'])->name('upload.doc.store');
     Route::get('/get-student-documents/{studentId}/{docType}', [UploadDocController::class, 'getStudentDocuments']);
 
+});
+
+// Route สำหรับ @gmail.com (advisor)
+Route::middleware(['auth', 'role:advisor'])->group(function () {
+    Route::get('/table-report', function () {
+        return view('table_report');
+    })->name('table_report');
+    Route::get('/table-report', [StudentController::class, 'showReport'])->name('table_report');
+    
 });
 
 
