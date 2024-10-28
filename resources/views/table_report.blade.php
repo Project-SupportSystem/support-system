@@ -81,31 +81,33 @@
             <!-- Table of Students -->
             <div class="table-responsive">
                 <table class="table table-bordered">
-                    <thead class="table-light">
+                    <thead class="table-light text-center">
                         <tr>
-                            <th>ลำดับ</th>
-                            <th>รหัสนักศึกษา</th>
-                            <th>ชื่อนามสกุล</th>
-                            <th>เกรดเฉลี่ย</th>
-                            <th>สหกิจศึกษา/โปรเจค</th>
-                            <th>KEPT Exits</th>
-                            <th>DQ</th>
-                            <th>ฝึกงาน</th>
-                            <th>คณะสาขา</th>
+                            <th style="vertical-align: top; white-space: nowrap;">ลำดับ</th>
+                            <th style="vertical-align: top; white-space: nowrap;">รหัสนักศึกษา</th>
+                            <th style="vertical-align: top; white-space: nowrap;">ชื่อนามสกุล</th>
+                            <th style="vertical-align: top; white-space: nowrap;">สาขา</th>
+                            <th style="vertical-align: top; white-space: nowrap;">เกรดเฉลี่ย</th>
+                            <th style="vertical-align: top; white-space: nowrap;">สหกิจศึกษา/โปรเจค</th>
+                            <th style="vertical-align: top; white-space: nowrap;">KEPT Exits</th>
+                            <th style="vertical-align: top; white-space: nowrap;">DQ</th>
+                            <th style="vertical-align: top; white-space: nowrap;">ฝึกงาน</th>
+
                         </tr>
                     </thead>
                     <tbody id="student-table">
                         @foreach($students as $index => $student)
-                            <tr>
+                            <tr class="text-center">
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $student->id }}</td>
-                                <td>{{ $student->first_name }}</td>
-                                <!-- <td>{{ $student->faculty ?? 'ไม่ระบุ' }}</td> -->
+                                <td style="white-space: nowrap;">{{ $student->first_name }}</td>
+                                <td style="white-space: nowrap;">   วิทยาการคอมพิวเตอร์และสารสนเทศ วิชาเอก วิทยาการคอมพิวเตอร์และสารสนเทศ</td>
                                 <td>{{ $student->calculateGPA() ? number_format($student->calculateGPA(), 2) : '-' }}</td>
+                                <!-- <td>{{ $student->faculty ?? 'ไม่ระบุ' }}</td> -->
                                 <!-- <td>{{ $student->kept_status ?? '-' }}</td>
                                 <td>{{ $student->dq_status ?? '-' }}</td>
                                 <td>{{ $student->internship_status ?? '-' }}</td> -->
-                                <td class="text-center">
+                                <td>
                                     <!-- แสดงข้อมูลในคอลัมน์ 'สหกิจศึกษา/โปรเจค' -->
                                     @php
                                         $coopDocs = $student->documents->where('document_type', 'coop_project');
@@ -125,6 +127,9 @@
                                         <a href="#" onclick="showFilesModal('{{ $student->id }}', 'project')">โปรเจค</a>
                                     @endif
                                 </td>
+                                <td>ผ่าน</td>
+                                <td style="white-space: nowrap;">ไม่ผ่าน</td>
+                                <td>ผ่าน</td>
                             </tr>
                         @endforeach
                     </tbody>

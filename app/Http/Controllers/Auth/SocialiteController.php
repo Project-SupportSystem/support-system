@@ -28,7 +28,7 @@ class SocialiteController extends Controller
                 $role = 'student';
                 $redirectRoute = 'register_courses';
                 //$redirectRoute = 'table_report';
-            } elseif (str_ends_with($googleUser->email, '@gmail.com')) {
+            } elseif (str_ends_with($googleUser->email, '@gmail.com')) { //kku.ac.th หากใช้จริง
                 $role = 'advisor';
                 $redirectRoute = 'table_report';
             } else {
