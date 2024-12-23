@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -12,9 +12,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body>
+<body> <!-- Set the background color of the entire body to light beige -->
 
-    <div class="navbar d-flex justify-content-between align-items-center p-2 bg-light">
+<div class="navbar d-flex justify-content-between align-items-center p-2 bg-light">
         <div class="navbar-logo">
             <img src="{{ asset('img/KKU_Logo.png') }}" alt="โลโก้ระบบ" style="height: 50px;">
         </div>
@@ -51,8 +51,8 @@
         <a href="{{ route('student-profile') }}">ประวัตินักศึกษา</a>
     </div>
 
-    <div class="content">
-        <div class="container mt-5">
+        <!-- Content -->
+        <div class="content flex-grow-1 p-4" style="background-color: white; border-radius: 8px;">
             <h2 class="text-center">บันทึกข้อมูลนักศึกษา</h2>
 
             @if (session('success'))
@@ -63,7 +63,7 @@
 
             <form action="{{ route('student.update', $student->id ?? '') }}" method="POST" id="studentForm">
                 @csrf
-                @method('PUT') <!-- ใช้ PUT สำหรับการอัปเดตข้อมูล -->
+                @method('PUT')
 
                 <div class="mb-3">
                     <label for="student_id" class="form-label">รหัสนักศึกษา</label>
@@ -80,13 +80,13 @@
                 <div class="mb-3">
                     <label for="phone" class="form-label">เบอร์โทร</label>
                     <input type="text" class="form-control" id="phone" name="phone" 
-                           value="{{ old('phone', $student->phone ?? '') }}" readonly required >
+                           value="{{ old('phone', $student->phone ?? '') }}" readonly required>
                 </div>
 
                 <div class="mb-3">
                     <label for="school_location" class="form-label">จบการศึกษาจาก</label>
                     <input type="text" class="form-control" id="school_location" name="school_location" 
-                           value="{{ old('school_location', $student->school_location ?? '') }}" readonly required >
+                           value="{{ old('school_location', $student->school_location ?? '') }}" readonly required>
                 </div>
 
                 <div class="mb-3">
@@ -113,10 +113,7 @@
     <script>
         $(document).ready(function() {
             $('#editButton').click(function() {
-                // เปิดการแก้ไข
                 $('input, select').removeAttr('readonly').removeAttr('disabled');
-
-                // ซ่อนปุ่มแก้ไข และแสดงปุ่มบันทึก
                 $(this).hide();
                 $('button[type=submit]').show();
             });
@@ -138,6 +135,5 @@
             });
         });
     </script>
-
 </body>
 </html>

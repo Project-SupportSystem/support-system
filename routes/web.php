@@ -18,9 +18,17 @@ Route::middleware(['auth', 'role:student'])->group(function () {
         return view('register_courses');
     })->name('register_courses');
 
+    // แสดงฟอร์มบันทึกข้อมูลนักศึกษา
     Route::get('/student-profile', [StudentController::class, 'create'])->name('student-profile');
+    
+    // บันทึกข้อมูลนักศึกษาใหม่
     Route::post('/student-profile', [StudentController::class, 'store'])->name('student.store');
-    Route::put('/student/{id}', [StudentController::class, 'update'])->name('student.update');
+    
+    // แสดงฟอร์มแก้ไขข้อมูลนักศึกษา
+    Route::get('/student-profile/edit/{id}', [StudentController::class, 'edit'])->name('student.edit');
+    
+    // อัปเดตข้อมูลนักศึกษา
+    Route::put('/student-profile/edit/{id}', [StudentController::class, 'update'])->name('student.update'); 
 
     // Route บันทึกผลการเรียน
     Route::get('/report', [ReportController::class, 'index'])->name('report');

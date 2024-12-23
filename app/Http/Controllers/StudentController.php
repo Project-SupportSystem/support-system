@@ -9,54 +9,72 @@ use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
 {
-    // แสดงฟอร์มกรอกข้อมูลนักศึกษา
+    // แสดงฟอร์มกรอกข้อมูลนักศึกษาหรือแก้ไขข้อมูล
     public function create()
     {
-        $advisors = Advisor::all(); // ดึงข้อมูลที่ปรึกษาเพื่อแสดงในฟอร์ม
-        $student = Student::where('user_id', Auth::id())->first(); // ดึงข้อมูลนักศึกษา
+        // ดึงข้อมูลที่ปรึกษา
+        $advisors = Advisor::all();
+
+        // ตรวจสอบว่ามีข้อมูลนักศึกษาหรือไม่
+        $student = Student::where('user_id', Auth::id())->first();
 
         return view('profile_report', compact('advisors', 'student'));
     }
 
-    // บันทึกข้อมูลนักศึกษาใหม่ลงในฐานข้อมูล
+    // บันทึกข้อมูลนักศึกษาใหม่
     public function store(Request $request)
     {
+        // ตรวจสอบความถูกต้องของข้อมูล
         $request->validate([
-            'student_id' => 'required|string|max:10|unique:students,id', // ตรวจสอบรหัสซ้ำ
+            'student_id' => 'required|string|max:10|unique:students,id',
             'first_name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:15',
             'school_location' => 'nullable|string|max:255',
             'advisor_id' => 'required|exists:advisors,id',
         ]);
 
-        // สร้างข้อมูลนักศึกษาใหม่
+        // บันทึกข้อมูลนักศึกษาใหม่
         Student::create([
-            'id' => $request->student_id, // ตั้งค่า id จาก student_id
-            'user_id' => Auth::id(), // ใช้ user_id ของผู้ใช้ปัจจุบัน
+            'id' => $request->student_id,
+            'user_id' => Auth::id(),
             'first_name' => $request->first_name,
             'phone' => $request->phone,
             'school_location' => $request->school_location,
             'advisor_id' => $request->advisor_id,
         ]);
 
-        return redirect()->route('student-profile')->with('success', 'บันทึกข้อมูลสำเร็จ');
+        // รีไดเรกต์ไปที่หน้าประวัติ
+        return redirect()->route('student-profile')->with('success', 'บันทึกข้อมูลนักศึกษาสำเร็จ');
     }
 
-    // ฟังก์ชันอัปเดตข้อมูลนักศึกษา
+    // แสดงฟอร์มแก้ไขข้อมูลนักศึกษา
+    public function edit($id)
+    {
+        // ค้นหานักศึกษาตาม ID
+        $student = Student::findOrFail($id);
+
+        // ดึงข้อมูลที่ปรึกษาทั้งหมด
+        $advisors = Advisor::all();
+
+        return view('profile_report', compact('student', 'advisors'));
+    }
+
+    // อัปเดตข้อมูลนักศึกษาที่มีอยู่
     public function update(Request $request, $id)
     {
-        $student = Student::findOrFail($id); // ค้นหานักศึกษาตาม ID ที่ส่งมา
+        // ค้นหานักศึกษาตาม ID
+        $student = Student::findOrFail($id);
 
-        // ตรวจสอบค่าที่กรอกมาให้ถูกต้อง
+        // ตรวจสอบความถูกต้องของข้อมูล
         $request->validate([
-            'student_id' => 'required|string|max:10|unique:students,id,' . $id, // ตรวจสอบว่ารหัสไม่ซ้ำกับนักศึกษาอื่น
+            'student_id' => 'required|string|max:10|unique:students,id,' . $id,
             'first_name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:15',
             'school_location' => 'nullable|string|max:255',
             'advisor_id' => 'required|exists:advisors,id',
         ]);
 
-        // อัปเดตข้อมูลนักศึกษา รวมถึง student_id
+        // อัปเดตข้อมูลนักศึกษา
         $student->update([
             'id' => $request->student_id,
             'first_name' => $request->first_name,
@@ -65,9 +83,9 @@ class StudentController extends Controller
             'advisor_id' => $request->advisor_id,
         ]);
 
-        return redirect()->back()->with('success', 'ข้อมูลนักศึกษาถูกอัปเดตเรียบร้อยแล้ว');
+        // รีไดเรกต์ไปที่หน้าประวัติ
+        return redirect()->route('student-profile')->with('success', 'ข้อมูลนักศึกษาถูกอัปเดตเรียบร้อยแล้ว');
     }
-
     public function showReport()
     {   
         // ดึงข้อมูลนักศึกษาทั้งหมดจากฐานข้อมูล
@@ -76,4 +94,5 @@ class StudentController extends Controller
         // ส่งข้อมูลไปยัง view 'table_report'
         return view('table_report', compact('students'));
     }
+
 }
