@@ -8,7 +8,6 @@ use App\Models\Document;
 use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
 
-
 class UploadDocController extends Controller
 {
     /**
@@ -16,7 +15,10 @@ class UploadDocController extends Controller
      */
     public function index()
     {
-        return view('uploaddoc');
+        $student = Auth::user()->student;
+        $documents = Document::where('student_id', $student->id)->get();
+
+        return view('uploaddoc', compact('documents', 'student'));
     }
 
     /**
@@ -24,13 +26,15 @@ class UploadDocController extends Controller
      */
     public function uploadDocument(Request $request)
     {
-        //dd($request->all());
+        // Validate input
         $request->validate([
-            'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,KKUDQ,KEPT,internship,transcript',  // ปรับรายการตามที่ต้องการ
-            'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',  // Validate file type and size
+            'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,KKUDQ,KEPT,internship,transcript,grade_proof',
+            'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'kept_status' => 'nullable|in:pass,fail',
+            'kkudq_status' => 'nullable|in:pass,fail',
         ]);
 
-        $student = Auth::user()->student->id;  // ดึงรหัสนักศึกษาจากผู้ใช้ที่เข้าสู่ระบบ
+        $student = Auth::user()->student->id;
 
         $documentTypeMapping = [
             'สหกิจศึกษา' => 'coop_project',
@@ -38,16 +42,17 @@ class UploadDocController extends Controller
             'KKUDQ' => 'kku_dq',
             'KEPT' => 'kku_kept',
             'internship' => 'internship',
-            'transcript' => 'transcript'
+            'transcript' => 'transcript',
+            'grade_proof' => 'grade_proof',
         ];
 
-        // วนลูปไฟล์และบันทึกข้อมูลทีละรายการ
+        // Handle file upload
         foreach ($request->titles as $index => $documentTitle) {
             if (!isset($documentTypeMapping[$documentTitle])) {
-                continue; // ข้ามกรณีที่ไม่มีการแมพ
+                continue; // Skip invalid titles
             }
             $documentType = $documentTypeMapping[$documentTitle];
-    
+
             $filesArray = $request->allFiles();
             if (isset($filesArray['files'][$index])) {
                 foreach ($filesArray['files'][$index] as $file) {
@@ -57,21 +62,30 @@ class UploadDocController extends Controller
                         'document_type' => $documentType,
                         'file_path' => $filePath,
                         'upload_date' => now(),
+                        'status' => $documentType === 'kku_dq' || $documentType === 'kku_kept' ? $request->get("{$documentType}_status") : null,
                     ]);
                 }
             }
         }
+
         return redirect()->back()->with('success', 'เอกสารถูกอัปโหลดสำเร็จแล้ว');
     }
+
+    /**
+     * Retrieve student documents based on type.
+     */
     public function getStudentDocuments($studentId, $docType)
     {
-        $documents = Document::where('student_id', $studentId)->where('document_type', $docType)->get(['file_path', 'id']);
+        $documents = Document::where('student_id', $studentId)
+            ->where('document_type', $docType)
+            ->get(['file_path', 'id', 'status']);
 
         return response()->json([
             'documents' => $documents->map(function ($doc) {
                 return [
                     'file_path' => Storage::url($doc->file_path),
                     'file_name' => basename($doc->file_path),
+                    'status' => $doc->status,
                 ];
             })
         ]);
