@@ -10,13 +10,11 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-    <!-- Include SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body style="background-color: #fff;"> <!-- Set the background color of the entire body to white -->
+<body> <!-- Set the background color of the entire body to light beige -->
 
-    <!-- Navbar -->
-    <div class="navbar d-flex justify-content-between align-items-center p-2 bg-light"> <!-- Set navbar background to light -->
+<div class="navbar d-flex justify-content-between align-items-center p-2 bg-light">
         <div class="navbar-logo">
             <img src="{{ asset('img/KKU_Logo.png') }}" alt="โลโก้ระบบ" style="height: 50px;">
         </div>
@@ -47,16 +45,14 @@
         </div>
     </div>
 
-    <!-- Sidebar -->
-    <div class="d-flex">
-        <div class="sidebar p-3" style="background-color: white; width: 250px;"> <!-- Set sidebar background to white -->
-            <a href="{{ route('report') }}" class="d-block py-2 text-dark">รายงานผลการศึกษา</a>
-            <a href="{{ route('upload.document') }}" class="d-block py-2 text-dark">อัปโหลดเอกสาร</a>
-            <a href="{{ route('student-profile') }}" class="d-block py-2 text-dark">ประวัตินักศึกษา</a>
-        </div>
+    <div class="sidebar">
+        <a href="{{ route('report') }}">รายงานผลการศึกษา</a>
+        <a href="{{ route('upload.document') }}">อัปโหลดเอกสาร</a>
+        <a href="{{ route('student-profile') }}">ประวัตินักศึกษา</a>
+    </div>
 
         <!-- Content -->
-        <div class="content flex-grow-1 p-4" style="background-color: white; border-radius: 8px;"> <!-- Set content background to white -->
+        <div class="content flex-grow-1 p-4" style="background-color: white; border-radius: 8px;">
             <h2 class="text-center">บันทึกข้อมูลนักศึกษา</h2>
 
             @if (session('success'))
