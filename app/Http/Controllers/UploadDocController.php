@@ -11,81 +11,87 @@ use Illuminate\Support\Facades\Auth;
 class UploadDocController extends Controller
 {
     /**
-     * Show the document upload form.
+     * แสดงฟอร์มการอัปโหลดเอกสาร
      */
     public function index()
     {
-        $student = Auth::user()->student;
-        $documents = Document::where('student_id', $student->id)->get();
-
-        return view('uploaddoc', compact('documents', 'student'));
+        return view('uploaddoc');
     }
 
     /**
-     * Handle the document upload and store data in the database.
+     * จัดการการอัปโหลดเอกสารและบันทึกข้อมูลในฐานข้อมูล
      */
     public function uploadDocument(Request $request)
     {
-        // Validate input
-        $request->validate([
-            'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,KKUDQ,KEPT,internship,transcript,grade_proof',
-            'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'kept_status' => 'nullable|in:pass,fail',
-            'kkudq_status' => 'nullable|in:pass,fail',
-        ]);
+        try {
+            // Validate ข้อมูลจากฟอร์ม
+            $request->validate([
+                'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,KKUDQ,KEPT,internship,transcript', // ปรับรายการตามที่ต้องการ
+                'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048', // ตรวจสอบไฟล์ประเภทและขนาด
+            ]);
 
-        $student = Auth::user()->student->id;
+            // ดึงรหัสนักศึกษาจากผู้ใช้ที่เข้าสู่ระบบ
+            $studentId = Auth::user()->student->id;
 
-        $documentTypeMapping = [
-            'สหกิจศึกษา' => 'coop_project',
-            'โปรเจค' => 'project',
-            'KKUDQ' => 'kku_dq',
-            'KEPT' => 'kku_kept',
-            'internship' => 'internship',
-            'transcript' => 'transcript',
-            'grade_proof' => 'grade_proof',
-        ];
+            // การแมพประเภทเอกสาร
+            $documentTypeMapping = [
+                'สหกิจศึกษา' => 'coop_project',
+                'โปรเจค' => 'project',
+                'KKUDQ' => 'kku_dq',
+                'KEPT' => 'kku_kept',
+                'internship' => 'internship',
+                'transcript' => 'transcript'
+            ];
 
-        // Handle file upload
-        foreach ($request->titles as $index => $documentTitle) {
-            if (!isset($documentTypeMapping[$documentTitle])) {
-                continue; // Skip invalid titles
-            }
-            $documentType = $documentTypeMapping[$documentTitle];
+            // วนลูปไฟล์และบันทึกข้อมูลทีละรายการ
+            foreach ($request->titles as $index => $documentTitle) {
+                if (!isset($documentTypeMapping[$documentTitle])) {
+                    continue; // ข้ามกรณีที่ไม่มีการแมพ
+                }
+                $documentType = $documentTypeMapping[$documentTitle];
 
-            $filesArray = $request->allFiles();
-            if (isset($filesArray['files'][$index])) {
-                foreach ($filesArray['files'][$index] as $file) {
-                    $filePath = $file->store('documents', 'public');
-                    Document::create([
-                        'student_id' => $student,
-                        'document_type' => $documentType,
-                        'file_path' => $filePath,
-                        'upload_date' => now(),
-                        'status' => $documentType === 'kku_dq' || $documentType === 'kku_kept' ? $request->get("{$documentType}_status") : null,
-                    ]);
+                // ดึงข้อมูลไฟล์จากฟอร์ม
+                $filesArray = $request->allFiles();
+                if (isset($filesArray['files'][$index])) {
+                    foreach ($filesArray['files'][$index] as $file) {
+                        // อัปโหลดไฟล์ไปยัง Storage
+                        $filePath = $file->store('documents', 'public');
+
+                        // บันทึกข้อมูลในฐานข้อมูล
+                        Document::create([
+                            'student_id' => $studentId,
+                            'document_type' => $documentType,
+                            'file_path' => $filePath,
+                            'upload_date' => now(),
+                        ]);
+                    }
                 }
             }
-        }
 
-        return redirect()->back()->with('success', 'เอกสารถูกอัปโหลดสำเร็จแล้ว');
+            // รีไดเรคกลับไปยังหน้าก่อนหน้านี้พร้อมกับข้อความสำเร็จ
+            return redirect()->back()->with('success', 'เอกสารถูกอัปโหลดสำเร็จแล้ว');
+        } catch (\Exception $e) {
+            // รีไดเรคกลับไปยังหน้าก่อนหน้านี้พร้อมกับข้อความข้อผิดพลาด
+            return redirect()->back()->with('error', 'การอัปโหลดล้มเหลว: ' . $e->getMessage());
+        }
     }
 
     /**
-     * Retrieve student documents based on type.
+     * ดึงข้อมูลเอกสารของนักศึกษา
      */
     public function getStudentDocuments($studentId, $docType)
     {
+        // ค้นหาเอกสารในฐานข้อมูลตามรหัสนักศึกษาและประเภทเอกสาร
         $documents = Document::where('student_id', $studentId)
-            ->where('document_type', $docType)
-            ->get(['file_path', 'id', 'status']);
+                              ->where('document_type', $docType)
+                              ->get(['file_path', 'id']);
 
+        // ส่งข้อมูลกลับในรูปแบบ JSON
         return response()->json([
             'documents' => $documents->map(function ($doc) {
                 return [
                     'file_path' => Storage::url($doc->file_path),
                     'file_name' => basename($doc->file_path),
-                    'status' => $doc->status,
                 ];
             })
         ]);

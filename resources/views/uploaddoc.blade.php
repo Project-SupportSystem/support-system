@@ -37,7 +37,7 @@
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
-                    <a class="dropdown-item" href="{{ route('logout') }}">Log Out</a>
+                    <a class="dropdown-item" href="{{ route('logout') }}">ออกจากระบบ</a>
                 </li>
             </ul>
         </div>
@@ -51,68 +51,91 @@
 
     <div class="content">
         <div class="container mt-5">
-            <h2 class="text-center">อัปโหลดเอกสาร</h2>
+            <h2 class="text-center mb-4">อัปโหลดเอกสาร</h2>
+
+            <!-- Success Message (แจ้งเตือนข้อความสำเร็จ) -->
+            @if(session('success'))
+                <div class="alert alert-success">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             <form action="{{ route('upload.doc') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
                 @csrf
 
-                <!-- Form 1: สหกิจศึกษา / โปรเจค -->
-                <div class="mb-4">
-                    <label class="form-label">สหกิจศึกษา / โปรเจค</label>
-                    <select name="titles[]" class="form-select mb-2" id="coopProjectSelect">
-                        <option value="" selected>-- เลือกแผนการที่จะไป --</option>
-                        <option value="สหกิจศึกษา">สหกิจศึกษา</option>
-                        <option value="โปรเจค">โปรเจค</option>
-                    </select>
-                    <p id="coopProjectInfo" class="text-muted"></p>
-                    <input type="file" name="files[0][]" id="coopProjectUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple onchange="addFiles(this, 'fileList0')" style="display: none;">
-                    <div id="fileList0" class="mt-2"></div>
-                </div>
-
-                <!-- Form 2: KKUDQ -->
-                <div class="mb-4">
-                    <label class="form-label">KKUDQ</label>
-                    <div>
-                        <input type="radio" name="kkudq_status" value="pass" id="kkudqPass" onclick="toggleUpload('kkudqUpload', true)">
-                        <label for="kkudqPass">ผ่าน</label>
-                        <input type="radio" name="kkudq_status" value="fail" id="kkudqFail" onclick="toggleUpload('kkudqUpload', false)">
-                        <label for="kkudqFail">ไม่ผ่าน</label>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">สหกิจศึกษา / โปรเจค</h5>
                     </div>
-                    <input type="file" name="files[1][]" id="kkudqUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple disabled onchange="addFiles(this, 'fileList1')">
-                    <div id="fileList1" class="mt-2"></div>
-                </div>
-
-                <!-- Form 3: KKU KEPT -->
-                <div class="mb-4">
-                    <label class="form-label">KKU KEPT</label>
-                    <div>
-                        <input type="radio" name="kept_status" value="pass" id="keptPass" onclick="toggleUpload('keptUpload', true)">
-                        <label for="keptPass">ผ่าน</label>
-                        <input type="radio" name="kept_status" value="fail" id="keptFail" onclick="toggleUpload('keptUpload', false)">
-                        <label for="keptFail">ไม่ผ่าน</label>
+                    <div class="card-body">
+                        <select name="titles[]" class="form-select mb-2" id="coopProjectSelect">
+                            <option value="" selected>-- เลือกแผนการที่จะไป --</option>
+                            <option value="สหกิจศึกษา">สหกิจศึกษา</option>
+                            <option value="โปรเจค">โปรเจค</option>
+                        </select>
+                        <p id="coopProjectInfo" class="text-muted"></p>
+                        <input type="file" name="files[0][]" id="coopProjectUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple onchange="addFiles(this, 'fileList0')" style="display: none;">
+                        <div id="fileList0" class="mt-2"></div>
                     </div>
-                    <input type="file" name="files[2][]" id="keptUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple disabled onchange="addFiles(this, 'fileList2')">
-                    <div id="fileList2" class="mt-2"></div>
                 </div>
 
-                <!-- Form 4: ฝึกงาน -->
-                <div class="mb-4">
-                    <label class="form-label">ฝึกงาน</label>
-                    <p class="text-muted">1). ไฟล์ประกอบด้วยเอกสารบันทึกและแบบประเมิน ให้รวมเป็นไฟล์เดียว <br>2). เอกสารแผนงานการฝึกงาน (ตัวเลือก)</p>
-                    <div>
-                        <input type="radio" name="internship_status" value="pass" id="internshipPass" onclick="toggleUpload('internshipUpload', true)">
-                        <label for="internshipPass">ผ่าน</label>
-                        <input type="radio" name="internship_status" value="fail" id="internshipFail" onclick="toggleUpload('internshipUpload', false)">
-                        <label for="internshipFail">ไม่ผ่าน</label>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">KKUDQ</h5>
                     </div>
-                    <input type="file" name="files[3][]" id="internshipUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple disabled onchange="addFiles(this, 'fileList3')">
-                    <div id="fileList3" class="mt-2"></div>
+                    <div class="card-body">
+                        <div>
+                            <input type="radio" name="kkudq_status" value="pass" id="kkudqPass" onclick="toggleUpload('kkudqUpload', true)">
+                            <label for="kkudqPass">ผ่าน</label>
+                            <input type="radio" name="kkudq_status" value="fail" id="kkudqFail" onclick="toggleUpload('kkudqUpload', false)">
+                            <label for="kkudqFail">ไม่ผ่าน</label>
+                        </div>
+                        <input type="file" name="files[1][]" id="kkudqUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple disabled onchange="addFiles(this, 'fileList1')">
+                        <div id="fileList1" class="mt-2"></div>
+                    </div>
                 </div>
 
-                <!-- Form 5: ผลการศึกษา -->
-                <div class="mb-4">
-                    <label class="form-label">ผลการศึกษา</label>
-                    <input type="file" name="files[4][]" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple onchange="addFiles(this, 'fileList4')">
-                    <div id="fileList4" class="mt-2"></div>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">KKU KEPT</h5>
+                    </div>
+                    <div class="card-body">
+                        <div>
+                            <input type="radio" name="kept_status" value="pass" id="keptPass" onclick="toggleUpload('keptUpload', true)">
+                            <label for="keptPass">ผ่าน</label>
+                            <input type="radio" name="kept_status" value="fail" id="keptFail" onclick="toggleUpload('keptUpload', false)">
+                            <label for="keptFail">ไม่ผ่าน</label>
+                        </div>
+                        <input type="file" name="files[2][]" id="keptUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple disabled onchange="addFiles(this, 'fileList2')">
+                        <div id="fileList2" class="mt-2"></div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">ฝึกงาน</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">1). ไฟล์ประกอบด้วยเอกสารบันทึกและแบบประเมิน ให้รวมเป็นไฟล์เดียว <br>2). เอกสารแผนงานการฝึกงาน (ตัวเลือก)</p>
+                        <div>
+                            <input type="radio" name="internship_status" value="pass" id="internshipPass" onclick="toggleUpload('internshipUpload', true)">
+                            <label for="internshipPass">ผ่าน</label>
+                            <input type="radio" name="internship_status" value="fail" id="internshipFail" onclick="toggleUpload('internshipUpload', false)">
+                            <label for="internshipFail">ไม่ผ่าน</label>
+                        </div>
+                        <input type="file" name="files[3][]" id="internshipUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple disabled onchange="addFiles(this, 'fileList3')">
+                        <div id="fileList3" class="mt-2"></div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title">ผลการศึกษา</h5>
+                    </div>
+                    <div class="card-body">
+                        <input type="file" name="files[4][]" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple onchange="addFiles(this, 'fileList4')">
+                        <div id="fileList4" class="mt-2"></div>
+                    </div>
                 </div>
 
                 <div class="text-end">
@@ -130,7 +153,7 @@
             const coopProjectInfo = document.getElementById("coopProjectInfo");
             const uploadInput = document.getElementById("coopProjectUpload");
             const fileList = document.getElementById("fileList0");
-            
+
             if (selectedOption === "") {
                 uploadInput.style.display = "none";
                 uploadInput.value = "";
@@ -144,7 +167,7 @@
                 uploadInput.style.display = "block";
                 coopProjectInfo.textContent = selectedOption === "สหกิจศึกษา"
                     ? "ไฟล์ประกอบด้วย 1. ใบสมัครออกฝึกปฏิบัติงานรายวิชาสหกิจศึกษา 2. ประวัติย่อ (Resume) 3. ใบรายงานผลการศึกษาฉบับจริง 1 ฉบับ 4. สำเนาบัตรประจำตัวประชาชน นศ. หรือสำเนาบัตรนักศึกษา (รับรองสำเนาถูกต้อง) 1 ฉบับ 5. หนังสือยินยอมจากผู้ปกครอง 6. สำเนาบัตรประชาชนของผู้ปกครอง (ผู้ปกครองลงชื่อและรับรองสํานําถูกต้อง) 1 ฉบับ โดยให้รวมเป็นไฟล์เดียว"
-                    : "ไฟล์ประกอบด้วย 1. รายละเอียดโครงการ โปรเจค ...";
+                    : "ไฟล์ประกอบด้วย 1. รายละเอียดโครงการ ชื่อโครงการหรือชื่อโปรเจค วัตถุประสงค์ของโครงการ  ...";
             }
             currentSelection = selectedOption;
         });
@@ -167,7 +190,7 @@
                 link.href = URL.createObjectURL(file);
                 link.target = "_blank";
                 link.textContent = file.name;
-                link.className = "me-2";
+                link.className = "me-2";    
                 fileWrapper.appendChild(link);
 
                 const removeIcon = document.createElement("span");

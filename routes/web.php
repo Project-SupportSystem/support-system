@@ -42,7 +42,8 @@ Route::middleware(['auth', 'role:student'])->group(function () {
     })->name('upload.document');
 
     Route::get('/upload-doc', [UploadDocController::class, 'index'])->name('upload.doc');
-    Route::post('/upload-doc', [UploadDocController::class, 'uploadDocument'])->name('upload.doc.store');
+    Route::post('/upload-doc', [UploadDocController::class, 'uploadDocument'])->name('upload.doc');
+    ///Route::post('/upload-doc', [UploadDocController::class, 'uploadDocument'])->name('upload.doc.store');
     Route::get('/get-student-documents/{studentId}/{docType}', [UploadDocController::class, 'getStudentDocuments']);
 
     // Route สำหรับบันทึกวิชาใหม่และ autocomplete
