@@ -3,77 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>เข้าสู่ระบบ</title>
     <!-- Import Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* ปรับสีพื้นหลังและจัดตำแหน่งเนื้อหากลางหน้า */
+        /* ปรับพื้นหลังและฟอนต์ */
         body, html {
             height: 100%;
             margin: 0;
-            background-color: #f5f5f5; /* สีเทาอ่อน */
             display: flex;
             justify-content: center;
             align-items: center;
+            background-color: #fef7ec; /* สีพื้นหลังโทนเบจอ่อน */
             font-family: 'Arial', sans-serif;
         }
 
-        .container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .card {
+        .login-container {
+            background-color: #fff7f0; /* สีขาวผสมส้มอ่อน */
+            border: 1px solid #e0d8cc;
+            border-radius: 10px;
             width: 100%;
             max-width: 400px;
             padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            background-color: #ffffff; /* สีขาวเพื่อความคมชัด */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            text-align: center;
         }
 
-        .card-title {
-            font-size: 1.75rem;
+        .login-container h2 {
+            font-size: 1.6rem;
             font-weight: bold;
-            color: #333;
+            color: #a15f3e; /* สีน้ำตาล */
+            margin-bottom: 1.5rem;
         }
 
-        .btn-google {
-            background-color: #db4437; /* สีแดงของ Google */
-            color: #fff;
+        .btn-login {
+            background-color: #f36d21; /* สีส้ม KKU */
+            color: #ffffff;
             font-weight: bold;
+            border: none;
             width: 100%;
             padding: 0.75rem;
             border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: background-color 0.3s ease;
         }
 
-        .btn-google:hover {
-            background-color: #c23321; /* สีแดงเข้มขึ้นเมื่อ hover */
+        .btn-login:hover {
+            background-color: #d85b1b; /* สีส้มเข้ม */
         }
 
-        p {
-            color: #666;
+        .btn-login img {
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        .privacy-links {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #8d6e63; /* สีน้ำตาลอ่อน */
+        }
+
+        .privacy-links a {
+            color: #a15f3e; /* สีน้ำตาล */
+            text-decoration: none;
+        }
+
+        .privacy-links a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 576px) {
+            .login-container {
+                padding: 1.5rem;
+            }
+
+            .login-container h2 {
+                font-size: 1.4rem;
+            }
+
+            .btn-login {
+                font-size: 0.9rem;
+                padding: 0.6rem;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body, html {
+                background-color: #1e1e1e;
+                color: #ffffff;
+            }
+
+            .login-container {
+                background-color: #2c2c2c;
+                border-color: #444444;
+            }
+
+            .privacy-links a {
+                color: #f36d21;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- กล่องสำหรับฟอร์ม login -->
-        <div class="card text-center">
-            <div class="card-body">
-                <h2 class="card-title">ระบบสนับสนุนหลักสูตร</h2>
-                <p class="mt-3">เข้าสู่ระบบด้วย Google KKU Account</p>
-                <a href="{{ url('auth/google') }}" class="btn btn-google">
-                    Login with Google
-                </a>
-            </div>
+    <div class="login-container">
+        <h2>เข้าสู่ระบบ</h2>
+        <p>กรุณาเข้าสู่ระบบด้วย KKU Account ของคุณ</p>
+        <a href="{{ url('auth/google') }}" class="btn btn-login mb-3">
+            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google Icon">
+            Login with Google
+        </a>
+
+        <div class="mt-3">
+            <a href="https://password.kku.ac.th/" class="text-muted" style="font-size: 0.85rem;">ลืมรหัสผ่าน? ติดต่อฝ่ายสนับสนุน</a>
+        </div>
+
+        <div class="privacy-links">
+            <p>
+                <a href="https://pdp.kku.ac.th/policy/680656708694016000" target="_blank">นโยบายคุ้มครองข้อมูลส่วนบุคคล</a><br>
+                <a href="https://pdp.kku.ac.th/policy/891598222989471744" target="_blank">ประกาศการคุ้มครองข้อมูลส่วนบุคคล</a>
+            </p>
         </div>
     </div>
 
     <!-- Import Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const loginButton = document.querySelector('.btn-login');
+        loginButton.addEventListener('click', () => {
+            loginButton.innerHTML = 'กำลังเข้าสู่ระบบ...';
+            loginButton.disabled = true;
+        });
+    </script>
 </body>
 </html>
