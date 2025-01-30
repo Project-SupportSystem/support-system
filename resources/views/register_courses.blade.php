@@ -44,7 +44,7 @@
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
-                        <a class="dropdown-item" href="{{ route('logout') }}">Log Out</a>
+                        <a class="dropdown-item" href="{{ route('logout') }}">ออกจากระบบ</a>
                     </li>
                 @else
                     <li>
