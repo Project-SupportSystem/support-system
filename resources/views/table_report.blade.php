@@ -70,11 +70,11 @@
                 <select class="form-select" id="filter-select" onchange="filterTable()">
                     <option value="all">ทั้งหมด</option>
                     <option value="grade">เกรดเฉลี่ย</option>
-                    <option value="kept">KEPT Exits</option>
-                    <option value="dq">DQ</option>
+                    <option value="kept">KKU KEPT</option>
+                    <option value="dq">KKU DQ</option>
                     <option value="internship">ฝึกงาน</option>
-                    <option value="internship">สหกิจศึกษา</option>
-                    <option value="internship">โปรเจค</option>
+                    <option value="coop">สหกิจศึกษา</option>
+                    <option value="project">โปรเจค</option>
                 </select>
             </div>
 
@@ -83,16 +83,16 @@
                 <table class="table table-bordered">
                     <thead class="table-light text-center">
                         <tr>
-                            <th style="vertical-align: top; white-space: nowrap;">ลำดับ</th>
-                            <th style="vertical-align: top; white-space: nowrap;">รหัสนักศึกษา</th>
-                            <th style="vertical-align: top; white-space: nowrap;">ชื่อนามสกุล</th>
-                            <th style="vertical-align: top; white-space: nowrap;">สาขา</th>
-                            <th style="vertical-align: top; white-space: nowrap;">เกรดเฉลี่ย</th>
-                            <th style="vertical-align: top; white-space: nowrap;">สหกิจศึกษา/โปรเจค</th>
-                            <th style="vertical-align: top; white-space: nowrap;">KEPT Exits</th>
-                            <th style="vertical-align: top; white-space: nowrap;">DQ</th>
-                            <th style="vertical-align: top; white-space: nowrap;">ฝึกงาน</th>
-
+                            <th>ลำดับ</th>
+                            <th>รหัสนักศึกษา</th>
+                            <th>ชื่อนามสกุล</th>
+                            <th>สาขา</th>
+                            <th>เกรดเฉลี่ย</th>
+                            <th>สหกิจศึกษา</th>
+                            <th>โปรเจค</th>
+                            <th>KEPT Exits</th>
+                            <th>DQ</th>
+                            <th>ฝึกงาน</th>
                         </tr>
                     </thead>
                     <tbody id="student-table">
@@ -100,43 +100,36 @@
                             <tr class="text-center">
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $student->id }}</td>
-                                <td style="white-space: nowrap;">{{ $student->first_name }}</td>
-                                <td style="white-space: nowrap;">   วิทยาการคอมพิวเตอร์และสารสนเทศ วิชาเอก วิทยาการคอมพิวเตอร์และสารสนเทศ</td>
+                                <td>{{ $student->first_name }}</td>
+                                <td>วิทยาการคอมพิวเตอร์และสารสนเทศ</td>
                                 <td>{{ $student->calculateGPA() ? number_format($student->calculateGPA(), 2) : '-' }}</td>
-                                <!-- <td>{{ $student->faculty ?? 'ไม่ระบุ' }}</td> -->
-                                <!-- <td>{{ $student->kept_status ?? '-' }}</td>
-                                <td>{{ $student->dq_status ?? '-' }}</td>
-                                <td>{{ $student->internship_status ?? '-' }}</td> -->
+                                
+                                <!-- แยกสหกิจศึกษา -->
                                 <td>
-                                    <!-- แสดงข้อมูลในคอลัมน์ 'สหกิจศึกษา/โปรเจค' -->
-                                    @php
-                                        $coopDocs = $student->documents->where('document_type', 'coop_project');
-                                        $projectDocs = $student->documents->where('document_type', 'project');
-                                    @endphp
-
-                                    <!-- ตรวจสอบข้อมูลประเภทสหกิจศึกษา -->
-                                    @if ($coopDocs->isNotEmpty())
-                                        <a href="#" onclick="showFilesModal('{{ $student->id }}', 'coop_project')">สหกิจศึกษา</a>
-                                    @endif
-
-                                    <!-- ตรวจสอบข้อมูลประเภทโปรเจค -->
-                                    @if ($projectDocs->isNotEmpty())
-                                        @if ($coopDocs->isNotEmpty())
-                                            | <!-- แยกด้วยเครื่องหมายขีด -->
-                                        @endif
-                                        <a href="#" onclick="showFilesModal('{{ $student->id }}', 'project')">โปรเจค</a>
+                                    @if($student->documents->where('document_type', 'coop_project')->isNotEmpty())
+                                        <a href="#" onclick="showFilesModal('{{ $student->id }}', 'coop_project')">ดูเอกสาร</a>
+                                    @else
+                                        -
                                     @endif
                                 </td>
+                                
+                                <!-- แยกโปรเจค -->
+                                <td>
+                                    @if($student->documents->where('document_type', 'project')->isNotEmpty())
+                                        <a href="#" onclick="showFilesModal('{{ $student->id }}', 'project')">ดูเอกสาร</a>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+
                                 <td>ผ่าน</td>
-                                <td style="white-space: nowrap;">ไม่ผ่าน</td>
+                                <td>ไม่ผ่าน</td>
                                 <td>ผ่าน</td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
 
     <!-- Modal สำหรับแสดงไฟล์เอกสาร -->
     <div class="modal fade" id="filesModal" tabindex="-1" aria-labelledby="filesModalLabel" aria-hidden="true">
@@ -194,32 +187,38 @@
         }
 
         function filterTable() {
-            var filter = document.getElementById("filter-select").value;
-            var table = document.getElementById("student-table");
-            var tr = table.getElementsByTagName("tr");
+        var filter = document.getElementById("filter-select").value;
+        var table = document.getElementById("student-table");
+        var tr = table.getElementsByTagName("tr");
 
-            for (var i = 0; i < tr.length; i++) {
-                var tdGrade = tr[i].getElementsByTagName("td")[4];
-                var tdKept = tr[i].getElementsByTagName("td")[5];
-                var tdDQ = tr[i].getElementsByTagName("td")[6];
-                var tdInternship = tr[i].getElementsByTagName("td")[7];
+        for (var i = 0; i < tr.length; i++) {
+            var tdGrade = tr[i].getElementsByTagName("td")[4];
+            var tdCoop = tr[i].getElementsByTagName("td")[5];
+            var tdProject = tr[i].getElementsByTagName("td")[6];
+            var tdKept = tr[i].getElementsByTagName("td")[7];
+            var tdDQ = tr[i].getElementsByTagName("td")[8];
+            var tdInternship = tr[i].getElementsByTagName("td")[9];
 
-                if (filter === "all") {
-                    tr[i].style.display = "";
-                } else if (filter === "grade" && tdGrade && tdGrade.textContent !== "") {
-                    tr[i].style.display = "";
-                } else if (filter === "kept" && tdKept && tdKept.textContent === "ผ่าน") {
-                    tr[i].style.display = "";
-                } else if (filter === "dq" && tdDQ && tdDQ.textContent === "ผ่าน") {
-                    tr[i].style.display = "";
-                } else if (filter === "internship" && tdInternship && tdInternship.textContent === "ผ่าน") {
-                    tr[i].style.display = "";
-                } else {
-                    tr[i].style.display = "none";
-                }
+            if (filter === "all") {
+                tr[i].style.display = "";
+            } else if (filter === "grade" && tdGrade && tdGrade.textContent !== "-") {
+                tr[i].style.display = "";
+            } else if (filter === "kept" && tdKept && tdKept.textContent === "ผ่าน") {
+                tr[i].style.display = "";
+            } else if (filter === "dq" && tdDQ && tdDQ.textContent === "ผ่าน") {
+                tr[i].style.display = "";
+            } else if (filter === "internship" && tdInternship && tdInternship.textContent === "ผ่าน") {
+                tr[i].style.display = "";
+            } else if (filter === "coop" && tdCoop && tdCoop.textContent.includes("ดูเอกสาร")) {
+                tr[i].style.display = "";
+            } else if (filter === "project" && tdProject && tdProject.textContent.includes("ดูเอกสาร")) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
             }
         }
-    </script>
+    }
+</script>
 
 </body>
 </html>

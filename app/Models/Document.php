@@ -14,6 +14,8 @@ class Document extends Model
         'document_type',
         'file_path',
         'upload_date',
+        'original_file_name',
+        
     ];
 
     public function student()

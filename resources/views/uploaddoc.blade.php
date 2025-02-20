@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>อัปโหลดเอกสาร</title>
 
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 
@@ -16,29 +17,16 @@
         <div class="navbar-logo">
             <img src="{{ asset('img/KKU_Logo.png') }}" alt="โลโก้ระบบ" style="height: 50px;">
         </div>
-
         <div class="dropdown">
             <a class="btn btn-light dropdown-toggle" href="#" role="button" id="userDropdown" 
                data-bs-toggle="dropdown" aria-expanded="false">
-                <img src="{{ asset('img/user-icon.png') }}" alt="User Icon" 
-                     style="width: 30px; height: 30px; border-radius: 50%;">
+                <img src="{{ asset('img/user-icon.png') }}" alt="User Icon" style="width: 30px; height: 30px; border-radius: 50%;">
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                <li>
-                    <a class="dropdown-item" href="#">
-                        {{ Auth::user()->username ?? 'ไม่พบข้อมูลผู้ใช้' }} 
-                        ({{ Auth::user()->role ?? 'ไม่มีสิทธิ์' }})
-                    </a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="#">
-                        รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}
-                    </a>
-                </li>
+                <li><a class="dropdown-item" href="#">{{ Auth::user()->username ?? 'ไม่พบข้อมูลผู้ใช้' }} ({{ Auth::user()->role ?? 'ไม่มีสิทธิ์' }})</a></li>
+                <li><a class="dropdown-item" href="#">รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li>
-                    <a class="dropdown-item" href="{{ route('logout') }}">ออกจากระบบ</a>
-                </li>
+                <li><a class="dropdown-item" href="{{ route('logout') }}">ออกจากระบบ</a></li>
             </ul>
         </div>
     </div>
@@ -53,16 +41,19 @@
         <div class="container mt-5">
             <h2 class="text-center mb-4">อัปโหลดเอกสาร</h2>
 
-            <!-- Success Message (แจ้งเตือนข้อความสำเร็จ) -->
+            <!-- Success/Error Message -->
             @if(session('success'))
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
+                <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
+            @if(session('error'))
+                <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
 
+            <!-- ฟอร์มการอัปโหลด -->
             <form action="{{ route('upload.doc') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
                 @csrf
 
+                <!-- ฟอร์ม สหกิจศึกษา / โปรเจค -->
                 <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="card-title">สหกิจศึกษา / โปรเจค</h5>
@@ -73,68 +64,53 @@
                             <option value="สหกิจศึกษา">สหกิจศึกษา</option>
                             <option value="โปรเจค">โปรเจค</option>
                         </select>
+                        @error('titles.0')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
                         <p id="coopProjectInfo" class="text-muted"></p>
-                        <input type="file" name="files[0][]" id="coopProjectUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple onchange="addFiles(this, 'fileList0')" style="display: none;">
+                        <input type="file" name="files[0][]" id="coopProjectUpload" class="form-control" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="addFiles(this, 'fileList0')" style="display: none;">
+                        @error('files.0.*')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
                         <div id="fileList0" class="mt-2"></div>
                     </div>
                 </div>
 
+                <!-- ฟอร์ม KKUDQ -->
                 <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="card-title">KKUDQ</h5>
                     </div>
                     <div class="card-body">
+                        <input type="hidden" name="titles[]" value="KKUDQ">
                         <div>
-                            <input type="radio" name="kkudq_status" value="pass" id="kkudqPass" onclick="toggleUpload('kkudqUpload', true)">
+                            <input type="radio" name="kkudq_status" value="pass" id="kkudqPass">
                             <label for="kkudqPass">ผ่าน</label>
-                            <input type="radio" name="kkudq_status" value="fail" id="kkudqFail" onclick="toggleUpload('kkudqUpload', false)">
+                            <input type="radio" name="kkudq_status" value="fail" id="kkudqFail">
                             <label for="kkudqFail">ไม่ผ่าน</label>
                         </div>
-                        <input type="file" name="files[1][]" id="kkudqUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple disabled onchange="addFiles(this, 'fileList1')">
-                        <div id="fileList1" class="mt-2"></div>
+                        @error('kkudq_status')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
                     </div>
                 </div>
 
+                <!-- ฟอร์ม KKU KEPT -->
                 <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="card-title">KKU KEPT</h5>
                     </div>
                     <div class="card-body">
+                        <input type="hidden" name="titles[]" value="KKU KEPT">
                         <div>
-                            <input type="radio" name="kept_status" value="pass" id="keptPass" onclick="toggleUpload('keptUpload', true)">
+                            <input type="radio" name="kept_status" value="pass" id="keptPass">
                             <label for="keptPass">ผ่าน</label>
-                            <input type="radio" name="kept_status" value="fail" id="keptFail" onclick="toggleUpload('keptUpload', false)">
+                            <input type="radio" name="kept_status" value="fail" id="keptFail">
                             <label for="keptFail">ไม่ผ่าน</label>
                         </div>
-                        <input type="file" name="files[2][]" id="keptUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple disabled onchange="addFiles(this, 'fileList2')">
-                        <div id="fileList2" class="mt-2"></div>
-                    </div>
-                </div>
-
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="card-title">ฝึกงาน</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted">1). ไฟล์ประกอบด้วยเอกสารบันทึกและแบบประเมิน ให้รวมเป็นไฟล์เดียว <br>2). เอกสารแผนงานการฝึกงาน (ตัวเลือก)</p>
-                        <div>
-                            <input type="radio" name="internship_status" value="pass" id="internshipPass" onclick="toggleUpload('internshipUpload', true)">
-                            <label for="internshipPass">ผ่าน</label>
-                            <input type="radio" name="internship_status" value="fail" id="internshipFail" onclick="toggleUpload('internshipUpload', false)">
-                            <label for="internshipFail">ไม่ผ่าน</label>
-                        </div>
-                        <input type="file" name="files[3][]" id="internshipUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple disabled onchange="addFiles(this, 'fileList3')">
-                        <div id="fileList3" class="mt-2"></div>
-                    </div>
-                </div>
-
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="card-title">ผลการศึกษา</h5>
-                    </div>
-                    <div class="card-body">
-                        <input type="file" name="files[4][]" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple onchange="addFiles(this, 'fileList4')">
-                        <div id="fileList4" class="mt-2"></div>
+                        @error('kept_status')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
                     </div>
                 </div>
 
@@ -142,6 +118,28 @@
                     <button type="submit" class="btn btn-primary">อัปโหลด</button>
                 </div>
             </form>
+
+            <!-- แสดงไฟล์ที่อัปโหลดแล้ว -->
+            <div class="card mt-5">
+                <div class="card-header">
+                    <h5 class="card-title">ไฟล์ที่อัปโหลดแล้ว</h5>
+                </div>
+                <div class="card-body">
+                    @if($documents->isEmpty())
+                        <p class="text-muted">ยังไม่มีเอกสารที่อัปโหลด</p>
+                    @else
+                        <ul class="list-group">
+                            @foreach ($documents as $document)
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <strong>{{ $document->title }}</strong>: 
+                                    <a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $document->original_file_name ?? 'ไฟล์' }}</a>
+                                    <a href="{{ route('document.delete', $document->id) }}" class="text-danger" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 
@@ -166,23 +164,15 @@
                 }
                 uploadInput.style.display = "block";
                 coopProjectInfo.textContent = selectedOption === "สหกิจศึกษา"
-                    ? "ไฟล์ประกอบด้วย 1. ใบสมัครออกฝึกปฏิบัติงานรายวิชาสหกิจศึกษา 2. ประวัติย่อ (Resume) 3. ใบรายงานผลการศึกษาฉบับจริง 1 ฉบับ 4. สำเนาบัตรประจำตัวประชาชน นศ. หรือสำเนาบัตรนักศึกษา (รับรองสำเนาถูกต้อง) 1 ฉบับ 5. หนังสือยินยอมจากผู้ปกครอง 6. สำเนาบัตรประชาชนของผู้ปกครอง (ผู้ปกครองลงชื่อและรับรองสํานําถูกต้อง) 1 ฉบับ โดยให้รวมเป็นไฟล์เดียว"
-                    : "ไฟล์ประกอบด้วย 1. รายละเอียดโครงการ ชื่อโครงการหรือชื่อโปรเจค วัตถุประสงค์ของโครงการ  ...";
+                    ? "ไฟล์ประกอบด้วย 1. ใบสมัครออกฝึกปฏิบัติงานรายวิชาสหกิจศึกษา 2. ประวัติย่อ (Resume) ..."
+                    : "ไฟล์ประกอบด้วย 1. รายละเอียดโครงการ ชื่อโครงการหรือชื่อโปรเจค ...";
             }
             currentSelection = selectedOption;
         });
 
-        function toggleUpload(inputId, enable) {
-            const fileInput = document.getElementById(inputId);
-            fileInput.disabled = !enable;
-            if (!enable) {
-                fileInput.value = "";
-                document.getElementById('fileList' + inputId[inputId.length - 1]).innerHTML = "";
-            }
-        }
-
         function addFiles(input, fileListId) {
             const fileList = document.getElementById(fileListId);
+            fileList.innerHTML = ""; // ล้างรายการเก่า
             Array.from(input.files).forEach(file => {
                 const fileWrapper = document.createElement("div");
                 fileWrapper.classList.add("d-flex", "align-items-center", "mb-1");
@@ -190,11 +180,11 @@
                 link.href = URL.createObjectURL(file);
                 link.target = "_blank";
                 link.textContent = file.name;
-                link.className = "me-2";    
+                link.className = "me-2";
                 fileWrapper.appendChild(link);
 
                 const removeIcon = document.createElement("span");
-                removeIcon.innerHTML = "&times;";
+                removeIcon.innerHTML = "×";
                 removeIcon.classList.add("text-danger", "cursor-pointer");
                 removeIcon.onclick = () => fileWrapper.remove();
                 fileWrapper.appendChild(removeIcon);

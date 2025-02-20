@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Document;
-use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
 
 class UploadDocController extends Controller
@@ -15,7 +14,19 @@ class UploadDocController extends Controller
      */
     public function index()
     {
-        return view('uploaddoc');
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'กรุณาล็อกอินก่อน');
+        }
+
+        $user = Auth::user();
+        if (is_null($user->student)) {
+            return redirect()->back()->with('error', 'ไม่พบข้อมูลนักศึกษาที่เชื่อมโยงกับบัญชีนี้');
+        }
+
+        $studentId = $user->student->id;
+        $documents = Document::where('student_id', $studentId)->get();
+
+        return view('uploaddoc', compact('documents'));
     }
 
     /**
@@ -24,76 +35,76 @@ class UploadDocController extends Controller
     public function uploadDocument(Request $request)
     {
         try {
-            // Validate ข้อมูลจากฟอร์ม
+            $user = Auth::user();
+            if (is_null($user->student)) {
+                return redirect()->back()->with('error', 'ไม่พบข้อมูลนักศึกษาที่เชื่อมโยงกับบัญชีนี้');
+            }
+
+            $studentId = $user->student->id;
+
+            // Validation
             $request->validate([
-                'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,KKUDQ,KEPT,internship,transcript', // ปรับรายการตามที่ต้องการ
-                'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048', // ตรวจสอบไฟล์ประเภทและขนาด
+                'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,KKUDQ,KKU KEPT',
+                'files.0.*' => 'required_if:titles.0,สหกิจศึกษา,โปรเจค|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                'kkudq_status' => 'required_if:titles.1,KKUDQ|in:pass,fail',
+                'kept_status' => 'required_if:titles.2,KKU KEPT|in:pass,fail',
+            ], [
+                'titles.*.required' => 'กรุณาเลือกประเภทเอกสาร',
+                'files.0.*.required_if' => 'กรุณาอัปโหลดไฟล์สำหรับสหกิจศึกษา/โปรเจค',
+                'kkudq_status.required_if' => 'กรุณาระบุสถานะ KKUDQ',
+                'kept_status.required_if' => 'กรุณาระบุสถานะ KKU KEPT',
             ]);
 
-            // ดึงรหัสนักศึกษาจากผู้ใช้ที่เข้าสู่ระบบ
-            $studentId = Auth::user()->student->id;
-
-            // การแมพประเภทเอกสาร
-            $documentTypeMapping = [
-                'สหกิจศึกษา' => 'coop_project',
-                'โปรเจค' => 'project',
-                'KKUDQ' => 'kku_dq',
-                'KEPT' => 'kku_kept',
-                'internship' => 'internship',
-                'transcript' => 'transcript'
-            ];
-
-            // วนลูปไฟล์และบันทึกข้อมูลทีละรายการ
-            foreach ($request->titles as $index => $documentTitle) {
-                if (!isset($documentTypeMapping[$documentTitle])) {
-                    continue; // ข้ามกรณีที่ไม่มีการแมพ
-                }
-                $documentType = $documentTypeMapping[$documentTitle];
-
-                // ดึงข้อมูลไฟล์จากฟอร์ม
-                $filesArray = $request->allFiles();
-                if (isset($filesArray['files'][$index])) {
-                    foreach ($filesArray['files'][$index] as $file) {
-                        // อัปโหลดไฟล์ไปยัง Storage
-                        $filePath = $file->store('documents', 'public');
-
-                        // บันทึกข้อมูลในฐานข้อมูล
-                        Document::create([
-                            'student_id' => $studentId,
-                            'document_type' => $documentType,
-                            'file_path' => $filePath,
-                            'upload_date' => now(),
-                        ]);
+            // บันทึกข้อมูลเอกสาร
+            foreach ($request->titles as $index => $title) {
+                if ($title === 'สหกิจศึกษา' || $title === 'โปรเจค') {
+                    if ($request->hasFile("files.0")) {
+                        foreach ($request->file("files.0") as $file) {
+                            $filePath = $file->store('documents', 'public');
+                            Document::create([
+                                'student_id' => $studentId,
+                                'title' => $title,
+                                'file_path' => $filePath,
+                                'original_file_name' => $file->getClientOriginalName(),
+                            ]);
+                        }
                     }
+                } elseif ($title === 'KKUDQ') {
+                    Document::create([
+                        'student_id' => $studentId,
+                        'title' => $title,
+                        'status' => $request->kkudq_status,
+                    ]);
+                } elseif ($title === 'KKU KEPT') {
+                    Document::create([
+                        'student_id' => $studentId,
+                        'title' => $title,
+                        'status' => $request->kept_status,
+                    ]);
                 }
             }
 
-            // รีไดเรคกลับไปยังหน้าก่อนหน้านี้พร้อมกับข้อความสำเร็จ
-            return redirect()->back()->with('success', 'เอกสารถูกอัปโหลดสำเร็จแล้ว');
+            return redirect()->back()->with('success', 'อัปโหลดเอกสารสำเร็จ');
         } catch (\Exception $e) {
-            // รีไดเรคกลับไปยังหน้าก่อนหน้านี้พร้อมกับข้อความข้อผิดพลาด
-            return redirect()->back()->with('error', 'การอัปโหลดล้มเหลว: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage())->withInput();
         }
     }
 
     /**
-     * ดึงข้อมูลเอกสารของนักศึกษา
+     * ลบเอกสาร
      */
-    public function getStudentDocuments($studentId, $docType)
+    public function deleteDocument($id)
     {
-        // ค้นหาเอกสารในฐานข้อมูลตามรหัสนักศึกษาและประเภทเอกสาร
-        $documents = Document::where('student_id', $studentId)
-                              ->where('document_type', $docType)
-                              ->get(['file_path', 'id']);
+        $document = Document::findOrFail($id);
+        if ($document->student_id !== Auth::user()->student->id) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์ลบเอกสารนี้');
+        }
 
-        // ส่งข้อมูลกลับในรูปแบบ JSON
-        return response()->json([
-            'documents' => $documents->map(function ($doc) {
-                return [
-                    'file_path' => Storage::url($doc->file_path),
-                    'file_name' => basename($doc->file_path),
-                ];
-            })
-        ]);
+        if ($document->file_path) {
+            Storage::disk('public')->delete($document->file_path);
+        }
+        $document->delete();
+
+        return redirect()->back()->with('success', 'ลบเอกสารสำเร็จ');
     }
 }

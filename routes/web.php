@@ -18,17 +18,17 @@ Route::middleware(['auth', 'role:student'])->group(function () {
         return view('register_courses');
     })->name('register_courses');
 
-    // แสดงฟอร์มบันทึกข้อมูลนักศึกษา
+        // หน้าแสดงฟอร์มกรอกข้อมูลนักศึกษา
     Route::get('/student-profile', [StudentController::class, 'create'])->name('student-profile');
-    
-    // บันทึกข้อมูลนักศึกษาใหม่
+
+        // บันทึกข้อมูลนักศึกษาใหม่
     Route::post('/student-profile', [StudentController::class, 'store'])->name('student.store');
-    
-    // แสดงฟอร์มแก้ไขข้อมูลนักศึกษา
+
+        // แสดงฟอร์มแก้ไขข้อมูลนักศึกษา
     Route::get('/student-profile/edit/{id}', [StudentController::class, 'edit'])->name('student.edit');
-    
-    // อัปเดตข้อมูลนักศึกษา
-    Route::put('/student-profile/edit/{id}', [StudentController::class, 'update'])->name('student.update'); 
+
+        // อัปเดตข้อมูลนักศึกษาด้วย PUT (สำหรับใช้ในฟอร์ม)
+    Route::put('/student/update/{id}', [StudentController::class, 'update'])->name('student.update');
 
     // Route บันทึกผลการเรียน
     Route::get('/report', [ReportController::class, 'index'])->name('report');
@@ -40,6 +40,13 @@ Route::middleware(['auth', 'role:student'])->group(function () {
     Route::get('/upload-documents', function () {
         return view('uploaddoc');
     })->name('upload.document');
+
+    Route::get('/upload-document', [UploadDocController::class, 'index'])->name('upload.document');
+    Route::post('/upload-document', [UploadDocController::class, 'uploadDocument'])->name('upload.doc');
+    Route::get('/document/delete/{id}', [UploadDocController::class, 'deleteDocument'])->name('document.delete');
+
+
+
 
     Route::get('/upload-doc', [UploadDocController::class, 'index'])->name('upload.doc');
     Route::post('/upload-doc', [UploadDocController::class, 'uploadDocument'])->name('upload.doc');
@@ -91,6 +98,3 @@ Route::get('/auth/google/call-back', [SocialiteController::class, 'handleGoogleC
 
 // Route Logout
 Route::get('/logout', [SocialiteController::class, 'logout'])->name('logout');
-
-
-
