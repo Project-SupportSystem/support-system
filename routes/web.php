@@ -43,7 +43,7 @@ Route::middleware(['auth', 'role:student'])->group(function () {
 
     Route::get('/upload-document', [UploadDocController::class, 'index'])->name('upload.document');
     Route::post('/upload-document', [UploadDocController::class, 'uploadDocument'])->name('upload.doc');
-    Route::get('/document/delete/{id}', [UploadDocController::class, 'deleteDocument'])->name('document.delete');
+    Route::get('/delete-document/{documentId}', [UploadDocController::class, 'deleteDocument'])->name('document.delete');
 
 
 

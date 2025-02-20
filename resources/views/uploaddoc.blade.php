@@ -20,8 +20,7 @@
         <div class="dropdown">
             <a class="btn btn-light dropdown-toggle" href="#" role="button" id="userDropdown" 
                data-bs-toggle="dropdown" aria-expanded="false">
-                <img src="{{ asset('img/user-icon.png') }}" alt="User Icon" style="width: 30px; height: 30px; border-radius: 50%;">
-            </a>
+                <img src="{{ asset('img/user-icon.png') }}" alt="User Icon" style="width: 30px; height: 30px; border-radius: 50%;"></a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                 <li><a class="dropdown-item" href="#">{{ Auth::user()->username ?? 'ไม่พบข้อมูลผู้ใช้' }} ({{ Auth::user()->role ?? 'ไม่มีสิทธิ์' }})</a></li>
                 <li><a class="dropdown-item" href="#">รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}</a></li>
@@ -41,12 +40,9 @@
         <div class="container mt-5">
             <h2 class="text-center mb-4">อัปโหลดเอกสาร</h2>
 
-            <!-- Success/Error Message -->
+            <!-- Success Message -->
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-            @if(session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
 
             <!-- ฟอร์มการอัปโหลด -->
@@ -64,14 +60,8 @@
                             <option value="สหกิจศึกษา">สหกิจศึกษา</option>
                             <option value="โปรเจค">โปรเจค</option>
                         </select>
-                        @error('titles.0')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
                         <p id="coopProjectInfo" class="text-muted"></p>
-                        <input type="file" name="files[0][]" id="coopProjectUpload" class="form-control" accept=".pdf,.jpg,.jpeg,.png" multiple onchange="addFiles(this, 'fileList0')" style="display: none;">
-                        @error('files.0.*')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
+                        <input type="file" name="files[0][]" id="coopProjectUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple onchange="addFiles(this, 'fileList0')" style="display: none;">
                         <div id="fileList0" class="mt-2"></div>
                     </div>
                 </div>
@@ -82,16 +72,12 @@
                         <h5 class="card-title">KKUDQ</h5>
                     </div>
                     <div class="card-body">
-                        <input type="hidden" name="titles[]" value="KKUDQ">
                         <div>
                             <input type="radio" name="kkudq_status" value="pass" id="kkudqPass">
                             <label for="kkudqPass">ผ่าน</label>
                             <input type="radio" name="kkudq_status" value="fail" id="kkudqFail">
                             <label for="kkudqFail">ไม่ผ่าน</label>
                         </div>
-                        @error('kkudq_status')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
                     </div>
                 </div>
 
@@ -101,16 +87,12 @@
                         <h5 class="card-title">KKU KEPT</h5>
                     </div>
                     <div class="card-body">
-                        <input type="hidden" name="titles[]" value="KKU KEPT">
                         <div>
                             <input type="radio" name="kept_status" value="pass" id="keptPass">
                             <label for="keptPass">ผ่าน</label>
                             <input type="radio" name="kept_status" value="fail" id="keptFail">
                             <label for="keptFail">ไม่ผ่าน</label>
                         </div>
-                        @error('kept_status')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
                     </div>
                 </div>
 
@@ -125,19 +107,32 @@
                     <h5 class="card-title">ไฟล์ที่อัปโหลดแล้ว</h5>
                 </div>
                 <div class="card-body">
-                    @if($documents->isEmpty())
-                        <p class="text-muted">ยังไม่มีเอกสารที่อัปโหลด</p>
-                    @else
-                        <ul class="list-group">
-                            @foreach ($documents as $document)
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <strong>{{ $document->title }}</strong>: 
-                                    <a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $document->original_file_name ?? 'ไฟล์' }}</a>
-                                    <a href="{{ route('document.delete', $document->id) }}" class="text-danger" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @endif
+                    <ul class="list-group">
+                        @foreach ($documents as $document)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <!-- แสดงประเภทเอกสาร -->
+                                @php
+                                    $documentType = '';
+                                    if ($document->document_type == 'coop_project') {
+                                        $documentType = 'สหกิจศึกษา';
+                                    } elseif ($document->document_type == 'project') {
+                                        $documentType = 'โปรเจค';
+                                    } elseif ($document->document_type == 'kku_dq') {
+                                        $documentType = 'KKUDQ';
+                                    } elseif ($document->document_type == 'kku_kept') {
+                                        $documentType = 'KKU KEPT';
+                                    } else {
+                                        $documentType = ucfirst($document->document_type); // สำหรับประเภทเอกสารอื่นๆ
+                                    }
+                                @endphp
+
+                                <strong>{{ $documentType }}</strong>: 
+                                <!-- แสดงชื่อไฟล์ที่ถูกอัปโหลด -->
+                                <a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $document->original_file_name ?? 'File' }}</a>
+                                <a href="{{ route('document.delete', $document->id) }}" class="text-danger" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
             </div>
         </div>
@@ -170,21 +165,29 @@
             currentSelection = selectedOption;
         });
 
+        function toggleUpload(inputId, enable) {
+            const fileInput = document.getElementById(inputId);
+            fileInput.disabled = !enable;
+            if (!enable) {
+                fileInput.value = "";
+                document.getElementById('fileList' + inputId[inputId.length - 1]).innerHTML = "";
+            }
+        }
+
         function addFiles(input, fileListId) {
             const fileList = document.getElementById(fileListId);
-            fileList.innerHTML = ""; // ล้างรายการเก่า
             Array.from(input.files).forEach(file => {
                 const fileWrapper = document.createElement("div");
                 fileWrapper.classList.add("d-flex", "align-items-center", "mb-1");
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(file);
-                link.target = "_blank";
+                link.target = "_blank"; 
                 link.textContent = file.name;
-                link.className = "me-2";
+                link.className = "me-2";    
                 fileWrapper.appendChild(link);
 
                 const removeIcon = document.createElement("span");
-                removeIcon.innerHTML = "×";
+                removeIcon.innerHTML = "&times;";
                 removeIcon.classList.add("text-danger", "cursor-pointer");
                 removeIcon.onclick = () => fileWrapper.remove();
                 fileWrapper.appendChild(removeIcon);
