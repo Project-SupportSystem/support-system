@@ -90,8 +90,8 @@
                             <th>เกรดเฉลี่ย</th>
                             <th>สหกิจศึกษา</th>
                             <th>โปรเจค</th>
-                            <th>KEPT Exits</th>
-                            <th>DQ</th>
+                            <th>KKU KEPTs</th>
+                            <th>KKUDQ</th>
                             <th>ฝึกงาน</th>
                         </tr>
                     </thead>

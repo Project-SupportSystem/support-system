@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Document;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class UploadDocController extends Controller
 {
@@ -44,10 +45,17 @@ class UploadDocController extends Controller
                 $filesArray = $request->allFiles();
                 if (isset($filesArray['files'][$index])) {
                     foreach ($filesArray['files'][$index] as $file) {
-                        $filePath = $file->store('documents', 'public');
-                        // เก็บชื่อไฟล์จริงใน session หรือ array เพื่อส่งไปยัง Blade
+                        // เก็บชื่อไฟล์จริงก่อน
                         $originalFileName = $file->getClientOriginalName();
 
+                        // สร้างชื่อไฟล์ใหม่ที่ปลอดภัย (ใช้ตัวอักษรภาษาอังกฤษและตัวเลข)
+                        $extension = $file->getClientOriginalExtension();
+                        $safeFileName = Str::random(32) . '.' . $extension; // เช่น "abc123xyz.pdf"
+
+                        // บันทึกไฟล์ด้วยชื่อที่ปลอดภัย
+                        $filePath = $file->storeAs('documents', $safeFileName, 'public');
+
+                        // บันทึกข้อมูลในฐานข้อมูล
                         $document = Document::create([
                             'student_id' => $studentId,
                             'document_type' => $documentType,
@@ -55,7 +63,7 @@ class UploadDocController extends Controller
                             'upload_date' => now(),
                         ]);
 
-                        // เก็บชื่อไฟล์จริงใน session หรือ array (ในที่นี้ใช้ session)
+                        // เก็บชื่อไฟล์จริงใน session
                         $uploadedFiles = session('uploaded_files', []);
                         $uploadedFiles[$document->id] = $originalFileName;
                         session(['uploaded_files' => $uploadedFiles]);
@@ -84,5 +92,24 @@ class UploadDocController extends Controller
             return redirect()->back()->with('success', 'เอกสารถูกลบเรียบร้อยแล้ว');
         }
         return redirect()->back()->with('error', 'ไม่พบเอกสารที่ต้องการลบ');
+    }
+
+    public function getStudentDocuments($studentId, $docType)
+    {
+        $documents = Document::where('student_id', $studentId)
+                              ->where('document_type', $docType)
+                              ->get(['file_path', 'id']);
+
+        // ดึงชื่อไฟล์จาก session
+        $uploadedFiles = session('uploaded_files', []);
+
+        return response()->json([
+            'documents' => $documents->map(function ($doc) use ($uploadedFiles) {
+                return [
+                    'file_path' => Storage::url($doc->file_path),
+                    'file_name' => $uploadedFiles[$doc->id] ?? basename($doc->file_path),
+                ];
+            })
+        ]);
     }
 }
