@@ -43,20 +43,10 @@ class ReportController extends Controller
 
             $student = Student::where('id', Auth::user()->student->id)->firstOrFail();
 
-            // ตรวจสอบวิชาซ้ำในภาคการศึกษา
             foreach ($request->id as $index => $courseId) {
                 $course = Course::where('id', $courseId)->firstOrFail();
 
-                $existingRecord = AcademicRecord::where([
-                    'student_id' => $student->id,
-                    'course_id' => $course->id,
-                    'semester' => $request->semester
-                ])->first();
-
-                if ($existingRecord) {
-                    throw new \Exception("วิชา {$courseId} มีการลงทะเบียนในภาคการศึกษา {$request->semester} แล้ว");
-                }
-
+                // ลบการตรวจสอบวิชาซ้ำ เพื่อให้สามารถลงซ้ำได้
                 $grade = $request->grade[$index];
 
                 AcademicRecord::create([
