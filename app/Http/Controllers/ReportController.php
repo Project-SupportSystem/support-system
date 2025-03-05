@@ -42,11 +42,33 @@ class ReportController extends Controller
             DB::beginTransaction();
 
             $student = Student::where('id', Auth::user()->student->id)->firstOrFail();
+            $existingCourses = AcademicRecord::where('student_id', $student->id)
+                ->where('semester', $request->semester)
+                ->pluck('course_id')
+                ->toArray();
+
+            // คำนวณหน่วยกิตรวมที่มีอยู่แล้วใน semester นี้
+            $existingCredits = AcademicRecord::where('student_id', $student->id)
+                ->where('semester', $request->semester)
+                ->join('courses', 'academic_records.course_id', '=', 'courses.id')
+                ->sum('courses.total_credits');
+
+            $newCredits = 0;
+            foreach ($request->id as $courseId) {
+                $course = Course::where('id', $courseId)->firstOrFail();
+                $newCredits += $course->total_credits;
+            }
+
+            if ($existingCredits + $newCredits > 22) {
+                throw new \Exception("หน่วยกิตรวม ($existingCredits + $newCredits) เกิน 22 หน่วยกิต");
+            }
 
             foreach ($request->id as $index => $courseId) {
-                $course = Course::where('id', $courseId)->firstOrFail();
+                if (in_array($courseId, $existingCourses)) {
+                    throw new \Exception("วิชารหัส $courseId มีอยู่ในระบบแล้วในภาคการศึกษา " . $request->semester);
+                }
 
-                // ลบการตรวจสอบวิชาซ้ำ เพื่อให้สามารถลงซ้ำได้
+                $course = Course::where('id', $courseId)->firstOrFail();
                 $grade = $request->grade[$index];
 
                 AcademicRecord::create([
@@ -56,6 +78,8 @@ class ReportController extends Controller
                     'grade' => $this->convertGPAtoGrade($grade),
                     'gpa' => $grade
                 ]);
+
+                $existingCourses[] = $courseId;
             }
 
             DB::commit();

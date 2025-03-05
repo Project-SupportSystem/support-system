@@ -26,10 +26,28 @@
         .grade-details-tab {
             margin-top: 30px;
         }
+        .section-title {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
         .semester-select-container {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .semester-select-container label {
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+        .semester-select-container select {
+            width: 150px;
         }
     </style>
 </head>
@@ -82,13 +100,6 @@
         <div class="container mt-5">
             <h2 class="text-center mb-4">กรอกผลการศึกษา</h2>
 
-            <div class="d-flex justify-content-between mb-3">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCourseModal">
-                    เพิ่มวิชาใหม่
-                </button>
-                <button type="button" class="btn btn-secondary" id="refreshCourses">รีเฟรชรายการวิชา</button>
-            </div>
-
             @if (session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
@@ -96,35 +107,48 @@
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
 
+            @auth
+                <p>ยินดีต้อนรับ, {{ Auth::user()->username }}</p>
+                <p>รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}</p>
+            @else
+                <p>กรุณาเข้าสู่ระบบก่อนทำการบันทึกผลการเรียน</p>
+            @endauth
+
+            <!-- Section for Adding New Courses -->
+            <div class="section-title">เพิ่มรายวิชาใหม่</div>
+            <div class="d-flex justify-content-between mb-3">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCourseModal">
+                    เพิ่มวิชาใหม่
+                </button>
+                <button type="button" class="btn btn-secondary" id="resetTable">รีเซ็ตตาราง</button>
+            </div>
+
+            <!-- Semester Selection (Moved Here) -->
+            @auth
+                <div class="semester-select-container">
+                    <div>
+                        <label for="semester_term" class="form-label">ภาคการศึกษา</label>
+                        <select class="form-control" name="semester_term" id="semester_term" required>
+                            <option value="">เลือกภาค</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="semester_year" class="form-label">ปีการศึกษา</label>
+                        <select class="form-control" name="semester_year" id="semester_year" required>
+                            <option value="">เลือกปี</option>
+                            @for ($year = 2565; $year <= 2570; $year++)
+                                <option value="{{ $year }}">{{ $year }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
+            @endauth
+
             <form id="reportForm" action="{{ route('report.submit') }}" method="POST">
                 @csrf
-
-                @auth
-                    <p>ยินดีต้อนรับ, {{ Auth::user()->username }}</p>
-                    <div class="mb-3 semester-select-container">
-                        <div>
-                            <label for="semester_term" class="form-label">ภาคการศึกษา</label>
-                            <select class="form-control" name="semester_term" id="semester_term" required>
-                                <option value="">เลือกภาค</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="semester_year" class="form-label">ปีการศึกษา</label>
-                            <select class="form-control" name="semester_year" id="semester_year" required>
-                                <option value="">เลือกปี</option>
-                                @for ($year = 2565; $year <= 2570; $year++)
-                                    <option value="{{ $year }}">{{ $year }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                    </div>
-                    <p>รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}</p>
-                    <input type="hidden" name="semester" id="semester">
-                @else
-                    <p>กรุณาเข้าสู่ระบบก่อนทำการบันทึกผลการเรียน</p>
-                @endauth
+                <input type="hidden" name="semester" id="semester_input">
 
                 <div class="table-responsive">
                     <table class="table table-bordered">
@@ -171,9 +195,9 @@
                 <button type="submit" class="btn btn-primary mt-3">บันทึกผลการเรียน</button>
             </form>
 
-            <!-- Grade Details Tabs -->
+            <!-- Section for Registered Courses -->
             <div class="grade-details-tab">
-                <h3 class="mt-5">รายละเอียดเกรด</h3>
+                <div class="section-title">รายวิชาที่ลงทะเบียนแล้ว</div>
                 <ul class="nav nav-tabs" id="gradeTabs" role="tablist">
                     @for ($year = 2565; $year <= 2570; $year++)
                         <li class="nav-item">
@@ -195,6 +219,7 @@
                                         <th>หน่วยกิต</th>
                                         <th>เกรด</th>
                                         <th>GPA</th>
+                                        <th>การดำเนินการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="grade-table-1-{{ $year }}"></tbody>
@@ -212,6 +237,7 @@
                                         <th>หน่วยกิต</th>
                                         <th>เกรด</th>
                                         <th>GPA</th>
+                                        <th>การดำเนินการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="grade-table-2-{{ $year }}"></tbody>
@@ -266,9 +292,12 @@
             const year = $('#semester_year').val();
             if (term && year) {
                 $('#semester').val(`${term}/${year}`);
-                loadAcademicRecords(`${term}/${year}`);
+                $('#semester_input').val(`${term}/${year}`);
+                // โหลดเฉพาะข้อมูลเก่าไปแสดงใน Grade Details Tabs
+                loadAcademicRecords(`${term}/${year}`, `#grade-table-${term}-${year}`, `#gpa-total-${term}-${year}`);
             } else {
                 $('#semester').val('');
+                $('#semester_input').val('');
                 $('#courses-table-body').empty();
                 addEmptyRow();
                 calculateGPA();
@@ -290,52 +319,26 @@
                         $.each(data, function (index, record) {
                             const row = `
                                 <tr data-record-id="${record.id}">
-                                    <td><input type="text" class="form-control course-id" name="id[]" value="${record.course.id}" readonly></td>
-                                    <td><input type="text" class="form-control" name="course_name[]" value="${record.course.course_name}" readonly></td>
-                                    <td><input type="number" class="form-control" name="total_credits[]" value="${record.course.total_credits}" readonly></td>
+                                    <td>${record.course.id}</td>
+                                    <td>${record.course.course_name}</td>
+                                    <td>${record.course.total_credits}</td>
+                                    <td>${record.grade}</td>
+                                    <td>${record.gpa}</td>
                                     <td>
-                                        <select class="form-control grade-select" name="grade[]" required>
-                                            <option value="">เลือกเกรด</option>
-                                            <option value="4.0" ${record.gpa == 4.0 ? 'selected' : ''}>A</option>
-                                            <option value="3.5" ${record.gpa == 3.5 ? 'selected' : ''}>B+</option>
-                                            <option value="3.0" ${record.gpa == 3.0 ? 'selected' : ''}>B</option>
-                                            <option value="2.5" ${record.gpa == 2.5 ? 'selected' : ''}>C+</option>
-                                            <option value="2.0" ${record.gpa == 2.0 ? 'selected' : ''}>C</option>
-                                            <option value="1.5" ${record.gpa == 1.5 ? 'selected' : ''}>D+</option>
-                                            <option value="1.0" ${record.gpa == 1.0 ? 'selected' : ''}>D</option>
-                                            <option value="0.0" ${record.gpa == 0.0 ? 'selected' : ''}>F</option>
-                                        </select>
+                                        <button type="button" class="btn btn-warning btn-edit-course">แก้ไข</button>
+                                        <button type="button" class="btn btn-danger btn-remove-course">ลบ</button>
                                     </td>
-                                    <td>
-                                        ${targetTable === '#courses-table-body' ? `
-                                            <button type="button" class="btn btn-warning btn-edit-course">แก้ไข</button>
-                                            <button type="button" class="btn btn-danger btn-remove-course">ลบ</button>
-                                            <button type="button" class="btn btn-success btn-add-course">+</button>
-                                        ` : `
-                                            <span>${record.grade}</span>
-                                        `}
-                                    </td>
-                                    ${targetTable !== '#courses-table-body' ? `<td>${record.gpa}</td>` : ''}
                                 </tr>`;
                             tableBody.append(row);
                         });
-                    } else if (targetTable === '#courses-table-body') {
-                        addEmptyRow();
                     } else {
-                        tableBody.append('<tr><td colspan="5" class="text-center">ไม่มีข้อมูล</td></tr>');
-                    }
-                    if (targetTable === '#courses-table-body') {
-                        setupAutocomplete();
+                        tableBody.append('<tr><td colspan="6" class="text-center">ไม่มีข้อมูล</td></tr>');
                     }
                     calculateGPA(targetTable, targetGpa);
                 },
                 error: function (xhr) {
                     Swal.fire('ผิดพลาด!', 'ไม่สามารถดึงข้อมูลผลการเรียนได้: ' + (xhr.responseJSON?.message || 'เกิดข้อผิดพลาด'), 'error');
-                    if (targetTable === '#courses-table-body') {
-                        addEmptyRow();
-                    } else {
-                        tableBody.append('<tr><td colspan="5" class="text-center">ไม่มีข้อมูล</td></tr>');
-                    }
+                    tableBody.append('<tr><td colspan="6" class="text-center">ไม่มีข้อมูล</td></tr>');
                 }
             });
         }
@@ -373,7 +376,6 @@
                 </tr>`;
             $('#courses-table-body').append(newRow);
             setupAutocomplete();
-            console.log('Added new row'); // เพิ่มการ debug
         }
 
         // ฟังก์ชัน Autocomplete สำหรับช่องรหัสวิชา
@@ -406,14 +408,14 @@
             });
         }
 
-        // ฟังก์ชันคำนวณ GPA รวม
+        // ฟังก์ชันคำนวณ GPA รวมและหน่วยกิตรวม
         function calculateGPA(targetTable = '#courses-table-body', targetGpa = '#gpa-total') {
             let totalCredits = 0;
             let totalWeightedGrades = 0;
 
             $(targetTable + ' tr').each(function () {
-                const credits = parseFloat($(this).find('input[name="total_credits[]"]').val()) || 0;
-                const grade = parseFloat($(this).find('select[name="grade[]"]').val()) || parseFloat($(this).find('td:last-child').prev().text()) || 0;
+                const credits = parseFloat($(this).find('input[name="total_credits[]"]').val()) || parseFloat($(this).find('td:nth-child(3)').text()) || 0;
+                const grade = parseFloat($(this).find('select[name="grade[]"]').val()) || parseFloat($(this).find('td:nth-child(5)').text()) || 0;
 
                 totalCredits += credits;
                 totalWeightedGrades += grade * credits;
@@ -421,6 +423,7 @@
 
             const gpa = totalCredits > 0 ? (totalWeightedGrades / totalCredits).toFixed(2) : '0.00';
             $(targetGpa).text(gpa);
+            return totalCredits;
         }
 
         // ฟังก์ชันแก้ไขข้อมูล
@@ -433,12 +436,35 @@
                 return;
             }
 
-            row.find('input[name="id[]"]').removeAttr('readonly');
-            row.find('input[name="course_name[]"]').val('');
-            row.find('input[name="total_credits[]"]').val('');
-            setupAutocomplete();
+            const courseId = row.find('td:first-child').text();
+            const courseName = row.find('td:nth-child(2)').text();
+            const credits = row.find('td:nth-child(3)').text();
+            const grade = row.find('td:nth-child(5)').text();
 
-            $(this).replaceWith('<button type="button" class="btn btn-success btn-save-course">บันทึก</button>');
+            row.html(`
+                <td><input type="text" class="form-control course-id" name="id[]" value="${courseId}" required maxlength="8"></td>
+                <td><input type="text" class="form-control" name="course_name[]" value="${courseName}" readonly></td>
+                <td><input type="number" class="form-control" name="total_credits[]" value="${credits}" readonly></td>
+                <td>
+                    <select class="form-control grade-select" name="grade[]" required>
+                        <option value="">เลือกเกรด</option>
+                        <option value="4.0" ${grade == 4.0 ? 'selected' : ''}>A</option>
+                        <option value="3.5" ${grade == 3.5 ? 'selected' : ''}>B+</option>
+                        <option value="3.0" ${grade == 3.0 ? 'selected' : ''}>B</option>
+                        <option value="2.5" ${grade == 2.5 ? 'selected' : ''}>C+</option>
+                        <option value="2.0" ${grade == 2.0 ? 'selected' : ''}>C</option>
+                        <option value="1.5" ${grade == 1.5 ? 'selected' : ''}>D+</option>
+                        <option value="1.0" ${grade == 1.0 ? 'selected' : ''}>D</option>
+                        <option value="0.0" ${grade == 0.0 ? 'selected' : ''}>F</option>
+                    </select>
+                </td>
+                <td>${grade}</td>
+                <td>
+                    <button type="button" class="btn btn-success btn-save-course">บันทึก</button>
+                    <button type="button" class="btn btn-danger btn-remove-course">ลบ</button>
+                </td>
+            `);
+            setupAutocomplete();
         });
 
         // ฟังก์ชันบันทึกการแก้ไข
@@ -464,11 +490,9 @@
                 success: function (response) {
                     if (response.success) {
                         Swal.fire('สำเร็จ!', response.message, 'success');
-                        row.find('input[name="id[]"]').attr('readonly', true);
-                        row.find('.btn-save-course').replaceWith('<button type="button" class="btn btn-warning btn-edit-course">แก้ไข</button>');
                         const semester = $('#semester').val();
                         if (semester) {
-                            loadAcademicRecords(semester);
+                            loadAcademicRecords(semester, `#grade-table-${semester.replace('/', '-')}`, `#gpa-total-${semester.replace('/', '-')}`);
                             @for ($year = 2565; $year <= 2570; $year++)
                                 loadAcademicRecords('1/{{ $year }}', '#grade-table-1-{{ $year }}', '#gpa-total-1-{{ $year }}');
                                 loadAcademicRecords('2/{{ $year }}', '#grade-table-2-{{ $year }}', '#gpa-total-2-{{ $year }}');
@@ -484,9 +508,13 @@
             });
         });
 
-        // ฟังก์ชันเพิ่มแถวใหม่
+        // ฟังก์ชันเพิ่มแถวใหม่ (จำกัดหน่วยกิต)
         $(document).on('click', '.btn-add-course', function () {
-            console.log('Add course button clicked'); // Debug
+            const currentCredits = calculateGPA();
+            if (currentCredits >= 22) {
+                Swal.fire('คำเตือน!', 'หน่วยกิตรวมเกิน 22 หน่วยกิตแล้ว ไม่สามารถเพิ่มวิชาได้', 'warning');
+                return;
+            }
             addEmptyRow();
         });
 
@@ -515,13 +543,10 @@
                             success: function (response) {
                                 if (response.success) {
                                     row.remove();
-                                    calculateGPA();
                                     Swal.fire('สำเร็จ!', response.message, 'success');
-                                    if ($('#courses-table-body tr').length === 0) {
-                                        addEmptyRow();
-                                    }
                                     const semester = $('#semester').val();
                                     if (semester) {
+                                        loadAcademicRecords(semester, `#grade-table-${semester.replace('/', '-')}`, `#gpa-total-${semester.replace('/', '-')}`);
                                         @for ($year = 2565; $year <= 2570; $year++)
                                             loadAcademicRecords('1/{{ $year }}', '#grade-table-1-{{ $year }}', '#gpa-total-1-{{ $year }}');
                                             loadAcademicRecords('2/{{ $year }}', '#grade-table-2-{{ $year }}', '#gpa-total-2-{{ $year }}');
@@ -551,14 +576,11 @@
             calculateGPA();
         });
 
-        // รีเฟรชรายการวิชา
-        $('#refreshCourses').on('click', function () {
-            const semester = $('#semester').val();
-            if (semester) {
-                loadAcademicRecords(semester);
-            } else {
-                Swal.fire('คำเตือน!', 'กรุณาเลือกภาคการศึกษาและปีการศึกษาก่อน', 'warning');
-            }
+        // รีเซ็ตตาราง
+        $('#resetTable').on('click', function () {
+            $('#courses-table-body').empty();
+            addEmptyRow();
+            calculateGPA();
         });
 
         // เพิ่มวิชาใหม่ใน Modal
@@ -599,14 +621,42 @@
             });
         });
 
-        // เพิ่มการยืนยันเมื่อบันทึกผลการเรียน
+        // เพิ่มการยืนยันเมื่อบันทึกผลการเรียน (ตรวจสอบวิชาซ้ำและหน่วยกิต)
         $('#reportForm').on('submit', function(e) {
             e.preventDefault();
-            const semester = $('#semester').val();
+            const semester = $('#semester_input').val();
             if (!semester) {
                 Swal.fire('คำเตือน!', 'กรุณาเลือกภาคการศึกษาและปีการศึกษาก่อน', 'warning');
                 return;
             }
+
+            // ตรวจสอบวิชาซ้ำในตารางเพิ่มวิชาใหม่
+            const courseIds = [];
+            let hasDuplicate = false;
+            const totalCredits = calculateGPA();
+
+            $('#courses-table-body tr').each(function() {
+                const courseId = $(this).find('input[name="id[]"]').val();
+                if (courseId) {
+                    if (courseIds.includes(courseId)) {
+                        hasDuplicate = true;
+                        return false;
+                    }
+                    courseIds.push(courseId);
+                }
+            });
+
+            if (hasDuplicate) {
+                Swal.fire('คำเตือน!', 'มีวิชาที่ซ้ำกันในรายการเพิ่มวิชาใหม่ กรุณาตรวจสอบ', 'warning');
+                return;
+            }
+
+            // ตรวจสอบหน่วยกิต
+            if (totalCredits > 22) {
+                Swal.fire('คำเตือน!', 'หน่วยกิตรวมเกิน 22 หน่วยกิต ไม่สามารถบันทึกได้', 'warning');
+                return;
+            }
+
             Swal.fire({
                 title: 'ยืนยันการบันทึก?',
                 text: "คุณต้องการบันทึกผลการเรียนนี้หรือไม่?",
@@ -618,6 +668,9 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     this.submit();
+                    // หลังจากบันทึกสำเร็จ ให้เคลียร์ตาราง
+                    $('#courses-table-body').empty();
+                    addEmptyRow();
                 }
             });
         });
