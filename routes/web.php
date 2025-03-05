@@ -34,6 +34,8 @@ Route::middleware(['auth', 'role:student'])->group(function () {
     Route::get('/report', [ReportController::class, 'index'])->name('report');
     Route::post('/report/submit', [ReportController::class, 'submit'])->name('report.submit');
     Route::get('/report/academic-records', [ReportController::class, 'getAcademicRecords'])->name('report.academic.records');
+    Route::post('/report/update-course/{id}', [ReportController::class, 'updateCourse'])->name('report.update.course');
+    Route::delete('/report/delete-course/{id}', [ReportController::class, 'deleteCourse'])->name('report.delete.course');
 
 
 
