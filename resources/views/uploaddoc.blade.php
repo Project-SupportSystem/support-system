@@ -4,13 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>อัปโหลดเอกสาร</title>
-
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .document-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .document-type {
+            width: 150px;
+            flex-shrink: 0;
+        }
+        .document-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+    </style>
 </head>
 <body>
     <div class="navbar d-flex justify-content-between align-items-center p-2 bg-light">
@@ -40,16 +54,13 @@
         <div class="container mt-5">
             <h2 class="text-center mb-4">อัปโหลดเอกสาร</h2>
 
-            <!-- Success Message -->
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
 
-            <!-- ฟอร์มการอัปโหลด -->
             <form action="{{ route('upload.doc') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
                 @csrf
 
-                <!-- ฟอร์ม สหกิจศึกษา / โปรเจค -->
                 <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="card-title">สหกิจศึกษา / โปรเจค</h5>
@@ -66,7 +77,6 @@
                     </div>
                 </div>
 
-                <!-- ฟอร์ม KKUDQ -->
                 <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="card-title">KKUDQ</h5>
@@ -81,7 +91,6 @@
                     </div>
                 </div>
 
-                <!-- ฟอร์ม KKU KEPT -->
                 <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="card-title">KKU KEPT</h5>
@@ -101,7 +110,6 @@
                 </div>
             </form>
 
-            <!-- แสดงไฟล์ที่อัปโหลดแล้ว -->
             <div class="card mt-5">
                 <div class="card-header">
                     <h5 class="card-title">ไฟล์ที่อัปโหลดแล้ว</h5>
@@ -109,27 +117,26 @@
                 <div class="card-body">
                     <ul class="list-group">
                         @foreach ($documents as $document)
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <!-- แสดงประเภทเอกสาร -->
+                            <li class="list-group-item document-item">
                                 @php
-                                    $documentType = '';
-                                    if ($document->document_type == 'coop_project') {
-                                        $documentType = 'สหกิจศึกษา';
-                                    } elseif ($document->document_type == 'project') {
-                                        $documentType = 'โปรเจค';
-                                    } elseif ($document->document_type == 'kku_dq') {
-                                        $documentType = 'KKUDQ';
-                                    } elseif ($document->document_type == 'kku_kept') {
-                                        $documentType = 'KKU KEPT';
-                                    } else {
-                                        $documentType = ucfirst($document->document_type); // สำหรับประเภทเอกสารอื่นๆ
-                                    }
+                                    $documentType = match ($document->document_type) {
+                                        'coop_project' => 'สหกิจศึกษา',
+                                        'project' => 'โปรเจค',
+                                        'kku_dq' => 'KKUDQ',
+                                        'kku_kept' => 'KKU KEPT',
+                                        'internship' => 'ฝึกงาน',
+                                        'transcript' => 'ผลการศึกษา',
+                                        default => ucfirst($document->document_type),
+                                    };
+                                    // ดึงชื่อไฟล์จาก session
+                                    $uploadedFiles = session('uploaded_files', []);
+                                    $fileName = $uploadedFiles[$document->id] ?? basename($document->file_path);
                                 @endphp
-
-                                <strong>{{ $documentType }}</strong>: 
-                                <!-- แสดงชื่อไฟล์ที่ถูกอัปโหลด -->
-                                <a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $document->original_file_name ?? 'File' }}</a>
-                                <a href="{{ route('document.delete', $document->id) }}" class="text-danger" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                                <strong class="document-type">{{ $documentType }}</strong>
+                                <div class="document-actions">
+                                    <a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $fileName }}</a>
+                                    <a href="{{ route('document.delete', $document->id) }}" class="text-danger" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                                </div>
                             </li>
                         @endforeach
                     </ul>
@@ -165,31 +172,30 @@
             currentSelection = selectedOption;
         });
 
-        function toggleUpload(inputId, enable) {
-            const fileInput = document.getElementById(inputId);
-            fileInput.disabled = !enable;
-            if (!enable) {
-                fileInput.value = "";
-                document.getElementById('fileList' + inputId[inputId.length - 1]).innerHTML = "";
-            }
-        }
-
         function addFiles(input, fileListId) {
             const fileList = document.getElementById(fileListId);
+            fileList.innerHTML = "";
             Array.from(input.files).forEach(file => {
                 const fileWrapper = document.createElement("div");
                 fileWrapper.classList.add("d-flex", "align-items-center", "mb-1");
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(file);
-                link.target = "_blank"; 
+                link.target = "_blank";
                 link.textContent = file.name;
-                link.className = "me-2";    
+                link.className = "me-2";
                 fileWrapper.appendChild(link);
 
                 const removeIcon = document.createElement("span");
-                removeIcon.innerHTML = "&times;";
+                removeIcon.innerHTML = "×";
                 removeIcon.classList.add("text-danger", "cursor-pointer");
-                removeIcon.onclick = () => fileWrapper.remove();
+                removeIcon.onclick = () => {
+                    fileWrapper.remove();
+                    const dt = new DataTransfer();
+                    Array.from(input.files).forEach(f => {
+                        if (f !== file) dt.items.add(f);
+                    });
+                    input.files = dt.files;
+                };
                 fileWrapper.appendChild(removeIcon);
                 fileList.appendChild(fileWrapper);
             });

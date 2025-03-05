@@ -9,33 +9,23 @@ use Illuminate\Support\Facades\Auth;
 
 class UploadDocController extends Controller
 {
-    /**
-     * แสดงฟอร์มการอัปโหลดเอกสาร
-     */
     public function index()
     {
         $studentId = Auth::user()->student->id;
-        // ดึงข้อมูลเอกสารที่อัปโหลดแล้วของนักศึกษา
         $documents = Document::where('student_id', $studentId)->get();
         return view('uploaddoc', compact('documents'));
     }
 
-    /**
-     * จัดการการอัปโหลดเอกสารและบันทึกข้อมูลในฐานข้อมูล
-     */
     public function uploadDocument(Request $request)
     {
         try {
-            // Validate ข้อมูลจากฟอร์ม
             $request->validate([
-                'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,KKUDQ,KEPT,internship,transcript', // ปรับรายการตามที่ต้องการ
-                'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048', // ตรวจสอบไฟล์ประเภทและขนาด
+                'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,KKUDQ,KEPT,internship,transcript',
+                'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
             ]);
-    
-            // ดึงรหัสนักศึกษาจากผู้ใช้ที่เข้าสู่ระบบ
+
             $studentId = Auth::user()->student->id;
-    
-            // การแมพประเภทเอกสาร
+
             $documentTypeMapping = [
                 'สหกิจศึกษา' => 'coop_project',
                 'โปรเจค' => 'project',
@@ -44,80 +34,55 @@ class UploadDocController extends Controller
                 'internship' => 'internship',
                 'transcript' => 'transcript'
             ];
-    
-            // วนลูปไฟล์และบันทึกข้อมูลทีละรายการ
+
             foreach ($request->titles as $index => $documentTitle) {
                 if (!isset($documentTypeMapping[$documentTitle])) {
-                    continue; // ข้ามกรณีที่ไม่มีการแมพ
+                    continue;
                 }
                 $documentType = $documentTypeMapping[$documentTitle];
-    
-                // ดึงข้อมูลไฟล์จากฟอร์ม
+
                 $filesArray = $request->allFiles();
                 if (isset($filesArray['files'][$index])) {
                     foreach ($filesArray['files'][$index] as $file) {
-                        // อัปโหลดไฟล์ไปยัง Storage (Laravel จะเก็บไฟล์ใน storage และเปลี่ยนชื่อไฟล์)
                         $filePath = $file->store('documents', 'public');
-    
-                        // บันทึกข้อมูลในฐานข้อมูลพร้อมชื่อไฟล์เดิม
-                        Document::create([
+                        // เก็บชื่อไฟล์จริงใน session หรือ array เพื่อส่งไปยัง Blade
+                        $originalFileName = $file->getClientOriginalName();
+
+                        $document = Document::create([
                             'student_id' => $studentId,
                             'document_type' => $documentType,
                             'file_path' => $filePath,
-                            'original_file_name' => $file->getClientOriginalName(), // เก็บชื่อไฟล์เดิม
                             'upload_date' => now(),
                         ]);
+
+                        // เก็บชื่อไฟล์จริงใน session หรือ array (ในที่นี้ใช้ session)
+                        $uploadedFiles = session('uploaded_files', []);
+                        $uploadedFiles[$document->id] = $originalFileName;
+                        session(['uploaded_files' => $uploadedFiles]);
                     }
                 }
             }
-    
-            // รีไดเรคกลับไปยังหน้าก่อนหน้านี้พร้อมกับข้อความสำเร็จ
+
             return redirect()->back()->with('success', 'เอกสารถูกอัปโหลดสำเร็จแล้ว');
         } catch (\Exception $e) {
-            // รีไดเรคกลับไปยังหน้าก่อนหน้านี้พร้อมกับข้อความข้อผิดพลาด
             return redirect()->back()->with('error', 'การอัปโหลดล้มเหลว: ' . $e->getMessage());
         }
     }
 
-    /**
-     * ดึงข้อมูลเอกสารของนักศึกษา
-     */
-    public function getStudentDocuments($studentId, $docType)
-    {
-        // ค้นหาเอกสารในฐานข้อมูลตามรหัสนักศึกษาและประเภทเอกสาร
-        $documents = Document::where('student_id', $studentId)
-                              ->where('document_type', $docType)
-                              ->get(['file_path', 'id']);
-
-        // ส่งข้อมูลกลับในรูปแบบ JSON
-        return response()->json([
-            'documents' => $documents->map(function ($doc) {
-                return [
-                    'file_path' => Storage::url($doc->file_path),
-                    'file_name' => basename($doc->file_path),
-                ];
-            })
-        ]);
-    }
-
-    /**
-     * ลบเอกสาร
-     */
     public function deleteDocument($documentId)
     {
-        // ค้นหาเอกสารตาม ID
         $document = Document::find($documentId);
-        
         if ($document) {
-            // ลบไฟล์จาก Storage
             Storage::delete($document->file_path);
-            
-            // ลบข้อมูลเอกสารจากฐานข้อมูล
             $document->delete();
-            
+
+            // ลบชื่อไฟล์ออกจาก session
+            $uploadedFiles = session('uploaded_files', []);
+            unset($uploadedFiles[$documentId]);
+            session(['uploaded_files' => $uploadedFiles]);
+
             return redirect()->back()->with('success', 'เอกสารถูกลบเรียบร้อยแล้ว');
         }
-        
         return redirect()->back()->with('error', 'ไม่พบเอกสารที่ต้องการลบ');
     }
 }
