@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -14,130 +14,120 @@
 </head>
 <body>
 
-    <div class="navbar d-flex justify-content-between align-items-center p-2 bg-light">
-        <div class="navbar-logo">
-            <img src="{{ asset('img/KKU_Logo.png') }}" alt="โลโก้ระบบ" style="height: 50px;">
-        </div>
-
-        <div class="dropdown">
-            <a class="btn btn-light dropdown-toggle" href="#" role="button" id="userDropdown" 
-               data-bs-toggle="dropdown" aria-expanded="false">
-                <img src="{{ asset('img/user-icon.png') }}" alt="User Icon" 
-                     style="width: 30px; height: 30px; border-radius: 50%;">
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                <li>
-                    <a class="dropdown-item" href="#">
-                        {{ Auth::user()->username ?? 'ไม่พบข้อมูลผู้ใช้' }} 
-                        ({{ Auth::user()->role ?? 'ไม่มีสิทธิ์' }})
-                    </a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="#">
-                        รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}
-                    </a>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                    <a class="dropdown-item" href="{{ route('logout') }}">Log Out</a>
-                </li>
-            </ul>
-        </div>
+<div class="navbar d-flex justify-content-between align-items-center p-2 bg-light">
+    <div class="navbar-logo">
+        <img src="{{ asset('img/KKU_Logo.png') }}" alt="โลโก้ระบบ" style="height: 50px;">
     </div>
 
-    <div class="sidebar">
-        <a href="{{ route('report') }}">รายงานผลการศึกษา</a>
-        <a href="{{ route('upload.document') }}">อัปโหลดเอกสาร</a>
-        <a href="{{ route('student-profile') }}">ประวัตินักศึกษา</a>
+    <div class="dropdown">
+        <a class="btn btn-light dropdown-toggle" href="#" role="button" id="userDropdown" 
+           data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="{{ asset('img/user-icon.png') }}" alt="User Icon" 
+                 style="width: 30px; height: 30px; border-radius: 50%;"></a>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li>
+                <a class="dropdown-item" href="#">
+                    {{ Auth::user()->username ?? 'ไม่พบข้อมูลผู้ใช้' }} 
+                    ({{ Auth::user()->role ?? 'ไม่มีสิทธิ์' }})
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="#">
+                    รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item" href="{{ route('logout') }}">ออกจากระบบ</a>
+            </li>
+        </ul>
     </div>
+</div>
 
-    <div class="content">
-        <div class="container mt-5">
-            <h2 class="text-center">บันทึกข้อมูลนักศึกษา</h2>
+<div class="sidebar">
+    <a href="{{ route('report') }}">รายงานผลการศึกษา</a>
+    <a href="{{ route('upload.document') }}">อัปโหลดเอกสาร</a>
+    <a href="{{ route('student-profile') }}">ประวัตินักศึกษา</a>
+</div>
 
-            @if (session('success'))
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
-            @endif
+<div class="content flex-grow-1 p-4" style="background-color: white; border-radius: 8px;">
+    <h2 class="text-center">บันทึกข้อมูลนักศึกษา</h2>
 
-            <form action="{{ route('student.update', $student->id ?? '') }}" method="POST" id="studentForm">
-                @csrf
-                @method('PUT') <!-- ใช้ PUT สำหรับการอัปเดตข้อมูล -->
-
-                <div class="mb-3">
-                    <label for="student_id" class="form-label">รหัสนักศึกษา</label>
-                    <input type="text" class="form-control" id="student_id" name="student_id" 
-                           value="{{ old('student_id', $student->id ?? '') }}" readonly required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="first_name" class="form-label">ชื่อจริง</label>
-                    <input type="text" class="form-control" id="first_name" name="first_name" 
-                           value="{{ old('first_name', $student->first_name ?? '') }}" readonly required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="phone" class="form-label">เบอร์โทร</label>
-                    <input type="text" class="form-control" id="phone" name="phone" 
-                           value="{{ old('phone', $student->phone ?? '') }}" readonly required >
-                </div>
-
-                <div class="mb-3">
-                    <label for="school_location" class="form-label">จบการศึกษาจาก</label>
-                    <input type="text" class="form-control" id="school_location" name="school_location" 
-                           value="{{ old('school_location', $student->school_location ?? '') }}" readonly required >
-                </div>
-
-                <div class="mb-3">
-                    <label for="advisor_id" class="form-label">อาจารย์ที่ปรึกษา</label>
-                    <select class="form-control" id="advisor_id" name="advisor_id" readonly required>
-                        <option value="">-- เลือกอาจารย์ที่ปรึกษา --</option>
-                        @foreach ($advisors as $advisor)
-                            <option value="{{ $advisor->id }}" 
-                                {{ (old('advisor_id', $student->advisor_id ?? '') == $advisor->id) ? 'selected' : '' }}>
-                                {{ $advisor->first_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="text-end">
-                    <button type="button" class="btn btn-primary" id="editButton">แก้ไข</button>
-                    <button type="submit" class="btn btn-success" style="display:none;">บันทึกข้อมูล</button>
-                </div>
-            </form>
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
         </div>
-    </div>
+    @endif
 
-    <script>
-        $(document).ready(function() {
-            $('#editButton').click(function() {
-                // เปิดการแก้ไข
-                $('input, select').removeAttr('readonly').removeAttr('disabled');
+    <form action="{{ isset($student) ? route('student.update', $student->id) : route('student.store') }}" method="POST">
+        @csrf
+        @if (isset($student))
+            @method('PUT') <!-- ใช้ @method('PUT') สำหรับการอัปเดตข้อมูล -->
+        @endif
 
-                // ซ่อนปุ่มแก้ไข และแสดงปุ่มบันทึก
-                $(this).hide();
-                $('button[type=submit]').show();
-            });
+        <div class="mb-3">
+            <label for="student_id" class="form-label">รหัสนักศึกษา</label>
+            <input type="text" class="form-control" id="student_id" name="student_id" 
+                   value="{{ old('student_id', $student->id ?? '') }}" readonly required>
+        </div>
 
-            $('#studentForm').on('submit', function(e) {
-                e.preventDefault();
-                Swal.fire({
-                    title: 'ยืนยันการบันทึก?',
-                    text: 'คุณต้องการบันทึกข้อมูลนักศึกษานี้หรือไม่?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'ใช่, บันทึกเลย!',
-                    cancelButtonText: 'ยกเลิก'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        this.submit();
-                    }
-                });
-            });
+        <div class="mb-3">
+            <label for="first_name" class="form-label">ชื่อจริง</label>
+            <input type="text" class="form-control" id="first_name" name="first_name" 
+                   value="{{ old('first_name', $student->first_name ?? '') }}" readonly required>
+        </div>
+
+        <div class="mb-3">
+            <label for="phone" class="form-label">เบอร์โทร</label>
+            <input type="text" class="form-control" id="phone" name="phone" 
+                   value="{{ old('phone', $student->phone ?? '') }}" readonly required>
+        </div>
+
+        <div class="mb-3">
+            <label for="school_location" class="form-label">จบการศึกษาจาก</label>
+            <input type="text" class="form-control" id="school_location" name="school_location" 
+                   value="{{ old('school_location', $student->school_location ?? '') }}" readonly required>
+        </div>
+
+        <div class="mb-3">
+            <label for="advisor_id" class="form-label">อาจารย์ที่ปรึกษา</label>
+            <select class="form-control" id="advisor_id" name="advisor_id" disabled required>
+                <option value="">-- เลือกอาจารย์ที่ปรึกษา --</option>
+                @foreach ($advisors as $advisor)
+                    <option value="{{ $advisor->id }}" 
+                        {{ (old('advisor_id', $student->advisor_id ?? '') == $advisor->id) ? 'selected' : '' }}>
+                        {{ $advisor->first_name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="text-end">
+            <a href="{{ route('student-profile') }}" class="btn btn-secondary" id="backButton" style="display:none;">ย้อนกลับ</a>
+            <button type="submit" class="btn btn-success" id="saveButton" style="display:none;">บันทึกข้อมูลนักศึกษาที่แก้ไข</button>
+            <button type="button" class="btn btn-primary" id="editButton">แก้ไขข้อมูลนักศึกษา</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // เมื่อคลิกปุ่ม "แก้ไขข้อมูลนักศึกษา"
+        $('#editButton').click(function() {
+            // ทำให้ฟอร์มสามารถแก้ไขได้
+            $('input').removeAttr('readonly');
+            $('select').prop('disabled', false);
+            $(this).hide(); // ซ่อนปุ่มแก้ไข
+            $('#backButton').show(); // แสดงปุ่มย้อนกลับ
+            $('#saveButton').show(); // แสดงปุ่มบันทึก
         });
-    </script>
+
+        // เมื่อคลิกปุ่ม "ย้อนกลับ"
+        $('#backButton').click(function() {
+            window.location.href = "{{ route('student-profile') }}"; // กลับไปยังหน้าประวัตินักศึกษา
+        });
+    });
+</script>
 
 </body>
 </html>

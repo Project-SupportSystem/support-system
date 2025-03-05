@@ -18,14 +18,24 @@ Route::middleware(['auth', 'role:student'])->group(function () {
         return view('register_courses');
     })->name('register_courses');
 
+        // หน้าแสดงฟอร์มกรอกข้อมูลนักศึกษา
     Route::get('/student-profile', [StudentController::class, 'create'])->name('student-profile');
+
+        // บันทึกข้อมูลนักศึกษาใหม่
     Route::post('/student-profile', [StudentController::class, 'store'])->name('student.store');
-    Route::put('/student/{id}', [StudentController::class, 'update'])->name('student.update');
+
+        // แสดงฟอร์มแก้ไขข้อมูลนักศึกษา
+    Route::get('/student-profile/edit/{id}', [StudentController::class, 'edit'])->name('student.edit');
+
+        // อัปเดตข้อมูลนักศึกษาด้วย PUT (สำหรับใช้ในฟอร์ม)
+    Route::put('/student/update/{id}', [StudentController::class, 'update'])->name('student.update');
 
     // Route บันทึกผลการเรียน
     Route::get('/report', [ReportController::class, 'index'])->name('report');
     Route::post('/report/submit', [ReportController::class, 'submit'])->name('report.submit');
     Route::get('/report/academic-records', [ReportController::class, 'getAcademicRecords'])->name('report.academic.records');
+    Route::post('/report/update-course/{id}', [ReportController::class, 'updateCourse'])->name('report.update.course');
+    Route::delete('/report/delete-course/{id}', [ReportController::class, 'deleteCourse'])->name('report.delete.course');
 
 
 
@@ -33,8 +43,16 @@ Route::middleware(['auth', 'role:student'])->group(function () {
         return view('uploaddoc');
     })->name('upload.document');
 
+    Route::get('/upload-document', [UploadDocController::class, 'index'])->name('upload.document');
+    Route::post('/upload-document', [UploadDocController::class, 'uploadDocument'])->name('upload.doc');
+    Route::get('/delete-document/{documentId}', [UploadDocController::class, 'deleteDocument'])->name('document.delete');
+
+
+
+
     Route::get('/upload-doc', [UploadDocController::class, 'index'])->name('upload.doc');
-    Route::post('/upload-doc', [UploadDocController::class, 'uploadDocument'])->name('upload.doc.store');
+    Route::post('/upload-doc', [UploadDocController::class, 'uploadDocument'])->name('upload.doc');
+    ///Route::post('/upload-doc', [UploadDocController::class, 'uploadDocument'])->name('upload.doc.store');
     Route::get('/get-student-documents/{studentId}/{docType}', [UploadDocController::class, 'getStudentDocuments']);
 
     // Route สำหรับบันทึกวิชาใหม่และ autocomplete
@@ -82,6 +100,3 @@ Route::get('/auth/google/call-back', [SocialiteController::class, 'handleGoogleC
 
 // Route Logout
 Route::get('/logout', [SocialiteController::class, 'logout'])->name('logout');
-
-
-

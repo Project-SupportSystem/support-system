@@ -5,73 +5,109 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Document;
-use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Str;
 
 class UploadDocController extends Controller
 {
-    /**
-     * Show the document upload form.
-     */
     public function index()
     {
-        return view('uploaddoc');
+        $studentId = Auth::user()->student->id;
+        $documents = Document::where('student_id', $studentId)->get();
+        return view('uploaddoc', compact('documents'));
     }
 
-    /**
-     * Handle the document upload and store data in the database.
-     */
     public function uploadDocument(Request $request)
     {
-        //dd($request->all());
-        $request->validate([
-            'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,KKUDQ,KEPT,internship,transcript',  // ปรับรายการตามที่ต้องการ
-            'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',  // Validate file type and size
-        ]);
+        try {
+            $request->validate([
+                'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,KKUDQ,KEPT,internship,transcript',
+                'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            ]);
 
-        $student = Auth::user()->student->id;  // ดึงรหัสนักศึกษาจากผู้ใช้ที่เข้าสู่ระบบ
+            $studentId = Auth::user()->student->id;
 
-        $documentTypeMapping = [
-            'สหกิจศึกษา' => 'coop_project',
-            'โปรเจค' => 'project',
-            'KKUDQ' => 'kku_dq',
-            'KEPT' => 'kku_kept',
-            'internship' => 'internship',
-            'transcript' => 'transcript'
-        ];
+            $documentTypeMapping = [
+                'สหกิจศึกษา' => 'coop_project',
+                'โปรเจค' => 'project',
+                'KKUDQ' => 'kku_dq',
+                'KEPT' => 'kku_kept',
+                'internship' => 'internship',
+                'transcript' => 'transcript'
+            ];
 
-        // วนลูปไฟล์และบันทึกข้อมูลทีละรายการ
-        foreach ($request->titles as $index => $documentTitle) {
-            if (!isset($documentTypeMapping[$documentTitle])) {
-                continue; // ข้ามกรณีที่ไม่มีการแมพ
-            }
-            $documentType = $documentTypeMapping[$documentTitle];
-    
-            $filesArray = $request->allFiles();
-            if (isset($filesArray['files'][$index])) {
-                foreach ($filesArray['files'][$index] as $file) {
-                    $filePath = $file->store('documents', 'public');
-                    Document::create([
-                        'student_id' => $student,
-                        'document_type' => $documentType,
-                        'file_path' => $filePath,
-                        'upload_date' => now(),
-                    ]);
+            foreach ($request->titles as $index => $documentTitle) {
+                if (!isset($documentTypeMapping[$documentTitle])) {
+                    continue;
+                }
+                $documentType = $documentTypeMapping[$documentTitle];
+
+                $filesArray = $request->allFiles();
+                if (isset($filesArray['files'][$index])) {
+                    foreach ($filesArray['files'][$index] as $file) {
+                        // เก็บชื่อไฟล์จริงก่อน
+                        $originalFileName = $file->getClientOriginalName();
+
+                        // สร้างชื่อไฟล์ใหม่ที่ปลอดภัย (ใช้ตัวอักษรภาษาอังกฤษและตัวเลข)
+                        $extension = $file->getClientOriginalExtension();
+                        $safeFileName = Str::random(32) . '.' . $extension; // เช่น "abc123xyz.pdf"
+
+                        // บันทึกไฟล์ด้วยชื่อที่ปลอดภัย
+                        $filePath = $file->storeAs('documents', $safeFileName, 'public');
+
+                        // บันทึกข้อมูลในฐานข้อมูล
+                        $document = Document::create([
+                            'student_id' => $studentId,
+                            'document_type' => $documentType,
+                            'file_path' => $filePath,
+                            'upload_date' => now(),
+                        ]);
+
+                        // เก็บชื่อไฟล์จริงใน session
+                        $uploadedFiles = session('uploaded_files', []);
+                        $uploadedFiles[$document->id] = $originalFileName;
+                        session(['uploaded_files' => $uploadedFiles]);
+                    }
                 }
             }
+
+            return redirect()->back()->with('success', 'เอกสารถูกอัปโหลดสำเร็จแล้ว');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'การอัปโหลดล้มเหลว: ' . $e->getMessage());
         }
-        return redirect()->back()->with('success', 'เอกสารถูกอัปโหลดสำเร็จแล้ว');
     }
+
+    public function deleteDocument($documentId)
+    {
+        $document = Document::find($documentId);
+        if ($document) {
+            Storage::delete($document->file_path);
+            $document->delete();
+
+            // ลบชื่อไฟล์ออกจาก session
+            $uploadedFiles = session('uploaded_files', []);
+            unset($uploadedFiles[$documentId]);
+            session(['uploaded_files' => $uploadedFiles]);
+
+            return redirect()->back()->with('success', 'เอกสารถูกลบเรียบร้อยแล้ว');
+        }
+        return redirect()->back()->with('error', 'ไม่พบเอกสารที่ต้องการลบ');
+    }
+
     public function getStudentDocuments($studentId, $docType)
     {
-        $documents = Document::where('student_id', $studentId)->where('document_type', $docType)->get(['file_path', 'id']);
+        $documents = Document::where('student_id', $studentId)
+                              ->where('document_type', $docType)
+                              ->get(['file_path', 'id']);
+
+        // ดึงชื่อไฟล์จาก session
+        $uploadedFiles = session('uploaded_files', []);
 
         return response()->json([
-            'documents' => $documents->map(function ($doc) {
+            'documents' => $documents->map(function ($doc) use ($uploadedFiles) {
                 return [
                     'file_path' => Storage::url($doc->file_path),
-                    'file_name' => basename($doc->file_path),
+                    'file_name' => $uploadedFiles[$doc->id] ?? basename($doc->file_path),
                 ];
             })
         ]);
