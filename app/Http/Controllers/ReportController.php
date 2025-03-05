@@ -21,11 +21,30 @@ class ReportController extends Controller
     {
         $request->validate(['semester' => 'required|string']);
 
+        // ดึงข้อมูลของเทอมที่ระบุ
         $records = AcademicRecord::where('student_id', Auth::user()->student->id)
             ->where('semester', $request->semester)
             ->with('course')
             ->get();
-        return response()->json($records);
+
+        // ดึงข้อมูลสะสมจนถึงเทอมที่ระบุ
+        $semesterParts = explode('/', $request->semester);
+        $term = (int)$semesterParts[0];
+        $year = (int)$semesterParts[1];
+
+        $cumulativeRecords = AcademicRecord::where('student_id', Auth::user()->student->id)
+            ->where(function ($query) use ($term, $year) {
+                $query->whereRaw('CAST(SUBSTRING(semester, 1, 1) AS UNSIGNED) < ?', [$term])
+                      ->whereRaw('CAST(SUBSTRING(semester, 3) AS UNSIGNED) <= ?', [$year])
+                      ->orWhereRaw('CAST(SUBSTRING(semester, 3) AS UNSIGNED) < ?', [$year]);
+            })
+            ->with('course')
+            ->get();
+
+        return response()->json([
+            'semester_records' => $records,
+            'cumulative_records' => $cumulativeRecords,
+        ]);
     }
 
     public function submit(Request $request)
@@ -47,7 +66,6 @@ class ReportController extends Controller
                 ->pluck('course_id')
                 ->toArray();
 
-            // คำนวณหน่วยกิตรวมที่มีอยู่แล้วใน semester นี้
             $existingCredits = AcademicRecord::where('student_id', $student->id)
                 ->where('semester', $request->semester)
                 ->join('courses', 'academic_records.course_id', '=', 'courses.id')
