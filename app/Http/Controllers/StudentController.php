@@ -19,7 +19,11 @@ class StudentController extends Controller
     public function showReport()
     {   
         $students = Student::with(['academicRecords.course', 'documents'])->get();
-        return view('table_report', compact('students'));
+        $academicRecords = [];
+        foreach ($students as $student) {
+            $academicRecords[$student->id] = $student->academicRecords()->with('course')->get();
+        }
+        return view('table_report', compact('students', 'academicRecords'));
     }
 
     public function update(Request $request, $id)

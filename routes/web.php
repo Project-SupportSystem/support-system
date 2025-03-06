@@ -29,7 +29,6 @@ Route::middleware(['auth', 'role:student'])->group(function () {
     Route::delete('/document/{documentId}', [UploadDocController::class, 'deleteDocument'])->name('document.delete');
     Route::get('/delete-document/{documentId}', [UploadDocController::class, 'deleteDocument'])->name('document.delete');
     Route::get('/get-student-documents/{studentId}/{docType}', [UploadDocController::class, 'getStudentDocuments']);
-    
 
     Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
     Route::get('/courses/autocomplete', [CourseController::class, 'autocomplete'])->name('courses.autocomplete');

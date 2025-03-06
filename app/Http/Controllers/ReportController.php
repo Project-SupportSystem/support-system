@@ -21,13 +21,11 @@ class ReportController extends Controller
     {
         $request->validate(['semester' => 'required|string']);
 
-        // ดึงข้อมูลของเทอมที่ระบุ
         $records = AcademicRecord::where('student_id', Auth::user()->student->id)
             ->where('semester', $request->semester)
             ->with('course')
             ->get();
 
-        // ดึงข้อมูลสะสมจนถึงเทอมที่ระบุ
         $semesterParts = explode('/', $request->semester);
         $term = (int)$semesterParts[0];
         $year = (int)$semesterParts[1];
@@ -152,6 +150,63 @@ class ReportController extends Controller
             return response()->json(['success' => true, 'message' => 'ลบข้อมูลเรียบร้อย']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการลบข้อมูล: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function getStudentAcademicRecords($studentId)
+    {
+        try {
+            // ดึงข้อมูลจาก academic_records โดยใช้ leftJoin กับ courses
+            $records = AcademicRecord::select(
+                'academic_records.id',
+                'academic_records.student_id',
+                'academic_records.course_id',
+                'academic_records.semester',
+                'academic_records.grade',
+                'academic_records.gpa',
+                'academic_records.created_at',
+                'academic_records.updated_at',
+                'courses.course_name',
+                'courses.total_credits'
+            )
+            ->leftJoin('courses', 'academic_records.course_id', '=', 'courses.id')
+            ->where('academic_records.student_id', $studentId)
+            ->orderBy('academic_records.semester')
+            ->get();
+
+            if ($records->isEmpty()) {
+                return response()->json([
+                    'academic_records' => [],
+                    'message' => 'ไม่มีข้อมูลผลการเรียนสำหรับนักศึกษาคนนี้'
+                ], 200);
+            }
+
+            // แปลงข้อมูลให้สอดคล้องกับ frontend
+            $formattedRecords = $records->map(function ($record) {
+                return [
+                    'id' => $record->id,
+                    'student_id' => $record->student_id,
+                    'course_id' => $record->course_id,
+                    'semester' => $record->semester,
+                    'grade' => $record->grade,
+                    'gpa' => $record->gpa,
+                    'course' => (object) [ // ใช้ object เพื่อให้เข้ากับ JavaScript
+                        'id' => $record->course_id,
+                        'course_name' => $record->course_name ?? 'ไม่พบชื่อวิชา',
+                        'total_credits' => $record->total_credits ?? 3,
+                    ],
+                    'created_at' => $record->created_at,
+                    'updated_at' => $record->updated_at,
+                ];
+            });
+
+            return response()->json([
+                'academic_records' => $formattedRecords,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'ไม่สามารถดึงข้อมูลผลการเรียนได้: ' . $e->getMessage()
+            ], 500);
         }
     }
 
