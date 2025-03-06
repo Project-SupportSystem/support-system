@@ -116,6 +116,9 @@
                 </div>
                 <div class="card-body">
                     <ul class="list-group">
+                        @php
+                            $uploadedFiles = Cache::get('uploaded_files', []);
+                        @endphp
                         @foreach ($documents as $document)
                             <li class="list-group-item document-item">
                                 @php
@@ -128,8 +131,7 @@
                                         'transcript' => 'ผลการศึกษา',
                                         default => ucfirst($document->document_type),
                                     };
-                                    // ดึงชื่อไฟล์จาก session
-                                    $uploadedFiles = session('uploaded_files', []);
+                                    // ดึงชื่อไฟล์ต้นฉบับจาก Cache
                                     $fileName = $uploadedFiles[$document->id] ?? basename($document->file_path);
                                 @endphp
                                 <strong class="document-type">{{ $documentType }}</strong>

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Document;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class UploadDocController extends Controller
@@ -45,17 +46,11 @@ class UploadDocController extends Controller
                 $filesArray = $request->allFiles();
                 if (isset($filesArray['files'][$index])) {
                     foreach ($filesArray['files'][$index] as $file) {
-                        // เก็บชื่อไฟล์จริงก่อน
                         $originalFileName = $file->getClientOriginalName();
-
-                        // สร้างชื่อไฟล์ใหม่ที่ปลอดภัย (ใช้ตัวอักษรภาษาอังกฤษและตัวเลข)
                         $extension = $file->getClientOriginalExtension();
-                        $safeFileName = Str::random(32) . '.' . $extension; // เช่น "abc123xyz.pdf"
-
-                        // บันทึกไฟล์ด้วยชื่อที่ปลอดภัย
+                        $safeFileName = Str::random(32) . '.' . $extension;
                         $filePath = $file->storeAs('documents', $safeFileName, 'public');
 
-                        // บันทึกข้อมูลในฐานข้อมูล
                         $document = Document::create([
                             'student_id' => $studentId,
                             'document_type' => $documentType,
@@ -63,10 +58,10 @@ class UploadDocController extends Controller
                             'upload_date' => now(),
                         ]);
 
-                        // เก็บชื่อไฟล์จริงใน session
-                        $uploadedFiles = session('uploaded_files', []);
+                        // เก็บชื่อไฟล์ใน Cache
+                        $uploadedFiles = Cache::get('uploaded_files', []);
                         $uploadedFiles[$document->id] = $originalFileName;
-                        session(['uploaded_files' => $uploadedFiles]);
+                        Cache::put('uploaded_files', $uploadedFiles); // เก็บถาวร
                     }
                 }
             }
@@ -84,10 +79,10 @@ class UploadDocController extends Controller
             Storage::delete($document->file_path);
             $document->delete();
 
-            // ลบชื่อไฟล์ออกจาก session
-            $uploadedFiles = session('uploaded_files', []);
+            // ลบชื่อไฟล์ออกจาก Cache
+            $uploadedFiles = Cache::get('uploaded_files', []);
             unset($uploadedFiles[$documentId]);
-            session(['uploaded_files' => $uploadedFiles]);
+            Cache::put('uploaded_files', $uploadedFiles);
 
             return redirect()->back()->with('success', 'เอกสารถูกลบเรียบร้อยแล้ว');
         }
@@ -100,8 +95,8 @@ class UploadDocController extends Controller
                               ->where('document_type', $docType)
                               ->get(['file_path', 'id']);
 
-        // ดึงชื่อไฟล์จาก session
-        $uploadedFiles = session('uploaded_files', []);
+        // ดึงชื่อไฟล์จาก Cache
+        $uploadedFiles = Cache::get('uploaded_files', []);
 
         return response()->json([
             'documents' => $documents->map(function ($doc) use ($uploadedFiles) {

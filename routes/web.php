@@ -9,94 +9,41 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\AcademicRecordController;
 use App\Http\Controllers\UploadDocController;
 
-
-
-
-// Group เส้นทางที่ต้องการ Auth
 Route::middleware(['auth', 'role:student'])->group(function () {
     Route::get('/register-courses', function () {
         return view('register_courses');
     })->name('register_courses');
 
-        // หน้าแสดงฟอร์มกรอกข้อมูลนักศึกษา
     Route::get('/student-profile', [StudentController::class, 'create'])->name('student-profile');
-
-        // บันทึกข้อมูลนักศึกษาใหม่
     Route::post('/student-profile', [StudentController::class, 'store'])->name('student.store');
-
-        // แสดงฟอร์มแก้ไขข้อมูลนักศึกษา
     Route::get('/student-profile/edit/{id}', [StudentController::class, 'edit'])->name('student.edit');
-
-        // อัปเดตข้อมูลนักศึกษาด้วย PUT (สำหรับใช้ในฟอร์ม)
     Route::put('/student/update/{id}', [StudentController::class, 'update'])->name('student.update');
 
-    // Route บันทึกผลการเรียน
     Route::get('/report', [ReportController::class, 'index'])->name('report');
     Route::post('/report/submit', [ReportController::class, 'submit'])->name('report.submit');
     Route::get('/report/academic-records', [ReportController::class, 'getAcademicRecords'])->name('report.academic.records');
     Route::post('/report/update-course/{id}', [ReportController::class, 'updateCourse'])->name('report.update.course');
     Route::delete('/report/delete-course/{id}', [ReportController::class, 'deleteCourse'])->name('report.delete.course');
 
-
-
-    Route::get('/upload-documents', function () {
-        return view('uploaddoc');
-    })->name('upload.document');
-
     Route::get('/upload-document', [UploadDocController::class, 'index'])->name('upload.document');
-    Route::post('/upload-document', [UploadDocController::class, 'uploadDocument'])->name('upload.doc');
-    Route::get('/delete-document/{documentId}', [UploadDocController::class, 'deleteDocument'])->name('document.delete');
-
-
-
-
-    Route::get('/upload-doc', [UploadDocController::class, 'index'])->name('upload.doc');
     Route::post('/upload-doc', [UploadDocController::class, 'uploadDocument'])->name('upload.doc');
-    ///Route::post('/upload-doc', [UploadDocController::class, 'uploadDocument'])->name('upload.doc.store');
+    Route::get('/delete-document/{documentId}', [UploadDocController::class, 'deleteDocument'])->name('document.delete');
     Route::get('/get-student-documents/{studentId}/{docType}', [UploadDocController::class, 'getStudentDocuments']);
 
-    // Route สำหรับบันทึกวิชาใหม่และ autocomplete
     Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
     Route::get('/courses/autocomplete', [CourseController::class, 'autocomplete'])->name('courses.autocomplete');
-
     Route::post('/courses/check-duplicate', [CourseController::class, 'checkDuplicate'])->name('courses.check.duplicate');
-
 });
 
-// Route สำหรับ @gmail.com (advisor)
 Route::middleware(['auth', 'role:advisor'])->group(function () {
-    Route::get('/table-report', function () {
-        return view('table_report');
-    })->name('table_report');
     Route::get('/table-report', [StudentController::class, 'showReport'])->name('table_report');
-
     Route::get('/get-student-documents/{studentId}/{docType}', [UploadDocController::class, 'getStudentDocuments']);
-
-    
 });
 
-
-
-// // Route บันทึกผลการเรียน
-// Route::get('/report', [ReportController::class, 'index'])->name('report');
-// Route::post('/report/submit', [ReportController::class, 'submit'])->name('report.submit');
-// Route::get('/report/academic-records', [ReportController::class, 'getAcademicRecords'])->name('report.academic.records');
-
-
-// // Route สำหรับบันทึกวิชาใหม่และ autocomplete
-// Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
-// Route::get('/courses/autocomplete', [CourseController::class, 'autocomplete'])->name('courses.autocomplete');
-
-// Route::post('/courses/check-duplicate', [CourseController::class, 'checkDuplicate'])->name('courses.check.duplicate');
-
-
-// Route Login และ Socialite Login
 Route::get('/login', function () {
     return view('login');
 })->name('login');
 
 Route::get('/auth/google', [SocialiteController::class, 'redirectToGoogle'])->name('login.google');
 Route::get('/auth/google/call-back', [SocialiteController::class, 'handleGoogleCallback']);
-
-// Route Logout
 Route::get('/logout', [SocialiteController::class, 'logout'])->name('logout');

@@ -31,11 +31,6 @@
                             {{ Auth::user()->username ?? 'ไม่พบข้อมูลผู้ใช้' }} ({{ Auth::user()->role ?? 'ไม่มีสิทธิ์' }})
                         </a>
                     </li>
-                    <!-- <li>
-                        <a class="dropdown-item" href="#">
-                            รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}
-                        </a>
-                    </li> -->
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <a class="dropdown-item" href="{{ route('logout') }}">Log Out</a>
@@ -104,7 +99,7 @@
                                 <td>วิทยาการคอมพิวเตอร์และสารสนเทศ</td>
                                 <td>{{ $student->calculateGPA() ? number_format($student->calculateGPA(), 2) : '-' }}</td>
                                 
-                                <!-- แยกสหกิจศึกษา -->
+                                <!-- สหกิจศึกษา -->
                                 <td>
                                     @if($student->documents->where('document_type', 'coop_project')->isNotEmpty())
                                         <a href="#" onclick="showFilesModal('{{ $student->id }}', 'coop_project')">ดูเอกสาร</a>
@@ -113,7 +108,7 @@
                                     @endif
                                 </td>
                                 
-                                <!-- แยกโปรเจค -->
+                                <!-- โปรเจค -->
                                 <td>
                                     @if($student->documents->where('document_type', 'project')->isNotEmpty())
                                         <a href="#" onclick="showFilesModal('{{ $student->id }}', 'project')">ดูเอกสาร</a>
@@ -122,32 +117,56 @@
                                     @endif
                                 </td>
 
-                                <td>ผ่าน</td>
-                                <td>ไม่ผ่าน</td>
-                                <td>ผ่าน</td>
+                                <!-- KKU KEPTs -->
+                                <td>
+                                    @if($student->documents->where('document_type', 'kku_kept')->isNotEmpty())
+                                        ผ่าน
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+
+                                <!-- KKUDQ -->
+                                <td>
+                                    @if($student->documents->where('document_type', 'kku_dq')->isNotEmpty())
+                                        ผ่าน
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+
+                                <!-- ฝึกงาน -->
+                                <td>
+                                    @if($student->documents->where('document_type', 'internship')->isNotEmpty())
+                                        ผ่าน
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
 
-    <!-- Modal สำหรับแสดงไฟล์เอกสาร -->
-    <div class="modal fade" id="filesModal" tabindex="-1" aria-labelledby="filesModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="filesModalLabel">ไฟล์เอกสาร</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <ul id="filesList"></ul>
+            <!-- Modal สำหรับแสดงไฟล์เอกสาร -->
+            <div class="modal fade" id="filesModal" tabindex="-1" aria-labelledby="filesModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="filesModalLabel">ไฟล์เอกสาร</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <ul id="filesList"></ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // ฟังก์ชันเปิด Modal พร้อมข้อมูลไฟล์ของประเภทเอกสารที่เลือก
         function showFilesModal(studentId, docType) {
             $.ajax({
                 url: `/get-student-documents/${studentId}/${docType}`,
@@ -155,12 +174,13 @@
                 success: function (response) {
                     $('#filesList').empty();
                     response.documents.forEach(function (doc) {
+                        // ใช้ doc.file_name ซึ่งมาจาก Cache ใน UploadDocController
                         $('#filesList').append(`<li><a href="${doc.file_path}" target="_blank">${doc.file_name}</a></li>`);
                     });
                     $('#filesModal').modal('show');
                 },
-                error: function () {
-                    alert('ไม่สามารถดึงข้อมูลเอกสารได้');
+                error: function (xhr) {
+                    alert('ไม่สามารถดึงข้อมูลเอกสารได้: ' + xhr.responseText);
                 }
             });
         }
@@ -173,7 +193,7 @@
             for (var i = 0; i < tr.length; i++) {
                 var tdStudentId = tr[i].getElementsByTagName('td')[1];
                 var tdName = tr[i].getElementsByTagName('td')[2];
-                if (tdStudentId || tdName) {
+                if (tdStudentId && tdName) {
                     var studentIdValue = tdStudentId.textContent || tdStudentId.innerText;
                     var nameValue = tdName.textContent || tdName.innerText;
 
@@ -187,38 +207,37 @@
         }
 
         function filterTable() {
-        var filter = document.getElementById("filter-select").value;
-        var table = document.getElementById("student-table");
-        var tr = table.getElementsByTagName("tr");
+            var filter = document.getElementById("filter-select").value;
+            var table = document.getElementById("student-table");
+            var tr = table.getElementsByTagName("tr");
 
-        for (var i = 0; i < tr.length; i++) {
-            var tdGrade = tr[i].getElementsByTagName("td")[4];
-            var tdCoop = tr[i].getElementsByTagName("td")[5];
-            var tdProject = tr[i].getElementsByTagName("td")[6];
-            var tdKept = tr[i].getElementsByTagName("td")[7];
-            var tdDQ = tr[i].getElementsByTagName("td")[8];
-            var tdInternship = tr[i].getElementsByTagName("td")[9];
+            for (var i = 0; i < tr.length; i++) {
+                var tdGrade = tr[i].getElementsByTagName("td")[4];
+                var tdCoop = tr[i].getElementsByTagName("td")[5];
+                var tdProject = tr[i].getElementsByTagName("td")[6];
+                var tdKept = tr[i].getElementsByTagName("td")[7];
+                var tdDQ = tr[i].getElementsByTagName("td")[8];
+                var tdInternship = tr[i].getElementsByTagName("td")[9];
 
-            if (filter === "all") {
-                tr[i].style.display = "";
-            } else if (filter === "grade" && tdGrade && tdGrade.textContent !== "-") {
-                tr[i].style.display = "";
-            } else if (filter === "kept" && tdKept && tdKept.textContent === "ผ่าน") {
-                tr[i].style.display = "";
-            } else if (filter === "dq" && tdDQ && tdDQ.textContent === "ผ่าน") {
-                tr[i].style.display = "";
-            } else if (filter === "internship" && tdInternship && tdInternship.textContent === "ผ่าน") {
-                tr[i].style.display = "";
-            } else if (filter === "coop" && tdCoop && tdCoop.textContent.includes("ดูเอกสาร")) {
-                tr[i].style.display = "";
-            } else if (filter === "project" && tdProject && tdProject.textContent.includes("ดูเอกสาร")) {
-                tr[i].style.display = "";
-            } else {
-                tr[i].style.display = "none";
+                if (filter === "all") {
+                    tr[i].style.display = "";
+                } else if (filter === "grade" && tdGrade && tdGrade.textContent !== "-") {
+                    tr[i].style.display = "";
+                } else if (filter === "kept" && tdKept && tdKept.textContent === "ผ่าน") {
+                    tr[i].style.display = "";
+                } else if (filter === "dq" && tdDQ && tdDQ.textContent === "ผ่าน") {
+                    tr[i].style.display = "";
+                } else if (filter === "internship" && tdInternship && tdInternship.textContent === "ผ่าน") {
+                    tr[i].style.display = "";
+                } else if (filter === "coop" && tdCoop && tdCoop.textContent.includes("ดูเอกสาร")) {
+                    tr[i].style.display = "";
+                } else if (filter === "project" && tdProject && tdProject.textContent.includes("ดูเอกสาร")) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
             }
         }
-    }
-</script>
-
+    </script>
 </body>
 </html>
