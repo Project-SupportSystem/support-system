@@ -21,7 +21,7 @@ class UploadDocController extends Controller
     public function uploadDocument(Request $request)
     {
         $request->validate([
-            'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,internship,transcript',
+            'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,internship',
             'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
@@ -30,8 +30,7 @@ class UploadDocController extends Controller
         $documentTypeMapping = [
             'สหกิจศึกษา' => 'coop_project',
             'โปรเจค' => 'project',
-            'internship' => 'internship',
-            'transcript' => 'transcript'
+            'internship' => 'internship'
         ];
 
         foreach ($request->titles as $index => $documentTitle) {
@@ -71,34 +70,30 @@ class UploadDocController extends Controller
     {
         $studentId = Auth::user()->student->id;
 
-        // อัพเดทสถานะ KKUDQ ถ้ามีการเลือก
         if ($request->has('kkudq_status') && in_array($request->kkudq_status, ['pass', 'fail'])) {
             $kkudqDoc = Document::where('student_id', $studentId)->where('document_type', 'kku_dq')->first();
             if ($kkudqDoc) {
                 $kkudqDoc->update(['status' => $request->kkudq_status, 'upload_date' => now()]);
             } else {
-                // สร้างใหม่ถ้ายังไม่มี โดยใช้ file_path ว่าง (ถ้าต้องการ)
                 Document::create([
                     'student_id' => $studentId,
                     'document_type' => 'kku_dq',
-                    'file_path' => '', // ค่าเริ่มต้นว่าง ถ้าฐานข้อมูลยอมรับ string ว่าง
+                    'file_path' => '',
                     'status' => $request->kkudq_status,
                     'upload_date' => now(),
                 ]);
             }
         }
 
-        // อัพเดทสถานะ KKU KEPT ถ้ามีการเลือก
         if ($request->has('kku_kept_status') && in_array($request->kku_kept_status, ['pass', 'fail'])) {
             $kkuKeptDoc = Document::where('student_id', $studentId)->where('document_type', 'kku_kept')->first();
             if ($kkuKeptDoc) {
                 $kkuKeptDoc->update(['status' => $request->kku_kept_status, 'upload_date' => now()]);
             } else {
-                // สร้างใหม่ถ้ายังไม่มี โดยใช้ file_path ว่าง
                 Document::create([
                     'student_id' => $studentId,
                     'document_type' => 'kku_kept',
-                    'file_path' => '', // ค่าเริ่มต้นว่าง ถ้าฐานข้อมูลยอมรับ string ว่าง
+                    'file_path' => '',
                     'status' => $request->kku_kept_status,
                     'upload_date' => now(),
                 ]);

@@ -8,6 +8,26 @@
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .section-title {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        .document-link {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        .document-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -77,9 +97,9 @@
                             <th>เกรดเฉลี่ย</th>
                             <th>สหกิจศึกษา</th>
                             <th>โปรเจค</th>
-                            <th>KKU KEPT</th>
-                            <th>KKU DQ</th>
                             <th>ฝึกงาน</th>
+                            <th>KKU DQ</th>
+                            <th>KKU KEPT</th>
                         </tr>
                     </thead>
                     <tbody id="student-table">
@@ -87,7 +107,7 @@
                             <tr class="text-center">
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $student->id }}</td>
-                                <td>{{ $student->first_name }}</td>
+                                <td>{{ $student->first_name }} {{ $student->last_name ?? '' }}</td>
                                 <td>วิทยาการคอมพิวเตอร์และสารสนเทศ</td>
                                 <td>{{ $student->calculateGPA() ? number_format($student->calculateGPA(), 2) : '-' }}</td>
                                 <td>
@@ -105,15 +125,8 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($student->documents->where('document_type', 'kku_kept')->isNotEmpty())
-                                        @php
-                                            $doc = $student->documents->where('document_type', 'kku_kept')->first();
-                                            $status = $doc->status;
-                                            $displayStatus = in_array($doc->document_type, ['kku_kept']) && $status
-                                                ? ($status == 'pass' ? 'ผ่าน' : ($status == 'fail' ? 'ไม่ผ่าน' : '-'))
-                                                : '-';
-                                        @endphp
-                                        {{ $displayStatus }}
+                                    @if($student->documents->where('document_type', 'internship')->isNotEmpty())
+                                        <a href="#" onclick="showFilesModal('{{ $student->id }}', 'internship')">ดูเอกสาร</a>
                                     @else
                                         -
                                     @endif
@@ -133,11 +146,11 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($student->documents->where('document_type', 'internship')->isNotEmpty())
+                                    @if($student->documents->where('document_type', 'kku_kept')->isNotEmpty())
                                         @php
-                                            $doc = $student->documents->where('document_type', 'internship')->first();
+                                            $doc = $student->documents->where('document_type', 'kku_kept')->first();
                                             $status = $doc->status;
-                                            $displayStatus = in_array($doc->document_type, ['internship']) && $status
+                                            $displayStatus = in_array($doc->document_type, ['kku_kept']) && $status
                                                 ? ($status == 'pass' ? 'ผ่าน' : ($status == 'fail' ? 'ไม่ผ่าน' : '-'))
                                                 : '-';
                                         @endphp
@@ -175,16 +188,20 @@
                 type: 'GET',
                 success: function (response) {
                     $('#filesList').empty();
-                    response.documents.forEach(function (doc) {
-                        let statusText = ['kku_dq', 'kku_kept'].includes(doc.document_type) && doc.status
-                            ? ` (${doc.status == 'pass' ? 'ผ่าน' : 'ไม่ผ่าน'})`
-                            : '';
-                        $('#filesList').append(`<li><a href="${doc.file_path}" target="_blank">${doc.file_name}${statusText}</a></li>`);
-                    });
+                    if (response.documents.length > 0) {
+                        response.documents.forEach(function (doc) {
+                            let statusText = ['kku_dq', 'kku_kept'].includes(docType) && doc.status
+                                ? ` (${doc.status == 'pass' ? 'ผ่าน' : 'ไม่ผ่าน'})`
+                                : '';
+                            $('#filesList').append(`<li><a href="${doc.file_path}" target="_blank">${doc.file_name}${statusText}</a></li>`);
+                        });
+                    } else {
+                        $('#filesList').append('<li><span class="text-muted">ไม่มีเอกสาร</span></li>');
+                    }
                     $('#filesModal').modal('show');
                 },
                 error: function (xhr) {
-                    alert('ไม่สามารถดึงข้อมูลเอกสารได้: ' + xhr.responseText);
+                    Swal.fire('ผิดพลาด!', 'ไม่สามารถดึงข้อมูลเอกสารได้: ' + (xhr.responseJSON?.message || xhr.responseText), 'error');
                 }
             });
         }
@@ -218,19 +235,19 @@
                 var tdGrade = tr[i].getElementsByTagName("td")[4];
                 var tdCoop = tr[i].getElementsByTagName("td")[5];
                 var tdProject = tr[i].getElementsByTagName("td")[6];
-                var tdKept = tr[i].getElementsByTagName("td")[7];
+                var tdInternship = tr[i].getElementsByTagName("td")[7];
                 var tdDQ = tr[i].getElementsByTagName("td")[8];
-                var tdInternship = tr[i].getElementsByTagName("td")[9];
+                var tdKept = tr[i].getElementsByTagName("td")[9];
 
                 if (filter === "all") {
                     tr[i].style.display = "";
-                } else if (filter === "grade" && tdGrade && tdGrade.textContent !== "-") {
+                } else if (filter === "grade" && tdGrade && tdGrade.textContent !== "-" && tdGrade.textContent !== "") {
                     tr[i].style.display = "";
                 } else if (filter === "kept" && tdKept && tdKept.textContent === "ผ่าน") {
                     tr[i].style.display = "";
                 } else if (filter === "dq" && tdDQ && tdDQ.textContent === "ผ่าน") {
                     tr[i].style.display = "";
-                } else if (filter === "internship" && tdInternship && tdInternship.textContent === "ผ่าน") {
+                } else if (filter === "internship" && tdInternship && tdInternship.textContent.includes("ดูเอกสาร")) {
                     tr[i].style.display = "";
                 } else if (filter === "coop" && tdCoop && tdCoop.textContent.includes("ดูเอกสาร")) {
                     tr[i].style.display = "";

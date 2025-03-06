@@ -56,10 +56,16 @@
             cursor: pointer;
             color: #dc3545;
         }
+        .nav-tabs .nav-link {
+            color: #495057;
+        }
+        .nav-tabs .nav-link.active {
+            color: #0d6efd;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
     <div class="navbar d-flex justify-content-between align-items-center p-2 bg-light">
         <div class="navbar-logo">
             <img src="{{ asset('img/KKU_Logo.png') }}" alt="โลโก้ระบบ" style="height: 50px;">
@@ -95,30 +101,32 @@
         </div>
     </div>
 
-    <!-- Sidebar -->
     <div class="sidebar">
         <a href="{{ route('report') }}">รายงานผลการศึกษา</a>
         <a href="{{ route('upload.document') }}">อัปโหลดเอกสาร</a>
         <a href="{{ route('student-profile') }}">ประวัตินักศึกษา</a>
     </div>
 
-    <!-- Main Content -->
-    <div class="content">
-        <div class="container mt-5">
+    <div class="content flex-grow-1 p-4">
+        <div class="container">
             <h2 class="text-center mb-4">อัปโหลดเอกสาร</h2>
 
             @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
+                <div class="alert alert-success">
+                    {{ session('success') }}
+                </div>
             @endif
             @if(session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
+                <div class="alert alert-danger">
+                    {{ session('error') }}
+                </div>
             @endif
 
             @auth
-                <p>ยินดีต้อนรับ, {{ Auth::user()->username }}</p>
-                <p>รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}</p>
+                <p class="mb-3">ยินดีต้อนรับ, {{ Auth::user()->username }}</p>
+                <p class="mb-4">รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}</p>
             @else
-                <p>กรุณาเข้าสู่ระบบก่อนทำการอัปโหลดเอกสาร</p>
+                <p class="mb-4">กรุณาเข้าสู่ระบบก่อนทำการอัปโหลดเอกสาร</p>
             @endauth
 
             <!-- Section for Uploading Documents -->
@@ -133,7 +141,6 @@
                             <option value="สหกิจศึกษา">สหกิจศึกษา</option>
                             <option value="โปรเจค">โปรเจค</option>
                             <option value="internship">ฝึกงาน</option>
-                            <option value="transcript">ผลการศึกษา</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -190,45 +197,114 @@
                 </form>
             </div>
 
-            <!-- Section for Uploaded Files -->
+            <!-- Section for Uploaded Files with Tabs -->
             <div class="section-title">ไฟล์ที่อัปโหลดแล้ว</div>
             <div class="card p-3">
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>ประเภทเอกสาร</th>
-                                <th>ชื่อไฟล์</th>
-                                <th>การดำเนินการ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php
-                                $uploadedFiles = Cache::get('uploaded_files', []);
-                            @endphp
-                            @foreach ($documents as $document)
-                                @if (in_array($document->document_type, ['coop_project', 'project', 'internship', 'transcript']))
+                <ul class="nav nav-tabs mb-3" id="docTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="coop-tab" data-bs-toggle="tab" href="#coop" role="tab" aria-controls="coop" aria-selected="true">สหกิจศึกษา</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="project-tab" data-bs-toggle="tab" href="#project" role="tab" aria-controls="project" aria-selected="false">โปรเจค</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="internship-tab" data-bs-toggle="tab" href="#internship" role="tab" aria-controls="internship" aria-selected="false">ฝึกงาน</a>
+                    </li>
+                </ul>
+                <div class="tab-content" id="docTabsContent">
+                    <!-- Tab for สหกิจศึกษา -->
+                    <div class="tab-pane fade show active" id="coop" role="tabpanel" aria-labelledby="coop-tab">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
                                     <tr>
-                                        @php
-                                            $documentType = match ($document->document_type) {
-                                                'coop_project' => 'สหกิจศึกษา',
-                                                'project' => 'โปรเจค',
-                                                'internship' => 'ฝึกงาน',
-                                                'transcript' => 'ผลการศึกษา',
-                                                default => ucfirst($document->document_type),
-                                            };
-                                            $fileName = $uploadedFiles[$document->id] ?? basename($document->file_path);
-                                        @endphp
-                                        <td>{{ $documentType }}</td>
-                                        <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $fileName }}</a></td>
-                                        <td>
-                                            <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
-                                        </td>
+                                        <th>ประเภทเอกสาร</th>
+                                        <th>ชื่อไฟล์</th>
+                                        <th>การดำเนินการ</th>
                                     </tr>
-                                @endif
-                            @endforeach
-                        </tbody>
-                    </table>
+                                </thead>
+                                <tbody>
+                                    @php
+                                        $uploadedFiles = Cache::get('uploaded_files', []);
+                                    @endphp
+                                    @foreach ($documents->where('document_type', 'coop_project') as $document)
+                                        <tr>
+                                            <td>สหกิจศึกษา</td>
+                                            <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
+                                            <td>
+                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                    @if ($documents->where('document_type', 'coop_project')->isEmpty())
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted">ไม่มีเอกสาร</td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Tab for โปรเจค -->
+                    <div class="tab-pane fade" id="project" role="tabpanel" aria-labelledby="project-tab">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>ประเภทเอกสาร</th>
+                                        <th>ชื่อไฟล์</th>
+                                        <th>การดำเนินการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($documents->where('document_type', 'project') as $document)
+                                        <tr>
+                                            <td>โปรเจค</td>
+                                            <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
+                                            <td>
+                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                    @if ($documents->where('document_type', 'project')->isEmpty())
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted">ไม่มีเอกสาร</td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Tab for ฝึกงาน -->
+                    <div class="tab-pane fade" id="internship" role="tabpanel" aria-labelledby="internship-tab">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>ประเภทเอกสาร</th>
+                                        <th>ชื่อไฟล์</th>
+                                        <th>การดำเนินการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($documents->where('document_type', 'internship') as $document)
+                                        <tr>
+                                            <td>ฝึกงาน</td>
+                                            <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
+                                            <td>
+                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                    @if ($documents->where('document_type', 'internship')->isEmpty())
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted">ไม่มีเอกสาร</td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
