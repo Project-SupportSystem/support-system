@@ -24,6 +24,22 @@
             gap: 10px;
             flex-shrink: 0;
         }
+        .status-section {
+            margin-top: 20px;
+        }
+        .status-section .form-control {
+            width: 200px;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .status-section .status-text {
+            margin-left: 10px;
+            font-weight: bold;
+            color: #28a745;
+        }
+        .status-section .btn {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -34,7 +50,8 @@
         <div class="dropdown">
             <a class="btn btn-light dropdown-toggle" href="#" role="button" id="userDropdown" 
                data-bs-toggle="dropdown" aria-expanded="false">
-                <img src="{{ asset('img/user-icon.png') }}" alt="User Icon" style="width: 30px; height: 30px; border-radius: 50%;"></a>
+                <img src="{{ asset('img/user-icon.png') }}" alt="User Icon" style="width: 30px; height: 30px; border-radius: 50%;">
+            </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                 <li><a class="dropdown-item" href="#">{{ Auth::user()->username ?? 'ไม่พบข้อมูลผู้ใช้' }} ({{ Auth::user()->role ?? 'ไม่มีสิทธิ์' }})</a></li>
                 <li><a class="dropdown-item" href="#">รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}</a></li>
@@ -57,58 +74,77 @@
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
+            @if(session('error'))
+                <div class="alert alert-danger">{{ session('error') }}</div>
+            @endif
 
             <form action="{{ route('upload.doc') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
                 @csrf
 
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="card-title">สหกิจศึกษา / โปรเจค</h5>
+                        <h5 class="card-title">เลือกประเภทเอกสาร</h5>
                     </div>
                     <div class="card-body">
-                        <select name="titles[]" class="form-select mb-2" id="coopProjectSelect">
-                            <option value="" selected>-- เลือกแผนการที่จะไป --</option>
+                        <select name="titles[]" class="form-select mb-2" id="docTypeSelect">
+                            <option value="" selected>-- เลือกประเภทเอกสาร --</option>
                             <option value="สหกิจศึกษา">สหกิจศึกษา</option>
                             <option value="โปรเจค">โปรเจค</option>
+                            <option value="internship">ฝึกงาน</option>
+                            <option value="transcript">ผลการศึกษา</option>
                         </select>
-                        <p id="coopProjectInfo" class="text-muted"></p>
-                        <input type="file" name="files[0][]" id="coopProjectUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple onchange="addFiles(this, 'fileList0')" style="display: none;">
+                        <p id="docInfo" class="text-muted"></p>
+                        <input type="file" name="files[0][]" id="docUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple onchange="addFiles(this, 'fileList0')" style="display: none;">
                         <div id="fileList0" class="mt-2"></div>
                     </div>
                 </div>
 
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="card-title">KKUDQ</h5>
-                    </div>
-                    <div class="card-body">
-                        <div>
-                            <input type="radio" name="kkudq_status" value="pass" id="kkudqPass">
-                            <label for="kkudqPass">ผ่าน</label>
-                            <input type="radio" name="kkudq_status" value="fail" id="kkudqFail">
-                            <label for="kkudqFail">ไม่ผ่าน</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="card-title">KKU KEPT</h5>
-                    </div>
-                    <div class="card-body">
-                        <div>
-                            <input type="radio" name="kept_status" value="pass" id="keptPass">
-                            <label for="keptPass">ผ่าน</label>
-                            <input type="radio" name="kept_status" value="fail" id="keptFail">
-                            <label for="keptFail">ไม่ผ่าน</label>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="text-end">
-                    <button type="submit" class="btn btn-primary">อัปโหลด</button>
+                    <button type="submit" class="btn btn-primary" id="submitButton">อัปโหลด</button>
                 </div>
             </form>
+
+            <div class="card mt-5 status-section">
+                <div class="card-header">
+                    <h5 class="card-title">บันทึกสถานะ</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('save.status') }}" method="POST" id="statusForm">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="kkudqStatus" class="form-label">สถานะ KKUDQ</label>
+                            <select name="kkudq_status" id="kkudqStatus" class="form-control">
+                                <option value="">-- เลือกสถานะ --</option>
+                                <option value="pass" {{ $documents->where('document_type', 'kku_dq')->first()?->status == 'pass' ? 'selected' : '' }}>ผ่าน</option>
+                                <option value="fail" {{ $documents->where('document_type', 'kku_dq')->first()?->status == 'fail' ? 'selected' : '' }}>ไม่ผ่าน</option>
+                            </select>
+                            @php
+                                $kkudqStatus = $documents->where('document_type', 'kku_dq')->first()?->status;
+                                $kkudqStatusText = $kkudqStatus ? ($kkudqStatus == 'pass' ? 'ผ่าน' : 'ไม่ผ่าน') : '';
+                            @endphp
+                            @if($kkudqStatusText)
+                                <span class="status-text"> (สถานะปัจจุบัน: {{ $kkudqStatusText }})</span>
+                            @endif
+                        </div>
+                        <div class="mb-3">
+                            <label for="kkuKeptStatus" class="form-label">สถานะ KKU KEPT</label>
+                            <select name="kku_kept_status" id="kkuKeptStatus" class="form-control">
+                                <option value="">-- เลือกสถานะ --</option>
+                                <option value="pass" {{ $documents->where('document_type', 'kku_kept')->first()?->status == 'pass' ? 'selected' : '' }}>ผ่าน</option>
+                                <option value="fail" {{ $documents->where('document_type', 'kku_kept')->first()?->status == 'fail' ? 'selected' : '' }}>ไม่ผ่าน</option>
+                            </select>
+                            @php
+                                $kkuKeptStatus = $documents->where('document_type', 'kku_kept')->first()?->status;
+                                $kkuKeptStatusText = $kkuKeptStatus ? ($kkuKeptStatus == 'pass' ? 'ผ่าน' : 'ไม่ผ่าน') : '';
+                            @endphp
+                            @if($kkuKeptStatusText)
+                                <span class="status-text"> (สถานะปัจจุบัน: {{ $kkuKeptStatusText }})</span>
+                            @endif
+                        </div>
+                        <button type="submit" class="btn btn-success">บันทึกสถานะ</button>
+                    </form>
+                </div>
+            </div>
 
             <div class="card mt-5">
                 <div class="card-header">
@@ -120,26 +156,26 @@
                             $uploadedFiles = Cache::get('uploaded_files', []);
                         @endphp
                         @foreach ($documents as $document)
-                            <li class="list-group-item document-item">
-                                @php
-                                    $documentType = match ($document->document_type) {
-                                        'coop_project' => 'สหกิจศึกษา',
-                                        'project' => 'โปรเจค',
-                                        'kku_dq' => 'KKUDQ',
-                                        'kku_kept' => 'KKU KEPT',
-                                        'internship' => 'ฝึกงาน',
-                                        'transcript' => 'ผลการศึกษา',
-                                        default => ucfirst($document->document_type),
-                                    };
-                                    // ดึงชื่อไฟล์ต้นฉบับจาก Cache
-                                    $fileName = $uploadedFiles[$document->id] ?? basename($document->file_path);
-                                @endphp
-                                <strong class="document-type">{{ $documentType }}</strong>
-                                <div class="document-actions">
-                                    <a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $fileName }}</a>
-                                    <a href="{{ route('document.delete', $document->id) }}" class="text-danger" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
-                                </div>
-                            </li>
+                            @if (in_array($document->document_type, ['coop_project', 'project', 'internship', 'transcript']))
+                                <li class="list-group-item document-item">
+                                    @php
+                                        $documentType = match ($document->document_type) {
+                                            'coop_project' => 'สหกิจศึกษา',
+                                            'project' => 'โปรเจค',
+                                            'internship' => 'ฝึกงาน',
+                                            'transcript' => 'ผลการศึกษา',
+                                            default => ucfirst($document->document_type),
+                                        };
+                                        $fileName = $uploadedFiles[$document->id] ?? basename($document->file_path);
+                                        $statusText = '';
+                                    @endphp
+                                    <strong class="document-type">{{ $documentType }}</strong>
+                                    <div class="document-actions">
+                                        <a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $fileName }}{{ $statusText }}</a>
+                                        <a href="{{ route('document.delete', $document->id) }}" class="text-danger" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                                    </div>
+                                </li>
+                            @endif
                         @endforeach
                     </ul>
                 </div>
@@ -149,29 +185,64 @@
 
     <script>
         let currentSelection = "";
-
-        document.getElementById("coopProjectSelect").addEventListener("change", function() {
+        document.getElementById("docTypeSelect").addEventListener("change", function() {
             const selectedOption = this.value;
-            const coopProjectInfo = document.getElementById("coopProjectInfo");
-            const uploadInput = document.getElementById("coopProjectUpload");
+            const docInfo = document.getElementById("docInfo");
+            const uploadInput = document.getElementById("docUpload");
             const fileList = document.getElementById("fileList0");
 
             if (selectedOption === "") {
                 uploadInput.style.display = "none";
                 uploadInput.value = "";
                 fileList.innerHTML = "";
-                coopProjectInfo.textContent = "";
+                docInfo.textContent = "";
             } else {
                 if (selectedOption !== currentSelection) {
                     uploadInput.value = "";
                     fileList.innerHTML = "";
                 }
                 uploadInput.style.display = "block";
-                coopProjectInfo.textContent = selectedOption === "สหกิจศึกษา"
-                    ? "ไฟล์ประกอบด้วย 1. ใบสมัครออกฝึกปฏิบัติงานรายวิชาสหกิจศึกษา 2. ประวัติย่อ (Resume) ..."
-                    : "ไฟล์ประกอบด้วย 1. รายละเอียดโครงการ ชื่อโครงการหรือชื่อโปรเจค ...";
+                if (selectedOption === "สหกิจศึกษา") {
+                    docInfo.textContent = "ไฟล์ประกอบด้วย 1. ใบสมัครออกฝึกปฏิบัติงานรายวิชาสหกิจศึกษา 2. ประวัติย่อ (Resume) ...";
+                } else if (selectedOption === "โปรเจค") {
+                    docInfo.textContent = "ไฟล์ประกอบด้วย 1. รายละเอียดโครงการ ชื่อโครงการหรือชื่อโปรเจค ...";
+                } else if (selectedOption === "internship") {
+                    docInfo.textContent = "ไฟล์ประกอบด้วย รายงานฝึกงาน ...";
+                } else if (selectedOption === "transcript") {
+                    docInfo.textContent = "ไฟล์ประกอบด้วย ผลการเรียน ...";
+                } else {
+                    docInfo.textContent = "กรุณาเลือกไฟล์ที่ต้องการอัปโหลด";
+                }
             }
             currentSelection = selectedOption;
+        });
+
+        document.getElementById("uploadForm").addEventListener("submit", function(e) {
+            const selectedType = document.getElementById("docTypeSelect").value;
+            const filesSelected = document.getElementById("docUpload").files.length > 0;
+
+            if (!selectedType) {
+                alert('กรุณาเลือกประเภทเอกสาร');
+                e.preventDefault();
+                return;
+            }
+
+            if (!filesSelected) {
+                alert('กรุณาเลือกไฟล์ที่ต้องการอัปโหลด');
+                e.preventDefault();
+                return;
+            }
+        });
+
+        document.getElementById("statusForm").addEventListener("submit", function(e) {
+            const kkudqStatus = document.getElementById("kkudqStatus").value;
+            const kkuKeptStatus = document.getElementById("kkuKeptStatus").value;
+
+            if (!kkudqStatus && !kkuKeptStatus) {
+                alert('กรุณาเลือกสถานะอย่างน้อยหนึ่งรายการ (KKUDQ หรือ KKU KEPT)');
+                e.preventDefault();
+                return;
+            }
         });
 
         function addFiles(input, fileListId) {

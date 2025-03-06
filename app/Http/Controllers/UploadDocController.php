@@ -20,56 +20,92 @@ class UploadDocController extends Controller
 
     public function uploadDocument(Request $request)
     {
-        try {
-            $request->validate([
-                'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,KKUDQ,KEPT,internship,transcript',
-                'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            ]);
+        $request->validate([
+            'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,internship,transcript',
+            'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+        ]);
 
-            $studentId = Auth::user()->student->id;
+        $studentId = Auth::user()->student->id;
 
-            $documentTypeMapping = [
-                'สหกิจศึกษา' => 'coop_project',
-                'โปรเจค' => 'project',
-                'KKUDQ' => 'kku_dq',
-                'KEPT' => 'kku_kept',
-                'internship' => 'internship',
-                'transcript' => 'transcript'
-            ];
+        $documentTypeMapping = [
+            'สหกิจศึกษา' => 'coop_project',
+            'โปรเจค' => 'project',
+            'internship' => 'internship',
+            'transcript' => 'transcript'
+        ];
 
-            foreach ($request->titles as $index => $documentTitle) {
-                if (!isset($documentTypeMapping[$documentTitle])) {
-                    continue;
-                }
-                $documentType = $documentTypeMapping[$documentTitle];
+        foreach ($request->titles as $index => $documentTitle) {
+            if (!isset($documentTypeMapping[$documentTitle])) {
+                continue;
+            }
+            $documentType = $documentTypeMapping[$documentTitle];
+            $status = null;
 
-                $filesArray = $request->allFiles();
-                if (isset($filesArray['files'][$index])) {
-                    foreach ($filesArray['files'][$index] as $file) {
-                        $originalFileName = $file->getClientOriginalName();
-                        $extension = $file->getClientOriginalExtension();
-                        $safeFileName = Str::random(32) . '.' . $extension;
-                        $filePath = $file->storeAs('documents', $safeFileName, 'public');
+            $filesArray = $request->allFiles();
+            if (isset($filesArray['files'][$index])) {
+                foreach ($filesArray['files'][$index] as $file) {
+                    $originalFileName = $file->getClientOriginalName();
+                    $extension = $file->getClientOriginalExtension();
+                    $safeFileName = Str::random(32) . '.' . $extension;
+                    $filePath = $file->storeAs('documents', $safeFileName, 'public');
 
-                        $document = Document::create([
-                            'student_id' => $studentId,
-                            'document_type' => $documentType,
-                            'file_path' => $filePath,
-                            'upload_date' => now(),
-                        ]);
+                    $document = Document::create([
+                        'student_id' => $studentId,
+                        'document_type' => $documentType,
+                        'file_path' => $filePath,
+                        'upload_date' => now(),
+                        'status' => $status,
+                    ]);
 
-                        // เก็บชื่อไฟล์ใน Cache
-                        $uploadedFiles = Cache::get('uploaded_files', []);
-                        $uploadedFiles[$document->id] = $originalFileName;
-                        Cache::put('uploaded_files', $uploadedFiles); // เก็บถาวร
-                    }
+                    $uploadedFiles = Cache::get('uploaded_files', []);
+                    $uploadedFiles[$document->id] = $originalFileName;
+                    Cache::put('uploaded_files', $uploadedFiles);
                 }
             }
-
-            return redirect()->back()->with('success', 'เอกสารถูกอัปโหลดสำเร็จแล้ว');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'การอัปโหลดล้มเหลว: ' . $e->getMessage());
         }
+
+        return redirect()->back()->with('success', 'เอกสารถูกอัปโหลดสำเร็จแล้ว');
+    }
+
+    public function saveStatus(Request $request)
+    {
+        $studentId = Auth::user()->student->id;
+
+        // อัพเดทสถานะ KKUDQ ถ้ามีการเลือก
+        if ($request->has('kkudq_status') && in_array($request->kkudq_status, ['pass', 'fail'])) {
+            $kkudqDoc = Document::where('student_id', $studentId)->where('document_type', 'kku_dq')->first();
+            if ($kkudqDoc) {
+                $kkudqDoc->update(['status' => $request->kkudq_status, 'upload_date' => now()]);
+            } else {
+                // สร้างใหม่ถ้ายังไม่มี โดยใช้ file_path ว่าง (ถ้าต้องการ)
+                Document::create([
+                    'student_id' => $studentId,
+                    'document_type' => 'kku_dq',
+                    'file_path' => '', // ค่าเริ่มต้นว่าง ถ้าฐานข้อมูลยอมรับ string ว่าง
+                    'status' => $request->kkudq_status,
+                    'upload_date' => now(),
+                ]);
+            }
+        }
+
+        // อัพเดทสถานะ KKU KEPT ถ้ามีการเลือก
+        if ($request->has('kku_kept_status') && in_array($request->kku_kept_status, ['pass', 'fail'])) {
+            $kkuKeptDoc = Document::where('student_id', $studentId)->where('document_type', 'kku_kept')->first();
+            if ($kkuKeptDoc) {
+                $kkuKeptDoc->update(['status' => $request->kku_kept_status, 'upload_date' => now()]);
+            } else {
+                // สร้างใหม่ถ้ายังไม่มี โดยใช้ file_path ว่าง
+                Document::create([
+                    'student_id' => $studentId,
+                    'document_type' => 'kku_kept',
+                    'file_path' => '', // ค่าเริ่มต้นว่าง ถ้าฐานข้อมูลยอมรับ string ว่าง
+                    'status' => $request->kku_kept_status,
+                    'upload_date' => now(),
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'บันทึกสถานะสำเร็จแล้ว');
     }
 
     public function deleteDocument($documentId)
@@ -79,7 +115,6 @@ class UploadDocController extends Controller
             Storage::delete($document->file_path);
             $document->delete();
 
-            // ลบชื่อไฟล์ออกจาก Cache
             $uploadedFiles = Cache::get('uploaded_files', []);
             unset($uploadedFiles[$documentId]);
             Cache::put('uploaded_files', $uploadedFiles);
@@ -93,9 +128,8 @@ class UploadDocController extends Controller
     {
         $documents = Document::where('student_id', $studentId)
                               ->where('document_type', $docType)
-                              ->get(['file_path', 'id']);
+                              ->get(['file_path', 'id', 'status']);
 
-        // ดึงชื่อไฟล์จาก Cache
         $uploadedFiles = Cache::get('uploaded_files', []);
 
         return response()->json([
@@ -103,6 +137,7 @@ class UploadDocController extends Controller
                 return [
                     'file_path' => Storage::url($doc->file_path),
                     'file_name' => $uploadedFiles[$doc->id] ?? basename($doc->file_path),
+                    'status' => $doc->status,
                 ];
             })
         ]);

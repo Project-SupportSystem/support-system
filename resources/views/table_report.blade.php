@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบรายงานผลการศึกษานักศึกษา</title>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -12,12 +11,10 @@
 </head>
 <body class="bg-light">
 
-    <!-- Navbar -->
     <div class="navbar d-flex justify-content-between align-items-center p-2 bg-light">
         <div class="navbar-logo">
             <img src="{{ asset('img/KKU_Logo.png') }}" alt="โลโก้ระบบ" style="height: 50px;">
         </div>
-
         <div class="dropdown">
             <a class="btn btn-light dropdown-toggle" href="#" role="button" id="userDropdown" 
                data-bs-toggle="dropdown" aria-expanded="false">
@@ -44,23 +41,19 @@
         </div>
     </div>
 
-    <!-- Sidebar -->
     <div class="sidebar">
         <a href="{{ route('table_report') }}">ค้นหานักศึกษา</a>
     </div>
 
-    <!-- Main content -->
     <div class="content p-4" style="margin-left: 250px; margin-top: 80px;">
         <div class="container">
             <h2 class="text-center mb-4">รายชื่อนักศึกษาที่รับผิดชอบ</h2>
 
-            <!-- Search Bar -->
             <div class="input-group mb-3">
                 <input type="text" class="form-control" id="search-input" placeholder="กรอกรหัสนักศึกษาหรือชื่อ">
                 <button class="btn btn-primary" onclick="searchStudent()">ค้นหา</button>
             </div>
 
-            <!-- Filter Dropdown -->
             <div class="mb-3">
                 <select class="form-select" id="filter-select" onchange="filterTable()">
                     <option value="all">ทั้งหมด</option>
@@ -73,7 +66,6 @@
                 </select>
             </div>
 
-            <!-- Table of Students -->
             <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead class="table-light text-center">
@@ -85,8 +77,8 @@
                             <th>เกรดเฉลี่ย</th>
                             <th>สหกิจศึกษา</th>
                             <th>โปรเจค</th>
-                            <th>KKU KEPTs</th>
-                            <th>KKUDQ</th>
+                            <th>KKU KEPT</th>
+                            <th>KKU DQ</th>
                             <th>ฝึกงาน</th>
                         </tr>
                     </thead>
@@ -98,8 +90,6 @@
                                 <td>{{ $student->first_name }}</td>
                                 <td>วิทยาการคอมพิวเตอร์และสารสนเทศ</td>
                                 <td>{{ $student->calculateGPA() ? number_format($student->calculateGPA(), 2) : '-' }}</td>
-                                
-                                <!-- สหกิจศึกษา -->
                                 <td>
                                     @if($student->documents->where('document_type', 'coop_project')->isNotEmpty())
                                         <a href="#" onclick="showFilesModal('{{ $student->id }}', 'coop_project')">ดูเอกสาร</a>
@@ -107,8 +97,6 @@
                                         -
                                     @endif
                                 </td>
-                                
-                                <!-- โปรเจค -->
                                 <td>
                                     @if($student->documents->where('document_type', 'project')->isNotEmpty())
                                         <a href="#" onclick="showFilesModal('{{ $student->id }}', 'project')">ดูเอกสาร</a>
@@ -116,29 +104,44 @@
                                         -
                                     @endif
                                 </td>
-
-                                <!-- KKU KEPTs -->
                                 <td>
                                     @if($student->documents->where('document_type', 'kku_kept')->isNotEmpty())
-                                        ผ่าน
+                                        @php
+                                            $doc = $student->documents->where('document_type', 'kku_kept')->first();
+                                            $status = $doc->status;
+                                            $displayStatus = in_array($doc->document_type, ['kku_kept']) && $status
+                                                ? ($status == 'pass' ? 'ผ่าน' : ($status == 'fail' ? 'ไม่ผ่าน' : '-'))
+                                                : '-';
+                                        @endphp
+                                        {{ $displayStatus }}
                                     @else
                                         -
                                     @endif
                                 </td>
-
-                                <!-- KKUDQ -->
                                 <td>
                                     @if($student->documents->where('document_type', 'kku_dq')->isNotEmpty())
-                                        ผ่าน
+                                        @php
+                                            $doc = $student->documents->where('document_type', 'kku_dq')->first();
+                                            $status = $doc->status;
+                                            $displayStatus = in_array($doc->document_type, ['kku_dq']) && $status
+                                                ? ($status == 'pass' ? 'ผ่าน' : ($status == 'fail' ? 'ไม่ผ่าน' : '-'))
+                                                : '-';
+                                        @endphp
+                                        {{ $displayStatus }}
                                     @else
                                         -
                                     @endif
                                 </td>
-
-                                <!-- ฝึกงาน -->
                                 <td>
                                     @if($student->documents->where('document_type', 'internship')->isNotEmpty())
-                                        ผ่าน
+                                        @php
+                                            $doc = $student->documents->where('document_type', 'internship')->first();
+                                            $status = $doc->status;
+                                            $displayStatus = in_array($doc->document_type, ['internship']) && $status
+                                                ? ($status == 'pass' ? 'ผ่าน' : ($status == 'fail' ? 'ไม่ผ่าน' : '-'))
+                                                : '-';
+                                        @endphp
+                                        {{ $displayStatus }}
                                     @else
                                         -
                                     @endif
@@ -149,7 +152,6 @@
                 </table>
             </div>
 
-            <!-- Modal สำหรับแสดงไฟล์เอกสาร -->
             <div class="modal fade" id="filesModal" tabindex="-1" aria-labelledby="filesModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -174,8 +176,10 @@
                 success: function (response) {
                     $('#filesList').empty();
                     response.documents.forEach(function (doc) {
-                        // ใช้ doc.file_name ซึ่งมาจาก Cache ใน UploadDocController
-                        $('#filesList').append(`<li><a href="${doc.file_path}" target="_blank">${doc.file_name}</a></li>`);
+                        let statusText = ['kku_dq', 'kku_kept'].includes(doc.document_type) && doc.status
+                            ? ` (${doc.status == 'pass' ? 'ผ่าน' : 'ไม่ผ่าน'})`
+                            : '';
+                        $('#filesList').append(`<li><a href="${doc.file_path}" target="_blank">${doc.file_name}${statusText}</a></li>`);
                     });
                     $('#filesModal').modal('show');
                 },
@@ -196,7 +200,6 @@
                 if (tdStudentId && tdName) {
                     var studentIdValue = tdStudentId.textContent || tdStudentId.innerText;
                     var nameValue = tdName.textContent || tdName.innerText;
-
                     if (studentIdValue.toLowerCase().indexOf(input) > -1 || nameValue.toLowerCase().indexOf(input) > -1) {
                         tr[i].style.display = '';
                     } else {

@@ -1,13 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UploadController;
+use App\Http\Controllers\UploadDocController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\AcademicRecordController;
-use App\Http\Controllers\UploadDocController;
 
 Route::middleware(['auth', 'role:student'])->group(function () {
     Route::get('/register-courses', function () {
@@ -16,7 +15,6 @@ Route::middleware(['auth', 'role:student'])->group(function () {
 
     Route::get('/student-profile', [StudentController::class, 'create'])->name('student-profile');
     Route::post('/student-profile', [StudentController::class, 'store'])->name('student.store');
-    Route::get('/student-profile/edit/{id}', [StudentController::class, 'edit'])->name('student.edit');
     Route::put('/student/update/{id}', [StudentController::class, 'update'])->name('student.update');
 
     Route::get('/report', [ReportController::class, 'index'])->name('report');
@@ -27,8 +25,11 @@ Route::middleware(['auth', 'role:student'])->group(function () {
 
     Route::get('/upload-document', [UploadDocController::class, 'index'])->name('upload.document');
     Route::post('/upload-doc', [UploadDocController::class, 'uploadDocument'])->name('upload.doc');
+    Route::post('/save-status', [UploadDocController::class, 'saveStatus'])->name('save.status');
+    Route::delete('/document/{documentId}', [UploadDocController::class, 'deleteDocument'])->name('document.delete');
     Route::get('/delete-document/{documentId}', [UploadDocController::class, 'deleteDocument'])->name('document.delete');
     Route::get('/get-student-documents/{studentId}/{docType}', [UploadDocController::class, 'getStudentDocuments']);
+    
 
     Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
     Route::get('/courses/autocomplete', [CourseController::class, 'autocomplete'])->name('courses.autocomplete');

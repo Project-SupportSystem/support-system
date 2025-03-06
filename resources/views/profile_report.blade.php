@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บันทึกข้อมูลนักศึกษา</title>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -18,12 +16,12 @@
     <div class="navbar-logo">
         <img src="{{ asset('img/KKU_Logo.png') }}" alt="โลโก้ระบบ" style="height: 50px;">
     </div>
-
     <div class="dropdown">
         <a class="btn btn-light dropdown-toggle" href="#" role="button" id="userDropdown" 
            data-bs-toggle="dropdown" aria-expanded="false">
             <img src="{{ asset('img/user-icon.png') }}" alt="User Icon" 
-                 style="width: 30px; height: 30px; border-radius: 50%;"></a>
+                 style="width: 30px; height: 30px; border-radius: 50%;">
+        </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
             <li>
                 <a class="dropdown-item" href="#">
@@ -62,7 +60,7 @@
     <form action="{{ isset($student) ? route('student.update', $student->id) : route('student.store') }}" method="POST">
         @csrf
         @if (isset($student))
-            @method('PUT') <!-- ใช้ @method('PUT') สำหรับการอัปเดตข้อมูล -->
+            @method('PUT')
         @endif
 
         <div class="mb-3">
@@ -112,19 +110,16 @@
 
 <script>
     $(document).ready(function() {
-        // เมื่อคลิกปุ่ม "แก้ไขข้อมูลนักศึกษา"
         $('#editButton').click(function() {
-            // ทำให้ฟอร์มสามารถแก้ไขได้
             $('input').removeAttr('readonly');
             $('select').prop('disabled', false);
-            $(this).hide(); // ซ่อนปุ่มแก้ไข
-            $('#backButton').show(); // แสดงปุ่มย้อนกลับ
-            $('#saveButton').show(); // แสดงปุ่มบันทึก
+            $(this).hide();
+            $('#backButton').show();
+            $('#saveButton').show();
         });
 
-        // เมื่อคลิกปุ่ม "ย้อนกลับ"
         $('#backButton').click(function() {
-            window.location.href = "{{ route('student-profile') }}"; // กลับไปยังหน้าประวัตินักศึกษา
+            window.location.href = "{{ route('student-profile') }}";
         });
     });
 </script>
