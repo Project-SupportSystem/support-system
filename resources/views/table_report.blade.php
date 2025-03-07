@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบรายงานผลการศึกษานักศึกษา</title>
+    <title>ระบบรายงานผลการศึกษานักศึกษา - มหาวิทยาลัยขอนแก่น</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
@@ -62,7 +62,7 @@
         }
         .sidebar a:hover {
             background-color: #e9ecef;
-            color: #0d6efd;
+            color: #F36D21; /* เปลี่ยนเป็นสีส้ม KKU เมื่อ hover */
         }
 
         /* ปรับแต่ง Content */
@@ -91,14 +91,15 @@
         }
         .input-group button {
             border-radius: 0 8px 8px 0;
-            background-color: #0d6efd;
+            background-color: #F36D21; /* เปลี่ยนเป็นสีส้ม KKU */
             border: none;
             font-size: 14px;
             padding: 10px 20px;
             transition: background-color 0.3s ease;
+            color: #fff; /* เปลี่ยนตัวอักษรเป็นสีขาวเพื่อความชัดเจน */
         }
         .input-group button:hover {
-            background-color: #0b5ed7;
+            background-color: #D85B1B; /* สีส้มเข้มเมื่อ hover */
         }
 
         /* ปรับแต่งตารางหลัก */
@@ -130,13 +131,13 @@
             color: #555;
         }
         .gpa-link, .document-link {
-            color: #0d6efd;
+            color: #0d6efd; /* รักษาสีน้ำเงินตามเดิม */
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s ease;
         }
         .gpa-link:hover, .document-link:hover {
-            color: #0b5ed7;
+            color: #0b5ed7; /* สีน้ำเงินเข้มเมื่อ hover */
             text-decoration: underline;
         }
 
@@ -235,13 +236,96 @@
             border-bottom: none;
         }
         .modal-body ul li a {
-            color: #0d6efd;
+            color: #0d6efd; /* รักษาสีน้ำเงินตามเดิม */
             text-decoration: none;
             font-size: 14px;
         }
         .modal-body ul li a:hover {
-            color: #0b5ed7;
+            color: #0b5ed7; /* สีน้ำเงินเข้มเมื่อ hover */
             text-decoration: underline;
+        }
+
+        /* Dark Mode */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1e1e1e;
+                color: #d1d1d1;
+            }
+            .navbar, .sidebar, .table {
+                background-color: #2c2c2c;
+                border-color: #444444;
+                box-shadow: 0 2px 10px rgba(255, 255, 255, 0.05);
+            }
+            .sidebar a {
+                color: #adb5bd;
+            }
+            .sidebar a:hover {
+                background-color: #3c3c3c;
+                color: #F36D21; /* เปลี่ยนเป็นสีส้ม KKU เมื่อ hover */
+            }
+            .content h2 {
+                color: #e9ecef;
+            }
+            .input-group input {
+                background-color: #3c3c3c;
+                border-color: #555;
+                color: #d1d1d1;
+            }
+            .input-group button {
+                background-color: #F36D21; /* เปลี่ยนเป็นสีส้ม KKU */
+                color: #fff; /* ตัวอักษรสีขาว */
+            }
+            .input-group button:hover {
+                background-color: #D85B1B; /* สีส้มเข้มเมื่อ hover */
+            }
+            .table thead {
+                background-color: #3c3c3c;
+                color: #e9ecef;
+            }
+            .table tbody tr:hover {
+                background-color: #3c3c3c;
+            }
+            .table tbody td {
+                color: #adb5bd;
+            }
+            .gpa-link, .document-link {
+                color: #0d6efd; /* รักษาสีน้ำเงินตามเดิม */
+            }
+            .gpa-link:hover, .document-link:hover {
+                color: #0b5ed7; /* สีน้ำเงินเข้มเมื่อ hover */
+            }
+            .semester-header {
+                background-color: #3c3c3c;
+                color: #e9ecef;
+            }
+            .semester-header:hover {
+                background-color: #4a4a4a;
+            }
+            .academic-table th {
+                background-color: #3c3c3c;
+                color: #e9ecef;
+            }
+            .academic-table td {
+                color: #adb5bd;
+            }
+            .summary-table th {
+                background-color: #3c3c3c;
+                color: #e9ecef;
+            }
+            .modal-header {
+                background-color: #3c3c3c;
+                color: #e9ecef;
+                border-bottom: 1px solid #555;
+            }
+            .modal-body ul li {
+                border-bottom: 1px solid #555;
+            }
+            .modal-body ul li a {
+                color: #0d6efd; /* รักษาสีน้ำเงินตามเดิม */
+            }
+            .modal-body ul li a:hover {
+                color: #0b5ed7; /* สีน้ำเงินเข้มเมื่อ hover */
+            }
         }
     </style>
 </head>
@@ -267,7 +351,7 @@
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
-                        <a class="dropdown-item" href="{{ route('logout') }}">Log Out</a>
+                        <a class="dropdown-item" href="{{ route('logout') }}">ออกจากระบบ</a>
                     </li>
                 @else
                     <li>
@@ -395,26 +479,22 @@
                                 <td colspan="10">
                                     @if(isset($academicRecords[$student->id]) && !$academicRecords[$student->id]->isEmpty())
                                         @php
-                                            // แยกภาค (term) และปี (year) จาก semester (เช่น "1/2565" → ["1", "2565"])
                                             $semesters = $academicRecords[$student->id]->pluck('semester')->unique()->map(function ($semester) {
                                                 [$term, $year] = explode('/', $semester);
                                                 return ['term' => (int)$term, 'year' => (int)$year, 'original' => $semester];
                                             })->sortBy(function ($item) {
-                                                return $item['year'] * 100 + $item['term']; // เรียงตามปี * 100 + เทอม (เช่น 256501, 256502, 256601)
+                                                return $item['year'] * 100 + $item['term'];
                                             })->pluck('original')->values();
 
-                                            // ประกาศตัวแปรสะสมสำหรับ "สะสมถึงเทอมนี้"
                                             $accumCR = 0;
                                             $accumCP = 0;
                                             $accumCA = 0;
                                             $accumGP = 0;
                                         @endphp
 
-                                        <!-- วนลูปตามลำดับภาคการศึกษาที่เรียงแล้ว -->
                                         @foreach($semesters as $semester)
                                             @php
                                                 $records = $academicRecords[$student->id]->where('semester', $semester);
-                                                // ตัวแปรผลรวม "เทอมนี้"
                                                 $totalCR = 0;
                                                 $totalCP = 0;
                                                 $totalCA = 0;
@@ -554,10 +634,20 @@
 
     <script>
         function showFilesModal(studentId, docType) {
+            Swal.fire({
+                title: 'กำลังโหลด...',
+                text: 'กรุณารอสักครู่ขณะที่ระบบดึงข้อมูลเอกสาร',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             $.ajax({
                 url: `/get-student-documents/${studentId}/${docType}`,
                 type: 'GET',
                 success: function (response) {
+                    Swal.close();
                     $('#filesList').empty();
                     if (response.documents.length > 0) {
                         response.documents.forEach(function (doc) {
@@ -574,8 +664,12 @@
                     $('#filesModal').modal('show');
                 },
                 error: function (xhr) {
-                    Swal.fire('ผิดพลาด!', 'ไม่สามารถดึงข้อมูลเอกสารได้: ' 
-                              + (xhr.responseJSON?.message || xhr.responseText), 'error');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ผิดพลาด!',
+                        text: 'ไม่สามารถดึงข้อมูลเอกสารได้: ' + (xhr.responseJSON?.message || xhr.responseText),
+                        confirmButtonColor: '#0d6efd' // รักษาสีน้ำเงิน
+                    });
                     console.log('Error Details:', xhr.responseText);
                 }
             });
@@ -613,9 +707,9 @@
 
         function toggleCollapse(semesterId) {
             var collapse = document.getElementById(semesterId);
-            var header = collapse.previousElementSibling; // ดึง element ของ semester-header
+            var header = collapse.previousElementSibling;
             collapse.classList.toggle('show');
-            header.classList.toggle('active'); // เพิ่ม/ลบคลาส active เพื่อหมุนไอคอน
+            header.classList.toggle('active');
         }
     </script>
 </body>

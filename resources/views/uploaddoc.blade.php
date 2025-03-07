@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>อัปโหลดเอกสาร</title>
+    <title>อัปโหลดเอกสาร - มหาวิทยาลัยขอนแก่น</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
@@ -56,7 +56,7 @@
         }
         .sidebar a:hover {
             background-color: #e9ecef;
-            color: #0d6efd;
+            color: #f36d21; /* เปลี่ยนเป็นสีส้มของ KKU */
         }
         .content {
             margin-left: 240px;
@@ -72,7 +72,7 @@
         .section-title {
             background-color: #f8f9fa;
             padding: 10px;
-            border-radius: 5px;
+            border-radius: 8px;
             margin-bottom: 15px;
             font-weight: 600;
             color: #2c3e50;
@@ -96,11 +96,11 @@
             border-radius: 8px;
         }
         .btn-primary {
-            background-color: #0d6efd;
+            background-color: #f36d21; /* เปลี่ยนเป็นสีส้มของ KKU */
             border: none;
         }
         .btn-primary:hover {
-            background-color: #0b5ed7;
+            background-color: #d85b1b; /* สีส้มเข้มเมื่อ hover */
         }
         .btn-success {
             background-color: #28a745;
@@ -160,8 +160,67 @@
             color: #495057;
         }
         .nav-tabs .nav-link.active {
-            color: #0d6efd;
+            color: #f36d21; /* เปลี่ยนเป็นสีส้มของ KKU */
             font-weight: bold;
+        }
+        /* Dark Mode */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1e1e1e;
+                color: #d1d1d1;
+            }
+            .navbar, .sidebar, .card {
+                background-color: #2c2c2c;
+                border-color: #444444;
+                box-shadow: 0 2px 10px rgba(255, 255, 255, 0.05);
+            }
+            .sidebar a {
+                color: #adb5bd;
+            }
+            .sidebar a:hover {
+                background-color: #3c3c3c;
+                color: #f36d21;
+            }
+            .content h2, .section-title, .form-label {
+                color: #e9ecef;
+            }
+            .form-control, .form-select {
+                background-color: #3c3c3c;
+                border-color: #555;
+                color: #d1d1d1;
+            }
+            .btn-primary {
+                background-color: #f36d21;
+            }
+            .btn-primary:hover {
+                background-color: #d85b1b;
+            }
+            .btn-success {
+                background-color: #28a745;
+            }
+            .btn-success:hover {
+                background-color: #218838;
+            }
+            .btn-danger {
+                background-color: #dc3545;
+            }
+            .btn-danger:hover {
+                background-color: #c82333;
+            }
+            .alert-success {
+                background-color: #28a745;
+                color: #ffffff;
+            }
+            .alert-danger {
+                background-color: #dc3545;
+                color: #ffffff;
+            }
+            .nav-tabs .nav-link {
+                color: #adb5bd;
+            }
+            .nav-tabs .nav-link.active {
+                color: #f36d21;
+            }
         }
     </style>
 </head>
@@ -332,7 +391,7 @@
                                             <td>สหกิจศึกษา</td>
                                             <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
                                             <td>
-                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom delete-btn" data-id="{{ $document->id }}">ลบ</a>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -362,7 +421,7 @@
                                             <td>โปรเจค</td>
                                             <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
                                             <td>
-                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom delete-btn" data-id="{{ $document->id }}">ลบ</a>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -392,7 +451,7 @@
                                             <td>ฝึกงาน</td>
                                             <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
                                             <td>
-                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom delete-btn" data-id="{{ $document->id }}">ลบ</a>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -431,32 +490,8 @@
             currentSelection = selectedOption;
         });
 
-        document.getElementById("uploadForm").addEventListener("submit", function(e) {
-            const selectedType = document.getElementById("docTypeSelect").value;
-            const filesSelected = document.getElementById("docUpload").files.length > 0;
-
-            if (!selectedType) {
-                Swal.fire('คำเตือน!', 'กรุณาเลือกประเภทเอกสาร', 'warning');
-                e.preventDefault();
-                return;
-            }
-
-            if (!filesSelected) {
-                Swal.fire('คำเตือน!', 'กรุณาเลือกไฟล์ที่ต้องการอัปโหลด', 'warning');
-                e.preventDefault();
-                return;
-            }
-        });
-
-        document.getElementById("statusForm").addEventListener("submit", function(e) {
-            const kkudqStatus = document.getElementById("kkudqStatus").value;
-            const kkuKeptStatus = document.getElementById("kkuKeptStatus").value;
-
-            if (!kkudqStatus && !kkuKeptStatus) {
-                Swal.fire('คำเตือน!', 'กรุณาเลือกสถานะอย่างน้อยหนึ่งรายการ (KKUDQ หรือ KKU KEPT)', 'warning');
-                e.preventDefault();
-                return;
-            }
+        document.getElementById("docUpload").addEventListener("change", function(e) {
+            addFiles(e.target, "fileList0");
         });
 
         function addFiles(input, fileListId) {
@@ -481,11 +516,99 @@
                         if (f !== file) dt.items.add(f);
                     });
                     input.files = dt.files;
+                    if (input.files.length === 0) {
+                        document.getElementById("docTypeSelect").value = "";
+                        input.style.display = "none";
+                    }
                 };
                 fileWrapper.appendChild(removeIcon);
                 fileList.appendChild(fileWrapper);
             });
         }
+
+        document.getElementById("uploadForm").addEventListener("submit", function(e) {
+            const selectedType = document.getElementById("docTypeSelect").value;
+            const filesSelected = document.getElementById("docUpload").files.length > 0;
+
+            if (!selectedType) {
+                Swal.fire('คำเตือน!', 'กรุณาเลือกประเภทเอกสาร', 'warning');
+                e.preventDefault();
+                return;
+            }
+
+            if (!filesSelected) {
+                Swal.fire('คำเตือน!', 'กรุณาเลือกไฟล์ที่ต้องการอัปโหลด', 'warning');
+                e.preventDefault();
+                return;
+            }
+
+            Swal.fire({
+                title: 'ยืนยันการอัปโหลด?',
+                text: "คุณต้องการอัปโหลดไฟล์นี้หรือไม่?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f36d21', // สีส้มของ KKU
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'ใช่, อัปโหลด!',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.submit();
+                } else {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        document.getElementById("statusForm").addEventListener("submit", function(e) {
+            const kkudqStatus = document.getElementById("kkudqStatus").value;
+            const kkuKeptStatus = document.getElementById("kkuKeptStatus").value;
+
+            if (!kkudqStatus && !kkuKeptStatus) {
+                Swal.fire('คำเตือน!', 'กรุณาเลือกสถานะอย่างน้อยหนึ่งรายการ (KKUDQ หรือ KKU KEPT)', 'warning');
+                e.preventDefault();
+                return;
+            }
+
+            Swal.fire({
+                title: 'ยืนยันการบันทึก?',
+                text: "คุณต้องการบันทึกสถานะนี้หรือไม่?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f36d21', // สีส้มของ KKU
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'ใช่, บันทึก!',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.submit();
+                } else {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // การลบไฟล์จากตาราง
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const documentId = this.getAttribute('data-id');
+                Swal.fire({
+                    title: 'ยืนยันการลบ?',
+                    text: "คุณต้องการลบไฟล์นี้หรือไม่? การกระทำนี้ไม่สามารถกู้คืนได้",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'ใช่, ลบ!',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = this.href;
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบันทึกผลการศึกษานักศึกษา</title>
+    <title>ระบบบันทึกผลการศึกษานักศึกษา - มหาวิทยาลัยขอนแก่น</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
@@ -58,7 +58,7 @@
         }
         .sidebar a:hover {
             background-color: #e9ecef;
-            color: #0d6efd;
+            color: #f36d21; /* เปลี่ยนเป็นสีส้มของ KKU */
         }
         .content {
             margin-left: 240px;
@@ -74,7 +74,7 @@
         .section-title {
             background-color: #f8f9fa;
             padding: 10px;
-            border-radius: 5px;
+            border-radius: 8px;
             margin-bottom: 15px;
             font-weight: 600;
             color: #2c3e50;
@@ -98,11 +98,11 @@
             border-radius: 8px;
         }
         .btn-primary {
-            background-color: #0d6efd;
+            background-color: #f36d21; /* เปลี่ยนเป็นสีส้มของ KKU */
             border: none;
         }
         .btn-primary:hover {
-            background-color: #0b5ed7;
+            background-color: #d85b1b; /* สีส้มเข้มเมื่อ hover */
         }
         .btn-secondary {
             background-color: #6c757d;
@@ -151,10 +151,10 @@
         }
         .total-credits-added {
             font-size: 1rem;
-            color: #0d6efd;
+            color: #f36d21; /* เปลี่ยนเป็นสีส้มของ KKU */
         }
         .total-credits-added strong {
-            color: #0d6efd;
+            color: #f36d21; /* เปลี่ยนเป็นสีส้มของ KKU */
         }
         .grade-details-tab {
             margin-top: 30px;
@@ -233,6 +233,93 @@
         .modal-header {
             background-color: #f8f9fa;
             border-bottom: 1px solid #dee2e6;
+        }
+        /* Dark Mode */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1e1e1e;
+                color: #d1d1d1;
+            }
+            .navbar, .sidebar, .card {
+                background-color: #2c2c2c;
+                border-color: #444444;
+                box-shadow: 0 2px 10px rgba(255, 255, 255, 0.05);
+            }
+            .sidebar a {
+                color: #adb5bd;
+            }
+            .sidebar a:hover {
+                background-color: #3c3c3c;
+                color: #f36d21;
+            }
+            .content h2, .section-title, .form-label {
+                color: #e9ecef;
+            }
+            .form-control, .form-select {
+                background-color: #3c3c3c;
+                border-color: #555;
+                color: #d1d1d1;
+            }
+            .btn-primary {
+                background-color: #f36d21;
+            }
+            .btn-primary:hover {
+                background-color: #d85b1b;
+            }
+            .btn-secondary {
+                background-color: #6c757d;
+            }
+            .btn-secondary:hover {
+                background-color: #5c636a;
+            }
+            .btn-success {
+                background-color: #28a745;
+            }
+            .btn-success:hover {
+                background-color: #218838;
+            }
+            .btn-danger {
+                background-color: #dc3545;
+            }
+            .btn-danger:hover {
+                background-color: #c82333;
+            }
+            .alert-success {
+                background-color: #28a745;
+                color: #ffffff;
+            }
+            .alert-danger {
+                background-color: #dc3545;
+                color: #ffffff;
+            }
+            .total-credits-added {
+                color: #f36d21;
+            }
+            .total-credits-added strong {
+                color: #f36d21;
+            }
+            .summary-table th {
+                background-color: #3c3c3c;
+            }
+            .gpa-status.good {
+                background-color: #2f4e3a;
+                color: #d4edda;
+            }
+            .gpa-status.warning {
+                background-color: #4e421e;
+                color: #fff3cd;
+            }
+            .gpa-status.danger {
+                background-color: #4e1f26;
+                color: #f8d7da;
+            }
+            .repeat-advice {
+                background-color: #4e1f26;
+                color: #f8d7da;
+            }
+            .abbreviations {
+                background-color: #2c2c2c;
+            }
         }
     </style>
 </head>
@@ -805,32 +892,27 @@
         @endfor
 
         // เพิ่มการจัดการเมื่อคลิกแท็บเพื่อเปิด/ปิด (toggle)
-        let lastClickedTab = null; // ตัวแปรเก็บแท็บที่คลิกครั้งล่าสุด
+        let lastClickedTab = null;
 
         $('a[data-bs-toggle="tab"]').on('click', function (e) {
-            e.preventDefault(); // ป้องกันการทำงานเริ่มต้นของ Bootstrap
+            e.preventDefault();
 
             const $this = $(this);
-            const target = $this.attr('href'); // เช่น #semester-1-2565
+            const target = $this.attr('href');
             const $targetPane = $(target);
-            const tabGroup = $this.closest('.nav-tabs').attr('id'); // เช่น gradeTabs หรือ summerTabs
+            const tabGroup = $this.closest('.nav-tabs').attr('id');
 
-            // ถ้าคลิกแท็บเดิมที่กำลัง active อยู่
             if ($this.hasClass('active') && lastClickedTab === target) {
-                // ปิดแท็บ (ซ่อนข้อมูล)
                 $this.removeClass('active');
                 $targetPane.removeClass('show active');
-                lastClickedTab = null; // รีเซ็ตตัวแปร
+                lastClickedTab = null;
             } else {
-                // เปิดแท็บใหม่ (แสดงข้อมูล)
-                // ลบ active ออกจากแท็บและ pane อื่นๆ ในกลุ่มเดียวกัน
                 $(`#${tabGroup} .nav-link`).removeClass('active');
                 $(`#${tabGroup} + .tab-content .tab-pane`).removeClass('show active');
 
-                // เพิ่ม active ให้แท็บที่ถูกคลิกและ pane ที่เกี่ยวข้อง
                 $this.addClass('active');
                 $targetPane.addClass('show active');
-                lastClickedTab = target; // อัปเดตแท็บที่คลิกครั้งล่าสุด
+                lastClickedTab = target;
             }
         });
 
@@ -924,8 +1006,8 @@
                     text: "คุณต้องการลบวิชานี้หรือไม่?",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
+                    confirmButtonColor: '#f36d21', /* เปลี่ยนเป็นสีส้มของ KKU */
+                    cancelButtonColor: '#dc3545',
                     confirmButtonText: 'ใช่, ลบ!'
                 }).then((result) => {
                     if (result.isConfirmed) {
@@ -985,8 +1067,8 @@
                 text: "คุณต้องการเพิ่มวิชาใหม่หรือไม่?",
                 icon: 'info',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
+                confirmButtonColor: '#f36d21', /* เปลี่ยนเป็นสีส้มของ KKU */
+                cancelButtonColor: '#dc3545',
                 confirmButtonText: 'ใช่, เพิ่ม!'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -1024,7 +1106,6 @@
                 return;
             }
 
-            // ตรวจสอบวิชาซ้ำในตารางเพิ่มวิชาใหม่
             const courseIds = [];
             let hasDuplicate = false;
             const totalCredits = calculateGPA();
@@ -1045,7 +1126,6 @@
                 return;
             }
 
-            // ตรวจสอบหน่วยกิต
             if (totalCredits > 22) {
                 Swal.fire('คำเตือน!', 'หน่วยกิตรวมเกิน 22 หน่วยกิต ไม่สามารถบันทึกได้', 'warning');
                 return;
@@ -1056,13 +1136,12 @@
                 text: "คุณต้องการบันทึกผลการเรียนนี้หรือไม่?",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
+                confirmButtonColor: '#f36d21', /* เปลี่ยนเป็นสีส้มของ KKU */
+                cancelButtonColor: '#dc3545',
                 confirmButtonText: 'ใช่, บันทึก!'
             }).then((result) => {
                 if (result.isConfirmed) {
                     this.submit();
-                    // หลังจากบันทึกสำเร็จ ให้เคลียร์ตาราง
                     $('#courses-table-body').empty();
                     addEmptyRow();
                 }
@@ -1071,6 +1150,11 @@
 
         // เรียกใช้ Autocomplete ครั้งแรก
         setupAutocomplete();
+
+        // เพิ่มแถวใหม่เมื่อกดปุ่ม +
+        $(document).on('click', '.btn-add-course', function () {
+            addEmptyRow();
+        });
     });
     </script>
 </body>
