@@ -53,7 +53,7 @@
         }
         .sidebar a:hover {
             background-color: #e9ecef;
-            color: #f36d21;
+            color: #f36d21; /* เปลี่ยนเป็นสีส้มของ KKU */
         }
         .content {
             margin-left: 240px;
@@ -97,11 +97,11 @@
             border-radius: 8px;
         }
         .btn-primary {
-            background-color: #f36d21;
+            background-color: #f36d21; /* สีส้มของ KKU */
             border: none;
         }
         .btn-primary:hover {
-            background-color: #d85b1b;
+            background-color: #d85b1b; /* สีส้มเข้มเมื่อ hover */
         }
         .btn-secondary {
             background-color: #6c757d;
@@ -121,6 +121,7 @@
             border-radius: 8px;
             margin-bottom: 20px;
         }
+        /* Dark Mode */
         @media (prefers-color-scheme: dark) {
             body {
                 background-color: #1e1e1e;
@@ -232,50 +233,56 @@
 
                     <div class="mb-3">
                         <label for="student_id" class="form-label">รหัสนักศึกษา</label>
-                        <input type="text" class="form-control {{ !isset($student) ? '' : 'disabled-input' }}" id="student_id" name="student_id" 
-                               value="{{ old('student_id', $student->id ?? '') }}" {{ isset($student) ? 'readonly' : '' }} required>
+                        <input type="text" class="form-control disabled-input" id="student_id" name="student_id" 
+                               value="{{ old('student_id', $student->id ?? '') }}" readonly required>
                     </div>
 
                     <div class="mb-3">
                         <label for="first_name" class="form-label">ชื่อจริง</label>
-                        <input type="text" class="form-control {{ !isset($student) ? '' : 'disabled-input' }}" id="first_name" name="first_name" 
-                               value="{{ old('first_name', $student->first_name ?? '') }}" {{ isset($student) ? 'readonly' : '' }} required>
+                        <input type="text" class="form-control disabled-input" id="first_name" name="first_name" 
+                               value="{{ old('first_name', $student->first_name ?? '') }}" readonly required>
                     </div>
 
                     <div class="mb-3">
                         <label for="phone" class="form-label">เบอร์โทร</label>
-                        <input type="text" class="form-control {{ !isset($student) ? '' : 'disabled-input' }}" id="phone" name="phone" 
-                               value="{{ old('phone', $student->phone ?? '') }}" {{ isset($student) ? 'readonly' : '' }} required>
+                        <input type="text" class="form-control disabled-input" id="phone" name="phone" 
+                               value="{{ old('phone', $student->phone ?? '') }}" readonly required>
                     </div>
 
                     <div class="mb-3">
                         <label for="school_location" class="form-label">จบการศึกษาจาก</label>
-                        <input type="text" class="form-control {{ !isset($student) ? '' : 'disabled-input' }}" id="school_location" name="school_location" 
-                               value="{{ old('school_location', $student->school_location ?? '') }}" {{ isset($student) ? 'readonly' : '' }} required>
+                        <input type="text" class="form-control disabled-input" id="school_location" name="school_location" 
+                               value="{{ old('school_location', $student->school_location ?? '') }}" readonly required>
                     </div>
 
                     <div class="mb-3">
                         <label for="province" class="form-label">จังหวัด</label>
-                        <input type="text" class="form-control {{ !isset($student) ? '' : 'disabled-input' }}" id="province" name="province" 
-                               value="{{ old('province', $student->province ?? '') }}" {{ isset($student) ? 'readonly' : '' }}>
+                        <input type="text" class="form-control disabled-input" id="province" name="province" 
+                               value="{{ old('province', $student->province ?? '') }}" readonly>
                     </div>
 
                     <div class="mb-3">
                         <label for="advisor_id" class="form-label">อาจารย์ที่ปรึกษา</label>
-                        <select class="form-control {{ !isset($student) ? '' : 'disabled-input' }}" id="advisor_id" name="advisor_id" {{ isset($student) ? 'disabled' : '' }} required>
+                        <select class="form-control disabled-input" id="advisor_id" name="advisor_id" disabled required>
                             <option value="">-- เลือกอาจารย์ที่ปรึกษา --</option>
-                            @foreach($advisors as $advisor)
-                                <option value="{{ $advisor->id }}" {{ (old('advisor_id', $student->advisor_id ?? '') == $advisor->id) ? 'selected' : '' }}>
+                            @foreach ($advisors as $advisor)
+                                <option value="{{ $advisor->id }}" 
+                                        {{ (old('advisor_id', $student->advisor_id ?? '') == $advisor->id) ? 'selected' : '' }}>
                                     {{ $advisor->first_name }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
+                    <!-- ปุ่มเริ่มต้น -->
                     <div class="text-end">
-                        <a href="{{ route('student-profile') }}" class="btn btn-secondary btn-custom" id="backButton" style="display:{{ isset($student) ? 'inline-block' : 'none' }}">ย้อนกลับ</a>
-                        <button type="submit" class="btn btn-success btn-custom" id="saveButton" style="display:{{ isset($student) ? 'inline-block' : 'none' }}">บันทึกข้อมูลนักศึกษาที่แก้ไข</button>
-                        <button type="button" class="btn btn-primary btn-custom" id="editButton" style="display:{{ isset($student) ? 'inline-block' : 'none' }}">แก้ไขข้อมูลนักศึกษา</button>
+                        <button type="button" class="btn btn-primary btn-custom" id="editButton">แก้ไขข้อมูลนักศึกษา</button>
+                    </div>
+
+                    <!-- ปุ่มที่แสดงเมื่อแก้ไข (ซ่อนเริ่มต้น) -->
+                    <div class="text-end" id="editControls" style="display: none;">
+                        <a href="{{ route('student-profile') }}" class="btn btn-secondary btn-custom" id="backButton">ย้อนกลับ</a>
+                        <button type="submit" class="btn btn-success btn-custom" id="saveButton">บันทึก</button>
                     </div>
                 </form>
             </div>
@@ -287,18 +294,13 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
-            // ลบการเรียก loadAdvisorsForDropdown เพราะใช้ Blade ในการแสดงข้อมูลแล้ว
             $('#editButton').on('click', function() {
+                // เปิดการแก้ไขฟอร์ม
                 $('.form-control').removeAttr('readonly').removeClass('disabled-input');
-                $('#advisor_id').prop('disabled', false).removeClass('disabled-input');
+                $('select[name="advisor_id"]').prop('disabled', false).removeClass('disabled-input');
                 $(this).hide();
-                $('#backButton').show();
-                $('#saveButton').show();
+                $('#editControls').show();
                 console.log('Edit button clicked');
-            });
-
-            $('#backButton').on('click', function() {
-                window.location.href = "{{ route('student-profile') }}";
             });
 
             $('#studentForm').on('submit', function(e) {
@@ -308,7 +310,7 @@
                     text: "คุณต้องการบันทึกข้อมูลนี้หรือไม่?",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#f36d21',
+                    confirmButtonColor: '#f36d21', // สีส้มของ KKU
                     cancelButtonColor: '#6c757d',
                     confirmButtonText: 'ใช่, บันทึก!',
                     cancelButtonText: 'ยกเลิก'

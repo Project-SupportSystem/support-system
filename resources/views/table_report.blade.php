@@ -222,6 +222,12 @@
             color: #0b5ed7;
             text-decoration: underline;
         }
+        .student-count-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 0;
+        }
         @media (prefers-color-scheme: dark) {
             body {
                 background-color: #1e1e1e;
@@ -298,6 +304,9 @@
             }
             .modal-body .file-link:hover {
                 color: #0b5ed7;
+            }
+            .student-count-text {
+                color: #e9ecef;
             }
         }
     </style>
@@ -608,7 +617,7 @@
                             <h5 class="modal-title" id="editAdvisorModalLabel">ข้อมูลอาจารย์ที่ปรึกษา</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <form action="{{ route('advisor.edit.name') }}" method="POST">
+                        <form action="{{ route('advisor.edit.name') }}" method="POST" id="advisorForm">
                             @csrf
                             <div class="modal-body">
                                 <div class="mb-3">
@@ -618,8 +627,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="student-count" class="form-label">จำนวนนักศึกษาที่ดูแล</label>
-                                    <input type="text" class="form-control" id="student-count" 
-                                           value="{{ $studentCount }}" disabled>
+                                    <p class="student-count-text">{{ $studentCount }}</p>
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -723,6 +731,39 @@
             collapse.classList.toggle('show');
             header.classList.toggle('active');
         }
+
+        // เพิ่มการยืนยันก่อนส่งฟอร์ม
+        $('#advisorForm').on('submit', function(e) {
+            e.preventDefault(); // ป้องกันการส่งฟอร์มทันที
+
+            Swal.fire({
+                title: 'ยืนยันการเปลี่ยนชื่อ?',
+                text: "คุณต้องการบันทึกการเปลี่ยนชื่อนี้หรือไม่?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#F36D21',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'ตกลง',
+                cancelButtonText: 'ไม่ตกลง'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // หากเลือก "ตกลง" ให้ส่งฟอร์ม
+                    $.ajax({
+                        url: $(this).attr('action'),
+                        type: $(this).attr('method'),
+                        data: $(this).serialize(),
+                        success: function(response) {
+                            Swal.fire('สำเร็จ!', 'เปลี่ยนชื่อสำเร็จ!', 'success').then(() => {
+                                location.reload(); // รีเฟรชหน้าเพื่ออัปเดตข้อมูล
+                            });
+                        },
+                        error: function(xhr) {
+                            Swal.fire('ผิดพลาด!', 'ไม่สามารถเปลี่ยนชื่อได้: ' + (xhr.responseJSON?.message || 'เกิดข้อผิดพลาด'), 'error');
+                        }
+                    });
+                }
+            });
+        });
     </script>
 </body>
 </html>
