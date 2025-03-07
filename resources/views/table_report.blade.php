@@ -273,8 +273,6 @@
                 <button class="btn btn-primary" onclick="searchStudent()">ค้นหา</button>
             </div>
 
-            <!-- ลบ Filter Select ออก -->
-
             <!-- Main Table -->
             <div class="table-responsive">
                 <table class="table table-bordered">
@@ -301,28 +299,33 @@
                                 <td>วิทยาการคอมพิวเตอร์และสารสนเทศ</td>
                                 <td>
                                     @if($student->calculateGPA())
-                                        <a href="#" class="gpa-link" onclick="toggleAcademicRecords('{{ $student->id }}')">{{ number_format($student->calculateGPA(), 2) }}</a>
+                                        <a href="#" class="gpa-link" onclick="toggleAcademicRecords('{{ $student->id }}')">
+                                            {{ number_format($student->calculateGPA(), 2) }}
+                                        </a>
                                     @else
                                         -
                                     @endif
                                 </td>
                                 <td>
                                     @if($student->documents->where('document_type', 'coop_project')->isNotEmpty())
-                                        <a href="#" class="document-link" onclick="showFilesModal('{{ $student->id }}', 'coop_project')">ดูเอกสาร</a>
+                                        <a href="#" class="document-link" 
+                                           onclick="showFilesModal('{{ $student->id }}', 'coop_project')">ดูเอกสาร</a>
                                     @else
                                         -
                                     @endif
                                 </td>
                                 <td>
                                     @if($student->documents->where('document_type', 'project')->isNotEmpty())
-                                        <a href="#" class="document-link" onclick="showFilesModal('{{ $student->id }}', 'project')">ดูเอกสาร</a>
+                                        <a href="#" class="document-link" 
+                                           onclick="showFilesModal('{{ $student->id }}', 'project')">ดูเอกสาร</a>
                                     @else
                                         -
                                     @endif
                                 </td>
                                 <td>
                                     @if($student->documents->where('document_type', 'internship')->isNotEmpty())
-                                        <a href="#" class="document-link" onclick="showFilesModal('{{ $student->id }}', 'internship')">ดูเอกสาร</a>
+                                        <a href="#" class="document-link" 
+                                           onclick="showFilesModal('{{ $student->id }}', 'internship')">ดูเอกสาร</a>
                                     @else
                                         -
                                     @endif
@@ -333,7 +336,12 @@
                                             $doc = $student->documents->where('document_type', 'kku_dq')->first();
                                             $status = $doc->status;
                                             $displayStatus = in_array($doc->document_type, ['kku_dq']) && $status
-                                                ? ($status == 'pass' ? '<span class="status-pass">ผ่าน</span>' : ($status == 'fail' ? '<span class="status-fail">ไม่ผ่าน</span>' : '-'))
+                                                ? ($status == 'pass' 
+                                                    ? '<span class="status-pass">ผ่าน</span>' 
+                                                    : ($status == 'fail' 
+                                                        ? '<span class="status-fail">ไม่ผ่าน</span>' 
+                                                        : '-')
+                                                  )
                                                 : '-';
                                         @endphp
                                         {!! $displayStatus !!}
@@ -347,7 +355,12 @@
                                             $doc = $student->documents->where('document_type', 'kku_kept')->first();
                                             $status = $doc->status;
                                             $displayStatus = in_array($doc->document_type, ['kku_kept']) && $status
-                                                ? ($status == 'pass' ? '<span class="status-pass">ผ่าน</span>' : ($status == 'fail' ? '<span class="status-fail">ไม่ผ่าน</span>' : '-'))
+                                                ? ($status == 'pass' 
+                                                    ? '<span class="status-pass">ผ่าน</span>' 
+                                                    : ($status == 'fail' 
+                                                        ? '<span class="status-fail">ไม่ผ่าน</span>' 
+                                                        : '-')
+                                                  )
                                                 : '-';
                                         @endphp
                                         {!! $displayStatus !!}
@@ -360,11 +373,28 @@
                             <tr id="academic-records-{{ $student->id }}" class="collapse-content">
                                 <td colspan="10">
                                     @if(isset($academicRecords[$student->id]) && !$academicRecords[$student->id]->isEmpty())
-                                        @foreach($academicRecords[$student->id]->groupBy('semester') as $semester => $records)
+                                        @php
+                                            // ประกาศตัวแปรสะสมสำหรับ "สะสมถึงเทอมนี้"
+                                            $accumCR = 0;
+                                            $accumCP = 0;
+                                            $accumCA = 0;
+                                            $accumGP = 0;
+                                        @endphp
+
+                                        <!-- เรียงลำดับภาคการศึกษา -->
+                                        @foreach($academicRecords[$student->id]->sortBy('semester')->groupBy('semester') as $semester => $records)
                                             <div class="semester-header" onclick="toggleCollapse('semester-{{ $student->id }}-{{ $semester }}')">
                                                 ภาคการศึกษา {{ $semester }}
                                             </div>
                                             <div id="semester-{{ $student->id }}-{{ $semester }}" class="collapse">
+                                                @php
+                                                    // ตัวแปรผลรวม "เทอมนี้"
+                                                    $totalCR = 0;
+                                                    $totalCP = 0;
+                                                    $totalCA = 0;
+                                                    $totalGP = 0;
+                                                @endphp
+
                                                 <table class="table table-bordered academic-table">
                                                     <thead>
                                                         <tr>
@@ -372,31 +402,113 @@
                                                             <th>ชื่อวิชา</th>
                                                             <th>หน่วยกิต</th>
                                                             <th>เกรด</th>
-                                                            <th>GPA</th>
+                                                            <!-- เพิ่มคอลัมน์ CR, CP, CA, GP -->
+                                                            <th>CR</th>
+                                                            <th>CP</th>
+                                                            <th>CA</th>
+                                                            <th>GP</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         @foreach($records as $record)
+                                                            @php
+                                                                // หน่วยกิตวิชา
+                                                                $courseCredits = $record->course->total_credits ?? 3;
+                                                                // เกรดตัวอักษร (เช่น A, B+, F)
+                                                                $gradeLetter = $record->grade ?? '-';
+                                                                // เกรดเชิงตัวเลข (เช่น 4.0, 3.5, 0.0)
+                                                                $gpaVal = $record->gpa ?? 0;
+
+                                                                // คำนวณ
+                                                                $CR = $courseCredits;
+                                                                $CP = ($gradeLetter != 'F') ? $courseCredits : 0;
+                                                                $CA = $courseCredits;
+                                                                $GP = $gpaVal * $courseCredits;
+
+                                                                // สะสมค่าของเทอมนี้
+                                                                $totalCR += $CR;
+                                                                $totalCP += $CP;
+                                                                $totalCA += $CA;
+                                                                $totalGP += $GP;
+                                                            @endphp
                                                             <tr>
-                                                                <td>{{ $record->course_id ?? '-' }}</td>
-                                                                <td>{{ $record->course->course_name ?? 'ไม่พบชื่อวิชา' }}</td>
-                                                                <td>{{ $record->course->total_credits ?? 3 }}</td>
-                                                                <td>{{ $record->grade ?? '-' }}</td>
-                                                                <td>{{ $record->gpa ? number_format($record->gpa, 2) : '-' }}</td>
+                                                                <td>{{ $record->course_id }}</td>
+                                                                <td>{{ $record->course->course_name }}</td>
+                                                                <td>{{ $courseCredits }}</td>
+                                                                <td>{{ $gradeLetter }}</td>
+                                                                <td>{{ $CR }}</td>
+                                                                <td>{{ $CP }}</td>
+                                                                <td>{{ $CA }}</td>
+                                                                <td>{{ number_format($GP, 2) }}</td>
                                                             </tr>
                                                         @endforeach
+
+                                                        <!-- แถวสรุปเทอมนี้ -->
+                                                        <tr>
+                                                            <td colspan="4" class="text-end"><strong>รวม</strong></td>
+                                                            <td><strong>{{ $totalCR }}</strong></td>
+                                                            <td><strong>{{ $totalCP }}</strong></td>
+                                                            <td><strong>{{ $totalCA }}</strong></td>
+                                                            <td><strong>{{ number_format($totalGP, 2) }}</strong></td>
+                                                        </tr>
                                                     </tbody>
                                                 </table>
+
                                                 @php
-                                                    $totalCredits = $records->sum(function($record) {
-                                                        return $record->course->total_credits ?? 3;
-                                                    });
-                                                    $totalPoints = $records->sum(function($record) {
-                                                        return ($record->gpa ?? 0) * ($record->course->total_credits ?? 3);
-                                                    });
-                                                    $semesterGPA = $totalCredits > 0 ? number_format($totalPoints / $totalCredits, 2) : '0.00';
+                                                    // GPA เทอมนี้
+                                                    $semesterGPA = $totalCR > 0
+                                                        ? number_format($totalGP / $totalCR, 2)
+                                                        : '0.00';
+
+                                                    // สะสม
+                                                    $accumCR += $totalCR;
+                                                    $accumCP += $totalCP;
+                                                    $accumCA += $totalCA;
+                                                    $accumGP += $totalGP;
+
+                                                    // GPA สะสม
+                                                    $accumGPA = $accumCR > 0
+                                                        ? number_format($accumGP / $accumCR, 2)
+                                                        : '0.00';
                                                 @endphp
-                                                <p><strong>GPA เฉพาะภาคนี้: {{ $semesterGPA }}</strong></p>
+
+                                                <!-- ตารางสรุป "เทอมนี้ vs สะสม" -->
+                                                <table class="table table-bordered" style="margin-top: 10px;">
+                                                    <thead>
+                                                        <tr class="table-light">
+                                                            <th colspan="5">เทอมนี้</th>
+                                                            <th colspan="5">สะสมถึงเทอมนี้</th>
+                                                        </tr>
+                                                        <tr>
+                                                            <th>CR</th>
+                                                            <th>CP</th>
+                                                            <th>CA</th>
+                                                            <th>GP</th>
+                                                            <th>GPA</th>
+                                                            <th>CR</th>
+                                                            <th>CP</th>
+                                                            <th>CA</th>
+                                                            <th>GP</th>
+                                                            <th>GPA</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <!-- เทอมนี้ -->
+                                                            <td>{{ $totalCR }}</td>
+                                                            <td>{{ $totalCP }}</td>
+                                                            <td>{{ $totalCA }}</td>
+                                                            <td>{{ number_format($totalGP, 2) }}</td>
+                                                            <td>{{ $semesterGPA }}</td>
+                                                            <!-- สะสมถึงเทอมนี้ -->
+                                                            <td>{{ $accumCR }}</td>
+                                                            <td>{{ $accumCP }}</td>
+                                                            <td>{{ $accumCA }}</td>
+                                                            <td>{{ number_format($accumGP, 2) }}</td>
+                                                            <td>{{ $accumGPA }}</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         @endforeach
                                     @else
@@ -438,7 +550,9 @@
                             let statusText = ['kku_dq', 'kku_kept'].includes(docType) && doc.status
                                 ? ` (${doc.status == 'pass' ? 'ผ่าน' : 'ไม่ผ่าน'})`
                                 : '';
-                            $('#filesList').append(`<li><a href="${doc.file_path}" target="_blank">${doc.file_name}${statusText}</a></li>`);
+                            $('#filesList').append(
+                                `<li><a href="${doc.file_path}" target="_blank">${doc.file_name}${statusText}</a></li>`
+                            );
                         });
                     } else {
                         $('#filesList').append('<li><span class="text-muted">ไม่มีเอกสาร</span></li>');
@@ -446,7 +560,8 @@
                     $('#filesModal').modal('show');
                 },
                 error: function (xhr) {
-                    Swal.fire('ผิดพลาด!', 'ไม่สามารถดึงข้อมูลเอกสารได้: ' + (xhr.responseJSON?.message || xhr.responseText), 'error');
+                    Swal.fire('ผิดพลาด!', 'ไม่สามารถดึงข้อมูลเอกสารได้: ' 
+                              + (xhr.responseJSON?.message || xhr.responseText), 'error');
                     console.log('Error Details:', xhr.responseText);
                 }
             });
@@ -463,7 +578,8 @@
                 if (tdStudentId && tdName) {
                     var studentIdValue = tdStudentId.textContent || tdStudentId.innerText;
                     var nameValue = tdName.textContent || tdName.innerText;
-                    if (studentIdValue.toLowerCase().indexOf(input) > -1 || nameValue.toLowerCase().indexOf(input) > -1) {
+                    if (studentIdValue.toLowerCase().indexOf(input) > -1 
+                        || nameValue.toLowerCase().indexOf(input) > -1) {
                         tr[i].style.display = '';
                     } else {
                         tr[i].style.display = 'none';
