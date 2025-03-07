@@ -318,6 +318,7 @@
                                 <option value="">เลือกภาค</option>
                                 <option value="1">1</option>
                                 <option value="2">2</option>
+                                <option value="3">3</option>
                             </select>
                         </div>
                         <div>
@@ -534,6 +535,87 @@
                 </div>
             </div>
 
+            <!-- Section for Summer Semester (ภาคการศึกษาที่ 3) -->
+            <div class="grade-details-tab mt-4">
+                <div class="section-title">ภาคการศึกษาที่ 3 (ภาคฤดูร้อน)</div>
+                <div class="card p-3">
+                    <ul class="nav nav-tabs" id="summerTabs" role="tablist">
+                        @for ($year = 2565; $year <= 2570; $year++)
+                            <li class="nav-item">
+                                <a class="nav-link {{ $year == 2565 ? 'active' : '' }}" id="tab-3-{{ $year }}" data-bs-toggle="tab" href="#semester-3-{{ $year }}" role="tab">3/{{ $year }}</a>
+                            </li>
+                        @endfor
+                    </ul>
+                    <div class="tab-content" id="summerTabsContent">
+                        @for ($year = 2565; $year <= 2570; $year++)
+                            <div class="tab-pane fade {{ $year == 2565 ? 'show active' : '' }}" id="semester-3-{{ $year }}" role="tabpanel">
+                                <h5 class="text-center mt-3">ภาคการศึกษา 3/{{ $year }}</h5>
+                                <table class="table table-bordered mt-3">
+                                    <thead>
+                                        <tr>
+                                            <th>รหัสวิชา</th>
+                                            <th>ชื่อวิชา</th>
+                                            <th>หน่วยกิต</th>
+                                            <th>เกรด</th>
+                                            <th>คำแนะนำ</th>
+                                            <th>การดำเนินการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="grade-table-3-{{ $year }}"></tbody>
+                                </table>
+                                <div class="summary-table">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th colspan="5">เทอมนี้</th>
+                                                <th colspan="5">สะสมถึงเทอมนี้</th>
+                                            </tr>
+                                            <tr>
+                                                <th>CR</th>
+                                                <th>CP</th>
+                                                <th>CA</th>
+                                                <th>GP</th>
+                                                <th class="highlight">GPA</th>
+                                                <th>CR</th>
+                                                <th>CP</th>
+                                                <th>CA</th>
+                                                <th>GP</th>
+                                                <th class="highlight">GPA</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td id="semester-cr-3-{{ $year }}">0</td>
+                                                <td id="semester-cp-3-{{ $year }}">0</td>
+                                                <td id="semester-ca-3-{{ $year }}">0</td>
+                                                <td id="semester-gp-3-{{ $year }}">0.00</td>
+                                                <td id="semester-gpa-3-{{ $year }}" class="highlight">0.00</td>
+                                                <td id="cumulative-cr-3-{{ $year }}">0</td>
+                                                <td id="cumulative-cp-3-{{ $year }}">0</td>
+                                                <td id="cumulative-ca-3-{{ $year }}">0</td>
+                                                <td id="cumulative-gp-3-{{ $year }}">0.00</td>
+                                                <td id="cumulative-gpa-3-{{ $year }}" class="highlight">0.00</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="abbreviations">
+                                    <p><strong>คำย่อ:</strong></p>
+                                    <p>CR = หน่วยกิตที่ลงทะเบียน (Credit Registered)</p>
+                                    <p>CP = หน่วยกิตที่ผ่าน (Credit Passed)</p>
+                                    <p>CA = หน่วยกิตที่ใช้คำนวณ GPA (Credit Attempt for GPA Calculation)</p>
+                                    <p>GP = คะแนนรวม (สำหรับคำนวณ GPA) (Grade Point for GPA Calculation)</p>
+                                    <p>GPA = เกรดเฉลี่ย (GP / CA) (Grade Point Average)</p>
+                                    <p>(T) = เกรดที่โอนมา (Transfer Grade)</p>
+                                </div>
+                                <div id="gpa-status-3-{{ $year }}" class="gpa-status"></div>
+                                <div id="repeat-advice-3-{{ $year }}" class="repeat-advice"></div>
+                            </div>
+                        @endfor
+                    </div>
+                </div>
+            </div>
+
             <!-- Modal for Adding Course -->
             <div class="modal fade" id="addCourseModal" tabindex="-1" aria-labelledby="addCourseModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
@@ -719,7 +801,38 @@
         @for ($year = 2565; $year <= 2570; $year++)
             loadAcademicRecords('1/{{ $year }}', '#grade-table-1-{{ $year }}');
             loadAcademicRecords('2/{{ $year }}', '#grade-table-2-{{ $year }}');
+            loadAcademicRecords('3/{{ $year }}', '#grade-table-3-{{ $year }}');
         @endfor
+
+        // เพิ่มการจัดการเมื่อคลิกแท็บเพื่อเปิด/ปิด (toggle)
+        let lastClickedTab = null; // ตัวแปรเก็บแท็บที่คลิกครั้งล่าสุด
+
+        $('a[data-bs-toggle="tab"]').on('click', function (e) {
+            e.preventDefault(); // ป้องกันการทำงานเริ่มต้นของ Bootstrap
+
+            const $this = $(this);
+            const target = $this.attr('href'); // เช่น #semester-1-2565
+            const $targetPane = $(target);
+            const tabGroup = $this.closest('.nav-tabs').attr('id'); // เช่น gradeTabs หรือ summerTabs
+
+            // ถ้าคลิกแท็บเดิมที่กำลัง active อยู่
+            if ($this.hasClass('active') && lastClickedTab === target) {
+                // ปิดแท็บ (ซ่อนข้อมูล)
+                $this.removeClass('active');
+                $targetPane.removeClass('show active');
+                lastClickedTab = null; // รีเซ็ตตัวแปร
+            } else {
+                // เปิดแท็บใหม่ (แสดงข้อมูล)
+                // ลบ active ออกจากแท็บและ pane อื่นๆ ในกลุ่มเดียวกัน
+                $(`#${tabGroup} .nav-link`).removeClass('active');
+                $(`#${tabGroup} + .tab-content .tab-pane`).removeClass('show active');
+
+                // เพิ่ม active ให้แท็บที่ถูกคลิกและ pane ที่เกี่ยวข้อง
+                $this.addClass('active');
+                $targetPane.addClass('show active');
+                lastClickedTab = target; // อัปเดตแท็บที่คลิกครั้งล่าสุด
+            }
+        });
 
         // ฟังก์ชันเพิ่มแถวเปล่าสำหรับกรอกข้อมูลใหม่
         function addEmptyRow() {
@@ -831,6 +944,7 @@
                                     @for ($year = 2565; $year <= 2570; $year++)
                                         loadAcademicRecords('1/{{ $year }}', '#grade-table-1-{{ $year }}');
                                         loadAcademicRecords('2/{{ $year }}', '#grade-table-2-{{ $year }}');
+                                        loadAcademicRecords('3/{{ $year }}', '#grade-table-3-{{ $year }}');
                                     @endfor
                                 } else {
                                     Swal.fire('ผิดพลาด!', response.message, 'error');
