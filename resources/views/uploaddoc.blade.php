@@ -5,20 +5,123 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>อัปโหลดเอกสาร</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        .table th, .table td {
-            vertical-align: middle;
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Kanit', sans-serif;
+            color: #333;
+        }
+        .navbar {
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 15px 20px;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+        .navbar-logo img {
+            height: 45px;
+        }
+        .dropdown-menu {
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .dropdown-item {
+            font-size: 14px;
+            padding: 8px 15px;
+        }
+        .sidebar {
+            position: fixed;
+            top: 80px;
+            left: 0;
+            width: 220px;
+            height: calc(100% - 80px);
+            background-color: #ffffff;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            padding: 20px 0;
+        }
+        .sidebar a {
+            display: block;
+            padding: 12px 20px;
+            color: #555;
+            text-decoration: none;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+        .sidebar a:hover {
+            background-color: #e9ecef;
+            color: #0d6efd;
+        }
+        .content {
+            margin-left: 240px;
+            margin-top: 100px;
+            padding: 30px;
+        }
+        .content h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 30px;
         }
         .section-title {
             background-color: #f8f9fa;
             padding: 10px;
             border-radius: 5px;
             margin-bottom: 15px;
-            font-weight: bold;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .card {
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+        }
+        .btn-custom {
+            margin-right: 10px;
+            border-radius: 8px;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+        }
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            border: none;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .alert-success, .alert-danger {
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .table th, .table td {
+            vertical-align: middle;
         }
         .status-section {
             margin-top: 20px;
@@ -33,13 +136,10 @@
             font-weight: bold;
         }
         .status-text.pass {
-            color: #28a745; /* สีเขียวสำหรับ "ผ่าน" */
+            color: #28a745;
         }
         .status-text.fail {
-            color: #dc3545; /* สีแดงสำหรับ "ไม่ผ่าน" */
-        }
-        .status-section .btn {
-            margin-top: 10px;
+            color: #dc3545;
         }
         .file-list {
             margin-top: 10px;
@@ -149,7 +249,7 @@
                     </div>
                     <div id="fileList0" class="file-list"></div>
                     <div class="text-end">
-                        <button type="submit" class="btn btn-primary">อัปโหลด</button>
+                        <button type="submit" class="btn btn-primary btn-custom">อัปโหลด</button>
                     </div>
                 </div>
             </form>
@@ -192,7 +292,7 @@
                         @endif
                     </div>
                     <div class="text-end">
-                        <button type="submit" class="btn btn-success">บันทึกสถานะ</button>
+                        <button type="submit" class="btn btn-success btn-custom">บันทึกสถานะ</button>
                     </div>
                 </form>
             </div>
@@ -232,7 +332,7 @@
                                             <td>สหกิจศึกษา</td>
                                             <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
                                             <td>
-                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -262,7 +362,7 @@
                                             <td>โปรเจค</td>
                                             <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
                                             <td>
-                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -292,7 +392,7 @@
                                             <td>ฝึกงาน</td>
                                             <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
                                             <td>
-                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
+                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom" onclick="return confirm('คุณต้องการลบไฟล์นี้?')">ลบ</a>
                                             </td>
                                         </tr>
                                     @endforeach

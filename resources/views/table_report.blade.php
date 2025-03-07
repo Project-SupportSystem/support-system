@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบรายงานผลการศึกษานักศึกษา</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
@@ -99,7 +101,7 @@
             background-color: #0b5ed7;
         }
 
-        /* ปรับแต่งตาราง */
+        /* ปรับแต่งตารางหลัก */
         .table {
             background-color: #ffffff;
             border-radius: 10px;
@@ -140,11 +142,11 @@
 
         /* ปรับแต่งสถานะ KKU DQ และ KKU KEPT */
         .status-pass {
-            color: #28a745; /* สีเขียว */
+            color: #28a745;
             font-weight: 500;
         }
         .status-fail {
-            color: #dc3545; /* สีแดง */
+            color: #dc3545;
             font-weight: 500;
         }
 
@@ -158,17 +160,30 @@
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .semester-header:hover {
             background-color: #dfe2e5;
         }
+        .semester-header .fa-chevron-down {
+            transition: transform 0.3s ease;
+        }
+        .semester-header.active .fa-chevron-down {
+            transform: rotate(180deg);
+        }
         .collapse-content {
             display: none;
-            padding: 15px;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 1px 10px rgba(0, 0, 0, 0.05);
-            margin-bottom: 15px;
+        }
+        .collapse-content td {
+            padding: 0;
+        }
+        .collapse {
+            display: none;
+        }
+        .collapse.show {
+            display: block;
         }
         .academic-table {
             font-size: 13px;
@@ -186,6 +201,12 @@
         }
         .academic-table td {
             color: #555;
+        }
+
+        /* ปรับแต่งตารางสรุป */
+        .summary-table th {
+            background-color: #f1f3f5;
+            color: #2c3e50;
         }
 
         /* ปรับแต่ง Modal */
@@ -374,6 +395,14 @@
                                 <td colspan="10">
                                     @if(isset($academicRecords[$student->id]) && !$academicRecords[$student->id]->isEmpty())
                                         @php
+                                            // แยกภาค (term) และปี (year) จาก semester (เช่น "1/2565" → ["1", "2565"])
+                                            $semesters = $academicRecords[$student->id]->pluck('semester')->unique()->map(function ($semester) {
+                                                [$term, $year] = explode('/', $semester);
+                                                return ['term' => (int)$term, 'year' => (int)$year, 'original' => $semester];
+                                            })->sortBy(function ($item) {
+                                                return $item['year'] * 100 + $item['term']; // เรียงตามปี * 100 + เทอม (เช่น 256501, 256502, 256601)
+                                            })->pluck('original')->values();
+
                                             // ประกาศตัวแปรสะสมสำหรับ "สะสมถึงเทอมนี้"
                                             $accumCR = 0;
                                             $accumCP = 0;
@@ -381,20 +410,22 @@
                                             $accumGP = 0;
                                         @endphp
 
-                                        <!-- เรียงลำดับภาคการศึกษา -->
-                                        @foreach($academicRecords[$student->id]->sortBy('semester')->groupBy('semester') as $semester => $records)
-                                            <div class="semester-header" onclick="toggleCollapse('semester-{{ $student->id }}-{{ $semester }}')">
-                                                ภาคการศึกษา {{ $semester }}
-                                            </div>
-                                            <div id="semester-{{ $student->id }}-{{ $semester }}" class="collapse">
-                                                @php
-                                                    // ตัวแปรผลรวม "เทอมนี้"
-                                                    $totalCR = 0;
-                                                    $totalCP = 0;
-                                                    $totalCA = 0;
-                                                    $totalGP = 0;
-                                                @endphp
+                                        <!-- วนลูปตามลำดับภาคการศึกษาที่เรียงแล้ว -->
+                                        @foreach($semesters as $semester)
+                                            @php
+                                                $records = $academicRecords[$student->id]->where('semester', $semester);
+                                                // ตัวแปรผลรวม "เทอมนี้"
+                                                $totalCR = 0;
+                                                $totalCP = 0;
+                                                $totalCA = 0;
+                                                $totalGP = 0;
+                                            @endphp
 
+                                            <div class="semester-header" onclick="toggleCollapse('semester-{{ $student->id }}-{{ str_replace('/', '-', $semester) }}')">
+                                                ภาคการศึกษา {{ $semester }}
+                                                <i class="fas fa-chevron-down"></i>
+                                            </div>
+                                            <div id="semester-{{ $student->id }}-{{ str_replace('/', '-', $semester) }}" class="collapse">
                                                 <table class="table table-bordered academic-table">
                                                     <thead>
                                                         <tr>
@@ -402,7 +433,6 @@
                                                             <th>ชื่อวิชา</th>
                                                             <th>หน่วยกิต</th>
                                                             <th>เกรด</th>
-                                                            <!-- เพิ่มคอลัมน์ CR, CP, CA, GP -->
                                                             <th>CR</th>
                                                             <th>CP</th>
                                                             <th>CA</th>
@@ -412,20 +442,15 @@
                                                     <tbody>
                                                         @foreach($records as $record)
                                                             @php
-                                                                // หน่วยกิตวิชา
                                                                 $courseCredits = $record->course->total_credits ?? 3;
-                                                                // เกรดตัวอักษร (เช่น A, B+, F)
                                                                 $gradeLetter = $record->grade ?? '-';
-                                                                // เกรดเชิงตัวเลข (เช่น 4.0, 3.5, 0.0)
                                                                 $gpaVal = $record->gpa ?? 0;
 
-                                                                // คำนวณ
                                                                 $CR = $courseCredits;
                                                                 $CP = ($gradeLetter != 'F') ? $courseCredits : 0;
                                                                 $CA = $courseCredits;
                                                                 $GP = $gpaVal * $courseCredits;
 
-                                                                // สะสมค่าของเทอมนี้
                                                                 $totalCR += $CR;
                                                                 $totalCP += $CP;
                                                                 $totalCA += $CA;
@@ -455,25 +480,16 @@
                                                 </table>
 
                                                 @php
-                                                    // GPA เทอมนี้
-                                                    $semesterGPA = $totalCR > 0
-                                                        ? number_format($totalGP / $totalCR, 2)
-                                                        : '0.00';
-
-                                                    // สะสม
+                                                    $semesterGPA = $totalCR > 0 ? number_format($totalGP / $totalCR, 2) : '0.00';
                                                     $accumCR += $totalCR;
                                                     $accumCP += $totalCP;
                                                     $accumCA += $totalCA;
                                                     $accumGP += $totalGP;
-
-                                                    // GPA สะสม
-                                                    $accumGPA = $accumCR > 0
-                                                        ? number_format($accumGP / $accumCR, 2)
-                                                        : '0.00';
+                                                    $accumGPA = $accumCR > 0 ? number_format($accumGP / $accumCR, 2) : '0.00';
                                                 @endphp
 
                                                 <!-- ตารางสรุป "เทอมนี้ vs สะสม" -->
-                                                <table class="table table-bordered" style="margin-top: 10px;">
+                                                <table class="table table-bordered summary-table" style="margin-top: 10px;">
                                                     <thead>
                                                         <tr class="table-light">
                                                             <th colspan="5">เทอมนี้</th>
@@ -494,13 +510,11 @@
                                                     </thead>
                                                     <tbody>
                                                         <tr>
-                                                            <!-- เทอมนี้ -->
                                                             <td>{{ $totalCR }}</td>
                                                             <td>{{ $totalCP }}</td>
                                                             <td>{{ $totalCA }}</td>
                                                             <td>{{ number_format($totalGP, 2) }}</td>
                                                             <td>{{ $semesterGPA }}</td>
-                                                            <!-- สะสมถึงเทอมนี้ -->
                                                             <td>{{ $accumCR }}</td>
                                                             <td>{{ $accumCP }}</td>
                                                             <td>{{ $accumCA }}</td>
@@ -599,11 +613,9 @@
 
         function toggleCollapse(semesterId) {
             var collapse = document.getElementById(semesterId);
-            if (collapse.style.display === 'none' || collapse.style.display === '') {
-                collapse.style.display = 'block';
-            } else {
-                collapse.style.display = 'none';
-            }
+            var header = collapse.previousElementSibling; // ดึง element ของ semester-header
+            collapse.classList.toggle('show');
+            header.classList.toggle('active'); // เพิ่ม/ลบคลาส active เพื่อหมุนไอคอน
         }
     </script>
 </body>

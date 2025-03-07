@@ -30,11 +30,16 @@ class StudentController extends Controller
     {
         $student = Student::findOrFail($id);
 
+        if ($student->user_id !== Auth::id()) {
+            return redirect()->back()->with('error', 'คุณไม่มีสิทธิ์แก้ไขข้อมูลนี้');
+        }
+
         $request->validate([
             'student_id' => 'required|string|max:10|unique:students,id,' . $id,
             'first_name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:15',
             'school_location' => 'nullable|string|max:255',
+            'province' => 'nullable|string|max:255', // เพิ่มการ validate สำหรับ province
             'advisor_id' => 'required|exists:advisors,id',
         ]);
 
@@ -43,6 +48,7 @@ class StudentController extends Controller
             'first_name' => $request->first_name,
             'phone' => $request->phone,
             'school_location' => $request->school_location,
+            'province' => $request->province, // อัปเดตข้อมูล province
             'advisor_id' => $request->advisor_id,
         ]);
 
@@ -56,6 +62,7 @@ class StudentController extends Controller
             'first_name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:15',
             'school_location' => 'nullable|string|max:255',
+            'province' => 'nullable|string|max:255', // เพิ่มการ validate สำหรับ province
             'advisor_id' => 'required|exists:advisors,id',
         ]);
 
@@ -65,6 +72,7 @@ class StudentController extends Controller
             'first_name' => $request->first_name,
             'phone' => $request->phone,
             'school_location' => $request->school_location,
+            'province' => $request->province, // เพิ่มการบันทึก province
             'advisor_id' => $request->advisor_id,
         ]);
 

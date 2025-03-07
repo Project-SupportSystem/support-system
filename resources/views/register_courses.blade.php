@@ -6,17 +6,135 @@
     <title>ระบบบันทึกผลการศึกษานักศึกษา</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Kanit', sans-serif;
+            color: #333;
+        }
+        .navbar {
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 15px 20px;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+        .navbar-logo img {
+            height: 45px;
+        }
+        .dropdown-menu {
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .dropdown-item {
+            font-size: 14px;
+            padding: 8px 15px;
+        }
+        .sidebar {
+            position: fixed;
+            top: 80px;
+            left: 0;
+            width: 220px;
+            height: calc(100% - 80px);
+            background-color: #ffffff;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            padding: 20px 0;
+        }
+        .sidebar a {
+            display: block;
+            padding: 12px 20px;
+            color: #555;
+            text-decoration: none;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+        .sidebar a:hover {
+            background-color: #e9ecef;
+            color: #0d6efd;
+        }
+        .content {
+            margin-left: 240px;
+            margin-top: 100px;
+            padding: 30px;
+        }
+        .content h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .section-title {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .card {
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+        }
+        .btn-custom {
+            margin-right: 10px;
+            border-radius: 8px;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background-color: #5c636a;
+        }
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            border: none;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .alert-success, .alert-danger {
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
         .table th, .table td {
             vertical-align: middle;
         }
-        .btn-add-course, .btn-remove-course, .btn-edit-course, .btn-save-course {
+        .btn-add-course, .btn-remove-course {
             margin: 0 2px;
+            border-radius: 8px;
         }
         .gpa-container {
             margin-top: 15px;
@@ -36,17 +154,10 @@
             color: #0d6efd;
         }
         .total-credits-added strong {
-            color: #0d6efd; /* ปรับสีตัวเลขให้เข้ากับคำว่า "หน่วยกิตรวมที่เพิ่ม" */
+            color: #0d6efd;
         }
         .grade-details-tab {
             margin-top: 30px;
-        }
-        .section-title {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            font-weight: bold;
         }
         .semester-select-container {
             display: flex;
@@ -60,6 +171,7 @@
         .semester-select-container label {
             margin-bottom: 0;
             font-weight: 500;
+            color: #2c3e50;
         }
         .semester-select-container select {
             width: 150px;
@@ -115,6 +227,13 @@
             margin: 0;
             line-height: 1.5;
         }
+        .modal-content {
+            border-radius: 8px;
+        }
+        .modal-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
     </style>
 </head>
 <body>
@@ -163,7 +282,7 @@
 
     <!-- Main Content -->
     <div class="content">
-        <div class="container mt-5">
+        <div class="container">
             <h2 class="text-center mb-4">กรอกผลการศึกษา</h2>
 
             @if (session('success'))
@@ -174,240 +293,244 @@
             @endif
 
             @auth
-                <p>ยินดีต้อนรับ, {{ Auth::user()->username }}</p>
-                <p>รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}</p>
+                <p class="mb-3">ยินดีต้อนรับ, {{ Auth::user()->username }}</p>
+                <p class="mb-4">รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}</p>
             @else
-                <p>กรุณาเข้าสู่ระบบก่อนทำการบันทึกผลการเรียน</p>
+                <p class="mb-4">กรุณาเข้าสู่ระบบก่อนทำการบันทึกผลการเรียน</p>
             @endauth
 
             <!-- Section for Adding New Courses -->
             <div class="section-title">เพิ่มรายวิชาใหม่</div>
-            <div class="d-flex justify-content-between mb-3">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCourseModal">
-                    เพิ่มวิชาใหม่
-                </button>
-                <button type="button" class="btn btn-secondary" id="resetTable">รีเซ็ตตาราง</button>
-            </div>
-
-            <!-- Semester Selection -->
-            @auth
-                <div class="semester-select-container">
-                    <div>
-                        <label for="semester_term" class="form-label">ภาคการศึกษา</label>
-                        <select class="form-control" name="semester_term" id="semester_term" required>
-                            <option value="">เลือกภาค</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="semester_year" class="form-label">ปีการศึกษา</label>
-                        <select class="form-control" name="semester_year" id="semester_year" required>
-                            <option value="">เลือกปี</option>
-                            @for ($year = 2565; $year <= 2570; $year++)
-                                <option value="{{ $year }}">{{ $year }}</option>
-                            @endfor
-                        </select>
-                    </div>
-                </div>
-            @endauth
-
-            <form id="reportForm" action="{{ route('report.submit') }}" method="POST">
-                @csrf
-                <input type="hidden" name="semester" id="semester_input">
-
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>รหัสวิชา</th>
-                                <th>ชื่อวิชา</th>
-                                <th>หน่วยกิต</th>
-                                <th>เกรด</th>
-                                <th>การดำเนินการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="courses-table-body">
-                            <tr>
-                                <td><input type="text" class="form-control course-id" name="id[]" required maxlength="8"></td>
-                                <td><input type="text" class="form-control" name="course_name[]" readonly></td>
-                                <td><input type="number" class="form-control" name="total_credits[]" readonly></td>
-                                <td>
-                                    <select class="form-control grade-select" name="grade[]" required>
-                                        <option value="">เลือกเกรด</option>
-                                        <option value="4.0">A</option>
-                                        <option value="3.5">B+</option>
-                                        <option value="3.0">B</option>
-                                        <option value="2.5">C+</option>
-                                        <option value="2.0">C</option>
-                                        <option value="1.5">D+</option>
-                                        <option value="1.0">D</option>
-                                        <option value="0.0">F</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-success btn-add-course">+</button>
-                                    <button type="button" class="btn btn-danger btn-remove-course">ลบ</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="card p-3 mb-4">
+                <div class="d-flex justify-content-between mb-3">
+                    <button type="button" class="btn btn-primary btn-custom" data-bs-toggle="modal" data-bs-target="#addCourseModal">
+                        เพิ่มวิชาใหม่
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-custom" id="resetTable">รีเซ็ตตาราง</button>
                 </div>
 
-                <div class="gpa-container">
-                    <div class="gpa-info">
-                        GPA รวม: <strong id="gpa-total">0.00</strong>
-                        <div class="total-credits-added">
-                            หน่วยกิตรวมที่เพิ่ม: <strong id="total-credits-added">0</strong>
+                <!-- Semester Selection -->
+                @auth
+                    <div class="semester-select-container">
+                        <div>
+                            <label for="semester_term" class="form-label">ภาคการศึกษา</label>
+                            <select class="form-control" name="semester_term" id="semester_term" required>
+                                <option value="">เลือกภาค</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="semester_year" class="form-label">ปีการศึกษา</label>
+                            <select class="form-control" name="semester_year" id="semester_year" required>
+                                <option value="">เลือกปี</option>
+                                @for ($year = 2565; $year <= 2570; $year++)
+                                    <option value="{{ $year }}">{{ $year }}</option>
+                                @endfor
+                            </select>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">บันทึกผลการเรียน</button>
-                </div>
-            </form>
+                @endauth
+
+                <form id="reportForm" action="{{ route('report.submit') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="semester" id="semester_input">
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>รหัสวิชา</th>
+                                    <th>ชื่อวิชา</th>
+                                    <th>หน่วยกิต</th>
+                                    <th>เกรด</th>
+                                    <th>การดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="courses-table-body">
+                                <tr>
+                                    <td><input type="text" class="form-control course-id" name="id[]" required maxlength="8"></td>
+                                    <td><input type="text" class="form-control" name="course_name[]" readonly></td>
+                                    <td><input type="number" class="form-control" name="total_credits[]" readonly></td>
+                                    <td>
+                                        <select class="form-control grade-select" name="grade[]" required>
+                                            <option value="">เลือกเกรด</option>
+                                            <option value="4.0">A</option>
+                                            <option value="3.5">B+</option>
+                                            <option value="3.0">B</option>
+                                            <option value="2.5">C+</option>
+                                            <option value="2.0">C</option>
+                                            <option value="1.5">D+</option>
+                                            <option value="1.0">D</option>
+                                            <option value="0.0">F</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-success btn-add-course btn-custom">+</button>
+                                        <button type="button" class="btn btn-danger btn-remove-course btn-custom">ลบ</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="gpa-container">
+                        <div class="gpa-info">
+                            GPA รวม: <strong id="gpa-total">0.00</strong>
+                            <div class="total-credits-added">
+                                หน่วยกิตรวมที่เพิ่ม: <strong id="total-credits-added">0</strong>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-custom">บันทึกผลการเรียน</button>
+                    </div>
+                </form>
+            </div>
 
             <!-- Section for Registered Courses -->
             <div class="grade-details-tab">
                 <div class="section-title">รายวิชาที่ลงทะเบียนแล้ว</div>
-                <ul class="nav nav-tabs" id="gradeTabs" role="tablist">
-                    @for ($year = 2565; $year <= 2570; $year++)
-                        <li class="nav-item">
-                            <a class="nav-link" id="tab-1-{{ $year }}" data-bs-toggle="tab" href="#semester-1-{{ $year }}" role="tab">1/{{ $year }}</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="tab-2-{{ $year }}" data-bs-toggle="tab" href="#semester-2-{{ $year }}" role="tab">2/{{ $year }}</a>
-                        </li>
-                    @endfor
-                </ul>
-                <div class="tab-content" id="gradeTabsContent">
-                    @for ($year = 2565; $year <= 2570; $year++)
-                        <!-- Tab for Registered Courses -->
-                        <div class="tab-pane fade" id="semester-1-{{ $year }}" role="tabpanel">
-                            <h5 class="text-center mt-3">ภาคการศึกษา 1/{{ $year }}</h5>
-                            <table class="table table-bordered mt-3">
-                                <thead>
-                                    <tr>
-                                        <th>รหัสวิชา</th>
-                                        <th>ชื่อวิชา</th>
-                                        <th>หน่วยกิต</th>
-                                        <th>เกรด</th>
-                                        <th>คำแนะนำ</th>
-                                        <th>การดำเนินการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="grade-table-1-{{ $year }}"></tbody>
-                            </table>
-                            <div class="summary-table">
-                                <table class="table table-bordered">
+                <div class="card p-3">
+                    <ul class="nav nav-tabs" id="gradeTabs" role="tablist">
+                        @for ($year = 2565; $year <= 2570; $year++)
+                            <li class="nav-item">
+                                <a class="nav-link" id="tab-1-{{ $year }}" data-bs-toggle="tab" href="#semester-1-{{ $year }}" role="tab">1/{{ $year }}</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="tab-2-{{ $year }}" data-bs-toggle="tab" href="#semester-2-{{ $year }}" role="tab">2/{{ $year }}</a>
+                            </li>
+                        @endfor
+                    </ul>
+                    <div class="tab-content" id="gradeTabsContent">
+                        @for ($year = 2565; $year <= 2570; $year++)
+                            <!-- Tab for Registered Courses -->
+                            <div class="tab-pane fade" id="semester-1-{{ $year }}" role="tabpanel">
+                                <h5 class="text-center mt-3">ภาคการศึกษา 1/{{ $year }}</h5>
+                                <table class="table table-bordered mt-3">
                                     <thead>
                                         <tr>
-                                            <th colspan="5">เทอมนี้</th>
-                                            <th colspan="5">สะสมถึงเทอมนี้</th>
-                                        </tr>
-                                        <tr>
-                                            <th>CR</th>
-                                            <th>CP</th>
-                                            <th>CA</th>
-                                            <th>GP</th>
-                                            <th class="highlight">GPA</th>
-                                            <th>CR</th>
-                                            <th>CP</th>
-                                            <th>CA</th>
-                                            <th>GP</th>
-                                            <th class="highlight">GPA</th>
+                                            <th>รหัสวิชา</th>
+                                            <th>ชื่อวิชา</th>
+                                            <th>หน่วยกิต</th>
+                                            <th>เกรด</th>
+                                            <th>คำแนะนำ</th>
+                                            <th>การดำเนินการ</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td id="semester-cr-1-{{ $year }}">0</td>
-                                            <td id="semester-cp-1-{{ $year }}">0</td>
-                                            <td id="semester-ca-1-{{ $year }}">0</td>
-                                            <td id="semester-gp-1-{{ $year }}">0.00</td>
-                                            <td id="semester-gpa-1-{{ $year }}" class="highlight">0.00</td>
-                                            <td id="cumulative-cr-1-{{ $year }}">0</td>
-                                            <td id="cumulative-cp-1-{{ $year }}">0</td>
-                                            <td id="cumulative-ca-1-{{ $year }}">0</td>
-                                            <td id="cumulative-gp-1-{{ $year }}">0.00</td>
-                                            <td id="cumulative-gpa-1-{{ $year }}" class="highlight">0.00</td>
-                                        </tr>
-                                    </tbody>
+                                    <tbody id="grade-table-1-{{ $year }}"></tbody>
                                 </table>
+                                <div class="summary-table">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th colspan="5">เทอมนี้</th>
+                                                <th colspan="5">สะสมถึงเทอมนี้</th>
+                                            </tr>
+                                            <tr>
+                                                <th>CR</th>
+                                                <th>CP</th>
+                                                <th>CA</th>
+                                                <th>GP</th>
+                                                <th class="highlight">GPA</th>
+                                                <th>CR</th>
+                                                <th>CP</th>
+                                                <th>CA</th>
+                                                <th>GP</th>
+                                                <th class="highlight">GPA</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td id="semester-cr-1-{{ $year }}">0</td>
+                                                <td id="semester-cp-1-{{ $year }}">0</td>
+                                                <td id="semester-ca-1-{{ $year }}">0</td>
+                                                <td id="semester-gp-1-{{ $year }}">0.00</td>
+                                                <td id="semester-gpa-1-{{ $year }}" class="highlight">0.00</td>
+                                                <td id="cumulative-cr-1-{{ $year }}">0</td>
+                                                <td id="cumulative-cp-1-{{ $year }}">0</td>
+                                                <td id="cumulative-ca-1-{{ $year }}">0</td>
+                                                <td id="cumulative-gp-1-{{ $year }}">0.00</td>
+                                                <td id="cumulative-gpa-1-{{ $year }}" class="highlight">0.00</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="abbreviations">
+                                    <p><strong>คำย่อ:</strong></p>
+                                    <p>CR = หน่วยกิตที่ลงทะเบียน (Credit Registered)</p>
+                                    <p>CP = หน่วยกิตที่ผ่าน (Credit Passed)</p>
+                                    <p>CA = หน่วยกิตที่ใช้คำนวณ GPA (Credit Attempt for GPA Calculation)</p>
+                                    <p>GP = คะแนนรวม (สำหรับคำนวณ GPA) (Grade Point for GPA Calculation)</p>
+                                    <p>GPA = เกรดเฉลี่ย (GP / CA) (Grade Point Average)</p>
+                                    <p>(T) = เกรดที่โอนมา (Transfer Grade)</p>
+                                </div>
+                                <div id="gpa-status-1-{{ $year }}" class="gpa-status"></div>
+                                <div id="repeat-advice-1-{{ $year }}" class="repeat-advice"></div>
                             </div>
-                            <div class="abbreviations">
-                                <p><strong>คำย่อ:</strong></p>
-                                <p>CR = หน่วยกิตที่ลงทะเบียน (Credit Registered)</p>
-                                <p>CP = หน่วยกิตที่ผ่าน (Credit Passed)</p>
-                                <p>CA = หน่วยกิตที่ใช้คำนวณ GPA (Credit Attempt for GPA Calculation)</p>
-                                <p>GP = คะแนนรวม (สำหรับคำนวณ GPA) (Grade Point for GPA Calculation)</p>
-                                <p>GPA = เกรดเฉลี่ย (GP / CA) (Grade Point Average)</p>
-                                <p>(T) = เกรดที่โอนมา (Transfer Grade)</p>
-                            </div>
-                            <div id="gpa-status-1-{{ $year }}" class="gpa-status"></div>
-                            <div id="repeat-advice-1-{{ $year }}" class="repeat-advice"></div>
-                        </div>
-                        <div class="tab-pane fade" id="semester-2-{{ $year }}" role="tabpanel">
-                            <h5 class="text-center mt-3">ภาคการศึกษา 2/{{ $year }}</h5>
-                            <table class="table table-bordered mt-3">
-                                <thead>
-                                    <tr>
-                                        <th>รหัสวิชา</th>
-                                        <th>ชื่อวิชา</th>
-                                        <th>หน่วยกิต</th>
-                                        <th>เกรด</th>
-                                        <th>คำแนะนำ</th>
-                                        <th>การดำเนินการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="grade-table-2-{{ $year }}"></tbody>
-                            </table>
-                            <div class="summary-table">
-                                <table class="table table-bordered">
+                            <div class="tab-pane fade" id="semester-2-{{ $year }}" role="tabpanel">
+                                <h5 class="text-center mt-3">ภาคการศึกษา 2/{{ $year }}</h5>
+                                <table class="table table-bordered mt-3">
                                     <thead>
                                         <tr>
-                                            <th colspan="5">เทอมนี้</th>
-                                            <th colspan="5">สะสมถึงเทอมนี้</th>
-                                        </tr>
-                                        <tr>
-                                            <th>CR</th>
-                                            <th>CP</th>
-                                            <th>CA</th>
-                                            <th>GP</th>
-                                            <th class="highlight">GPA</th>
-                                            <th>CR</th>
-                                            <th>CP</th>
-                                            <th>CA</th>
-                                            <th>GP</th>
-                                            <th class="highlight">GPA</th>
+                                            <th>รหัสวิชา</th>
+                                            <th>ชื่อวิชา</th>
+                                            <th>หน่วยกิต</th>
+                                            <th>เกรด</th>
+                                            <th>คำแนะนำ</th>
+                                            <th>การดำเนินการ</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td id="semester-cr-2-{{ $year }}">0</td>
-                                            <td id="semester-cp-2-{{ $year }}">0</td>
-                                            <td id="semester-ca-2-{{ $year }}">0</td>
-                                            <td id="semester-gp-2-{{ $year }}">0.00</td>
-                                            <td id="semester-gpa-2-{{ $year }}" class="highlight">0.00</td>
-                                            <td id="cumulative-cr-2-{{ $year }}">0</td>
-                                            <td id="cumulative-cp-2-{{ $year }}">0</td>
-                                            <td id="cumulative-ca-2-{{ $year }}">0</td>
-                                            <td id="cumulative-gp-2-{{ $year }}">0.00</td>
-                                            <td id="cumulative-gpa-2-{{ $year }}" class="highlight">0.00</td>
-                                        </tr>
-                                    </tbody>
+                                    <tbody id="grade-table-2-{{ $year }}"></tbody>
                                 </table>
+                                <div class="summary-table">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th colspan="5">เทอมนี้</th>
+                                                <th colspan="5">สะสมถึงเทอมนี้</th>
+                                            </tr>
+                                            <tr>
+                                                <th>CR</th>
+                                                <th>CP</th>
+                                                <th>CA</th>
+                                                <th>GP</th>
+                                                <th class="highlight">GPA</th>
+                                                <th>CR</th>
+                                                <th>CP</th>
+                                                <th>CA</th>
+                                                <th>GP</th>
+                                                <th class="highlight">GPA</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td id="semester-cr-2-{{ $year }}">0</td>
+                                                <td id="semester-cp-2-{{ $year }}">0</td>
+                                                <td id="semester-ca-2-{{ $year }}">0</td>
+                                                <td id="semester-gp-2-{{ $year }}">0.00</td>
+                                                <td id="semester-gpa-2-{{ $year }}" class="highlight">0.00</td>
+                                                <td id="cumulative-cr-2-{{ $year }}">0</td>
+                                                <td id="cumulative-cp-2-{{ $year }}">0</td>
+                                                <td id="cumulative-ca-2-{{ $year }}">0</td>
+                                                <td id="cumulative-gp-2-{{ $year }}">0.00</td>
+                                                <td id="cumulative-gpa-2-{{ $year }}" class="highlight">0.00</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="abbreviations">
+                                    <p><strong>คำย่อ:</strong></p>
+                                    <p>CR = หน่วยกิตที่ลงทะเบียน (Credit Registered)</p>
+                                    <p>CP = หน่วยกิตที่ผ่าน (Credit Passed)</p>
+                                    <p>CA = หน่วยกิตที่ใช้คำนวณ GPA (Credit Attempt for GPA Calculation)</p>
+                                    <p>GP = คะแนนรวม (สำหรับคำนวณ GPA) (Grade Point for GPA Calculation)</p>
+                                    <p>GPA = เกรดเฉลี่ย (GP / CA) (Grade Point Average)</p>
+                                    <p>(T) = เกรดที่โอนมา (Transfer Grade)</p>
+                                </div>
+                                <div id="gpa-status-2-{{ $year }}" class="gpa-status"></div>
+                                <div id="repeat-advice-2-{{ $year }}" class="repeat-advice"></div>
                             </div>
-                            <div class="abbreviations">
-                                <p><strong>คำย่อ:</strong></p>
-                                <p>CR = หน่วยกิตที่ลงทะเบียน (Credit Registered)</p>
-                                <p>CP = หน่วยกิตที่ผ่าน (Credit Passed)</p>
-                                <p>CA = หน่วยกิตที่ใช้คำนวณ GPA (Credit Attempt for GPA Calculation)</p>
-                                <p>GP = คะแนนรวม (สำหรับคำนวณ GPA) (Grade Point for GPA Calculation)</p>
-                                <p>GPA = เกรดเฉลี่ย (GP / CA) (Grade Point Average)</p>
-                                <p>(T) = เกรดที่โอนมา (Transfer Grade)</p>
-                            </div>
-                            <div id="gpa-status-2-{{ $year }}" class="gpa-status"></div>
-                            <div id="repeat-advice-2-{{ $year }}" class="repeat-advice"></div>
-                        </div>
-                    @endfor
+                        @endfor
+                    </div>
                 </div>
             </div>
 
@@ -436,7 +559,9 @@
                                     <label for="total_credits" class="form-label">หน่วยกิต</label>
                                     <input type="number" id="total_credits" name="total_credits" class="form-control" required min="1">
                                 </div>
-                                <button type="submit" class="btn btn-primary">เพิ่มวิชา</button>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary btn-custom">เพิ่มวิชา</button>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -497,7 +622,7 @@
                                     <td>${record.grade}</td>
                                     <td>${advice}</td>
                                     <td>
-                                        <button type="button" class="btn btn-danger btn-remove-course">ลบ</button>
+                                        <button type="button" class="btn btn-danger btn-remove-course btn-custom">ลบ</button>
                                     </td>
                                 </tr>`;
                             tableBody.append(row);
@@ -617,8 +742,8 @@
                         </select>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-success btn-add-course">+</button>
-                        <button type="button" class="btn btn-danger btn-remove-course">ลบ</button>
+                        <button type="button" class="btn btn-success btn-add-course btn-custom">+</button>
+                        <button type="button" class="btn btn-danger btn-remove-course btn-custom">ลบ</button>
                     </td>
                 </tr>`;
             $('#courses-table-body').append(newRow);
