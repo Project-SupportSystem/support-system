@@ -14,11 +14,24 @@
             height: 100%;
             margin: 0;
             display: flex;
+            flex-direction: column; /* เปลี่ยนเป็น column เพื่อให้สามารถวางข้อความด้านบน */
             justify-content: center;
             align-items: center;
             background-color: #f5f7fa; /* สีพื้นหลังเหมือนหน้า "กรอกผลการศึกษา" */
             font-family: 'Kanit', sans-serif;
             color: #333;
+        }
+
+        .system-title-container {
+            margin-bottom: 1.5rem; /* ระยะห่างระหว่างข้อความและกล่อง Login */
+            text-align: center;
+        }
+
+        .system-title {
+            font-size: 28px; /* ขนาดตัวอักษรที่ใหญ่แต่ไม่มากเกินไป */
+            font-weight: 600;
+            color: #f36d21; /* สีส้ม KKU */
+            line-height: 1.2;
         }
 
         .login-container {
@@ -123,6 +136,14 @@
 
         /* Responsive Design */
         @media (max-width: 576px) {
+            .system-title {
+                font-size: 22px; /* ปรับขนาดตัวอักษรให้เล็กลงสำหรับหน้าจอเล็ก */
+            }
+
+            .system-title-container {
+                margin-bottom: 1rem;
+            }
+
             .login-container {
                 padding: 1.5rem;
                 max-width: 90%;
@@ -165,6 +186,10 @@
                 color: #d1d1d1;
             }
 
+            .system-title {
+                color: #f36d21; /* รักษาสีส้ม KKU */
+            }
+
             .login-container {
                 background-color: #2c2c2c;
                 border-color: #444444;
@@ -198,6 +223,11 @@
     </style>
 </head>
 <body>
+    <div class="system-title-container">
+        <div class="system-title">
+            ระบบสนับสนุนหลักสูตร วิทยาการคอมพิวเตอร์และสารสนเทศ
+        </div>
+    </div>
     <div class="login-container">
         <div class="login-header">
             <img src="{{ asset('img/KKU_Logo.png') }}" alt="โลโก้ KKU">

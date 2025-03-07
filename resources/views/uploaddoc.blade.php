@@ -163,6 +163,12 @@
             color: #f36d21; /* เปลี่ยนเป็นสีส้มของ KKU */
             font-weight: bold;
         }
+        /* ปรับแต่งสไตล์สำหรับข้อความกำกับไฟล์ */
+        .file-hint {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
         /* Dark Mode */
         @media (prefers-color-scheme: dark) {
             body {
@@ -220,6 +226,9 @@
             }
             .nav-tabs .nav-link.active {
                 color: #f36d21;
+            }
+            .file-hint {
+                color: #adb5bd;
             }
         }
     </style>
@@ -305,6 +314,15 @@
                     <div class="mb-3">
                         <label for="docUpload" class="form-label">เลือกไฟล์</label>
                         <input type="file" name="files[0][]" id="docUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple>
+                        <div class="file-hint">
+                            <p>ไฟล์ที่ยอมรับได้: <strong>.pdf, .docx, .jpeg, .jpg, .png</strong></p>
+                            <p>สำหรับประเภทเอกสาร:</p>
+                            <ul>
+                                <li>สหกิจศึกษา: รองรับ <strong>.pdf, .docx</strong> (รายงานสหกิจศึกษา)</li>
+                                <li>โปรเจค: รองรับ <strong>.pdf, .docx, .jpeg, .jpg, .png</strong> (เอกสารหรือภาพประกอบ)</li>
+                                <li>ฝึกงาน: รองรับ <strong>.pdf, .docx</strong> (รายงานฝึกงาน)</li>
+                            </ul>
+                        </div>
                     </div>
                     <div id="fileList0" class="file-list"></div>
                     <div class="text-end">
@@ -527,18 +545,18 @@
         }
 
         document.getElementById("uploadForm").addEventListener("submit", function(e) {
+            e.preventDefault(); // ป้องกันการส่งฟอร์มทันที
+
             const selectedType = document.getElementById("docTypeSelect").value;
             const filesSelected = document.getElementById("docUpload").files.length > 0;
 
             if (!selectedType) {
                 Swal.fire('คำเตือน!', 'กรุณาเลือกประเภทเอกสาร', 'warning');
-                e.preventDefault();
                 return;
             }
 
             if (!filesSelected) {
                 Swal.fire('คำเตือน!', 'กรุณาเลือกไฟล์ที่ต้องการอัปโหลด', 'warning');
-                e.preventDefault();
                 return;
             }
 
@@ -553,20 +571,19 @@
                 cancelButtonText: 'ยกเลิก'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    this.submit();
-                } else {
-                    e.preventDefault();
+                    this.submit(); // ส่งฟอร์มเฉพาะเมื่อกด "ใช่"
                 }
             });
         });
 
         document.getElementById("statusForm").addEventListener("submit", function(e) {
+            e.preventDefault(); // ป้องกันการส่งฟอร์มทันที
+
             const kkudqStatus = document.getElementById("kkudqStatus").value;
             const kkuKeptStatus = document.getElementById("kkuKeptStatus").value;
 
             if (!kkudqStatus && !kkuKeptStatus) {
                 Swal.fire('คำเตือน!', 'กรุณาเลือกสถานะอย่างน้อยหนึ่งรายการ (KKUDQ หรือ KKU KEPT)', 'warning');
-                e.preventDefault();
                 return;
             }
 
@@ -581,9 +598,7 @@
                 cancelButtonText: 'ยกเลิก'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    this.submit();
-                } else {
-                    e.preventDefault();
+                    this.submit(); // ส่งฟอร์มเฉพาะเมื่อกด "ใช่"
                 }
             });
         });
