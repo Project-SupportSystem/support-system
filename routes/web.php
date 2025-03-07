@@ -37,6 +37,8 @@ Route::middleware(['auth', 'role:student'])->group(function () {
 
 Route::middleware(['auth', 'role:advisor'])->group(function () {
     Route::get('/table-report', [StudentController::class, 'showReport'])->name('table_report');
+    Route::get('/get-advisors', [StudentController::class, 'getAdvisors'])->name('advisor.get');
+    Route::post('/edit-advisor-name', [StudentController::class, 'editAdvisorName'])->name('advisor.edit.name');
     Route::get('/get-student-documents/{studentId}/{docType}', [UploadDocController::class, 'getStudentDocuments']);
 });
 

@@ -12,14 +12,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* ปรับแต่ง Body และพื้นหลัง */
+        /* คง CSS เดิมทั้งหมด */
         body {
             background-color: #f5f7fa;
             font-family: 'Kanit', sans-serif;
             color: #333;
         }
-
-        /* ปรับแต่ง Navbar */
         .navbar {
             background-color: #ffffff;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -40,8 +38,6 @@
             font-size: 14px;
             padding: 8px 15px;
         }
-
-        /* ปรับแต่ง Sidebar */
         .sidebar {
             position: fixed;
             top: 80px;
@@ -62,10 +58,8 @@
         }
         .sidebar a:hover {
             background-color: #e9ecef;
-            color: #F36D21; /* เปลี่ยนเป็นสีส้ม KKU เมื่อ hover */
+            color: #F36D21;
         }
-
-        /* ปรับแต่ง Content */
         .content {
             margin-left: 240px;
             margin-top: 100px;
@@ -77,8 +71,6 @@
             color: #2c3e50;
             margin-bottom: 30px;
         }
-
-        /* ปรับแต่ง Input และ Search */
         .input-group {
             max-width: 500px;
             margin: 0 auto 20px;
@@ -91,18 +83,16 @@
         }
         .input-group button {
             border-radius: 0 8px 8px 0;
-            background-color: #F36D21; /* เปลี่ยนเป็นสีส้ม KKU */
+            background-color: #F36D21;
             border: none;
             font-size: 14px;
             padding: 10px 20px;
             transition: background-color 0.3s ease;
-            color: #fff; /* เปลี่ยนตัวอักษรเป็นสีขาวเพื่อความชัดเจน */
+            color: #fff;
         }
         .input-group button:hover {
-            background-color: #D85B1B; /* สีส้มเข้มเมื่อ hover */
+            background-color: #D85B1B;
         }
-
-        /* ปรับแต่งตารางหลัก */
         .table {
             background-color: #ffffff;
             border-radius: 10px;
@@ -131,17 +121,15 @@
             color: #555;
         }
         .gpa-link, .document-link {
-            color: #0d6efd; /* รักษาสีน้ำเงินตามเดิม */
+            color: #0d6efd;
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s ease;
         }
         .gpa-link:hover, .document-link:hover {
-            color: #0b5ed7; /* สีน้ำเงินเข้มเมื่อ hover */
+            color: #0b5ed7;
             text-decoration: underline;
         }
-
-        /* ปรับแต่งสถานะ KKU DQ และ KKU KEPT */
         .status-pass {
             color: #28a745;
             font-weight: 500;
@@ -150,8 +138,6 @@
             color: #dc3545;
             font-weight: 500;
         }
-
-        /* ปรับแต่ง Accordion */
         .semester-header {
             background-color: #e9ecef;
             color: #2c3e50;
@@ -203,14 +189,10 @@
         .academic-table td {
             color: #555;
         }
-
-        /* ปรับแต่งตารางสรุป */
         .summary-table th {
             background-color: #f1f3f5;
             color: #2c3e50;
         }
-
-        /* ปรับแต่ง Modal */
         .modal-content {
             border-radius: 10px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
@@ -240,8 +222,6 @@
             color: #0b5ed7;
             text-decoration: underline;
         }
-
-        /* Dark Mode */
         @media (prefers-color-scheme: dark) {
             body {
                 background-color: #1e1e1e;
@@ -257,7 +237,7 @@
             }
             .sidebar a:hover {
                 background-color: #3c3c3c;
-                color: #F36D21; /* เปลี่ยนเป็นสีส้ม KKU เมื่อ hover */
+                color: #F36D21;
             }
             .content h2 {
                 color: #e9ecef;
@@ -268,11 +248,11 @@
                 color: #d1d1d1;
             }
             .input-group button {
-                background-color: #F36D21; /* เปลี่ยนเป็นสีส้ม KKU */
-                color: #fff; /* ตัวอักษรสีขาว */
+                background-color: #F36D21;
+                color: #fff;
             }
             .input-group button:hover {
-                background-color: #D85B1B; /* สีส้มเข้มเมื่อ hover */
+                background-color: #D85B1B;
             }
             .table thead {
                 background-color: #3c3c3c;
@@ -285,10 +265,10 @@
                 color: #adb5bd;
             }
             .gpa-link, .document-link {
-                color: #0d6efd; /* รักษาสีน้ำเงินตามเดิม */
+                color: #0d6efd;
             }
             .gpa-link:hover, .document-link:hover {
-                color: #0b5ed7; /* สีน้ำเงินเข้มเมื่อ hover */
+                color: #0b5ed7;
             }
             .semester-header {
                 background-color: #3c3c3c;
@@ -314,10 +294,10 @@
                 border-bottom: 1px solid #555;
             }
             .modal-body .file-link {
-                color: #0d6efd; /* รักษาสีน้ำเงินตามเดิม */
+                color: #0d6efd;
             }
             .modal-body .file-link:hover {
-                color: #0b5ed7; /* สีน้ำเงินเข้มเมื่อ hover */
+                color: #0b5ed7;
             }
         }
     </style>
@@ -358,6 +338,7 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <a href="{{ route('table_report') }}">ค้นหานักศึกษา</a>
+        <a href="#" data-bs-toggle="modal" data-bs-target="#editAdvisorModal">ข้อมูลอาจารย์ที่ปรึกษา</a>
     </div>
 
     <!-- Main Content -->
@@ -467,7 +448,6 @@
                                     @endif
                                 </td>
                             </tr>
-                            <!-- Accordion สำหรับแสดงผลการเรียน -->
                             <tr id="academic-records-{{ $student->id }}" class="collapse-content">
                                 <td colspan="10">
                                     @if(isset($academicRecords[$student->id]) && !$academicRecords[$student->id]->isEmpty())
@@ -540,8 +520,6 @@
                                                                 <td>{{ number_format($GP, 2) }}</td>
                                                             </tr>
                                                         @endforeach
-
-                                                        <!-- แถวสรุปเทอมนี้ -->
                                                         <tr>
                                                             <td colspan="4" class="text-end"><strong>รวม</strong></td>
                                                             <td><strong>{{ $totalCR }}</strong></td>
@@ -561,7 +539,6 @@
                                                     $accumGPA = $accumCR > 0 ? number_format($accumGP / $accumCR, 2) : '0.00';
                                                 @endphp
 
-                                                <!-- ตารางสรุป "เทอมนี้ vs สะสม" -->
                                                 <table class="table table-bordered summary-table" style="margin-top: 10px;">
                                                     <thead>
                                                         <tr class="table-light">
@@ -608,7 +585,7 @@
                 </table>
             </div>
 
-            <!-- Modal สำหรับแสดงเอกสารหรือรูปภาพ -->
+            <!-- Modal สำหรับแสดงเอกสาร -->
             <div class="modal fade" id="filesModal" tabindex="-1" aria-labelledby="filesModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -619,6 +596,37 @@
                         <div class="modal-body" id="filesModalBody">
                             <!-- รูปภาพหรือลิงก์จะถูกแทรกที่นี่ -->
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal สำหรับข้อมูลอาจารย์ที่ปรึกษา -->
+            <div class="modal fade" id="editAdvisorModal" tabindex="-1" aria-labelledby="editAdvisorModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editAdvisorModalLabel">ข้อมูลอาจารย์ที่ปรึกษา</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form action="{{ route('advisor.edit.name') }}" method="POST">
+                            @csrf
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="advisor-name-input" class="form-label">ชื่ออาจารย์</label>
+                                    <input type="text" class="form-control" id="advisor-name-input" name="first_name" 
+                                           value="{{ $advisor->first_name ?? Auth::user()->username }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="student-count" class="form-label">จำนวนนักศึกษาที่ดูแล</label>
+                                    <input type="text" class="form-control" id="student-count" 
+                                           value="{{ $studentCount }}" disabled>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                                <button type="submit" class="btn btn-primary">บันทึก</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -650,12 +658,10 @@
                             const isImage = ['jpg', 'jpeg', 'png'].includes(fileExtension);
 
                             if (isImage) {
-                                // แสดงรูปภาพถ้าเป็นไฟล์ภาพ
                                 modalBody.append(`
                                     <img src="${doc.file_path}" alt="${doc.file_name}" class="image-preview">
                                 `);
                             } else {
-                                // แสดงลิงก์ดาวน์โหลดถ้าไม่ใช่รูปภาพ
                                 let statusText = ['kku_dq', 'kku_kept'].includes(docType) && doc.status
                                     ? ` (${doc.status == 'pass' ? 'ผ่าน' : 'ไม่ผ่าน'})`
                                     : '';
@@ -674,7 +680,7 @@
                         icon: 'error',
                         title: 'ผิดพลาด!',
                         text: 'ไม่สามารถดึงข้อมูลเอกสารได้: ' + (xhr.responseJSON?.message || xhr.responseText),
-                        confirmButtonColor: '#0d6efd' // รักษาสีน้ำเงิน
+                        confirmButtonColor: '#0d6efd'
                     });
                     console.log('Error Details:', xhr.responseText);
                 }
