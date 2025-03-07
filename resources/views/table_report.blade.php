@@ -224,24 +224,20 @@
             font-weight: 600;
             color: #2c3e50;
         }
-        .modal-body ul {
-            list-style: none;
-            padding: 0;
+        .modal-body .image-preview {
+            max-width: 100%;
+            max-height: 400px;
+            margin: 10px auto;
+            display: block;
         }
-        .modal-body ul li {
-            padding: 8px 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-        .modal-body ul li:last-child {
-            border-bottom: none;
-        }
-        .modal-body ul li a {
-            color: #0d6efd; /* รักษาสีน้ำเงินตามเดิม */
+        .modal-body .file-link {
+            display: block;
+            margin: 10px 0;
+            color: #0d6efd;
             text-decoration: none;
-            font-size: 14px;
         }
-        .modal-body ul li a:hover {
-            color: #0b5ed7; /* สีน้ำเงินเข้มเมื่อ hover */
+        .modal-body .file-link:hover {
+            color: #0b5ed7;
             text-decoration: underline;
         }
 
@@ -317,13 +313,10 @@
                 color: #e9ecef;
                 border-bottom: 1px solid #555;
             }
-            .modal-body ul li {
-                border-bottom: 1px solid #555;
-            }
-            .modal-body ul li a {
+            .modal-body .file-link {
                 color: #0d6efd; /* รักษาสีน้ำเงินตามเดิม */
             }
-            .modal-body ul li a:hover {
+            .modal-body .file-link:hover {
                 color: #0b5ed7; /* สีน้ำเงินเข้มเมื่อ hover */
             }
         }
@@ -615,7 +608,7 @@
                 </table>
             </div>
 
-            <!-- Modal สำหรับแสดงเอกสาร -->
+            <!-- Modal สำหรับแสดงเอกสารหรือรูปภาพ -->
             <div class="modal fade" id="filesModal" tabindex="-1" aria-labelledby="filesModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -623,8 +616,8 @@
                             <h5 class="modal-title" id="filesModalLabel">ไฟล์เอกสาร</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body">
-                            <ul id="filesList"></ul>
+                        <div class="modal-body" id="filesModalBody">
+                            <!-- รูปภาพหรือลิงก์จะถูกแทรกที่นี่ -->
                         </div>
                     </div>
                 </div>
@@ -648,18 +641,31 @@
                 type: 'GET',
                 success: function (response) {
                     Swal.close();
-                    $('#filesList').empty();
+                    const modalBody = $('#filesModalBody');
+                    modalBody.empty();
+
                     if (response.documents.length > 0) {
                         response.documents.forEach(function (doc) {
-                            let statusText = ['kku_dq', 'kku_kept'].includes(docType) && doc.status
-                                ? ` (${doc.status == 'pass' ? 'ผ่าน' : 'ไม่ผ่าน'})`
-                                : '';
-                            $('#filesList').append(
-                                `<li><a href="${doc.file_path}" target="_blank">${doc.file_name}${statusText}</a></li>`
-                            );
+                            const fileExtension = doc.file_name.split('.').pop().toLowerCase();
+                            const isImage = ['jpg', 'jpeg', 'png'].includes(fileExtension);
+
+                            if (isImage) {
+                                // แสดงรูปภาพถ้าเป็นไฟล์ภาพ
+                                modalBody.append(`
+                                    <img src="${doc.file_path}" alt="${doc.file_name}" class="image-preview">
+                                `);
+                            } else {
+                                // แสดงลิงก์ดาวน์โหลดถ้าไม่ใช่รูปภาพ
+                                let statusText = ['kku_dq', 'kku_kept'].includes(docType) && doc.status
+                                    ? ` (${doc.status == 'pass' ? 'ผ่าน' : 'ไม่ผ่าน'})`
+                                    : '';
+                                modalBody.append(`
+                                    <a href="${doc.file_path}" target="_blank" class="file-link">${doc.file_name}${statusText}</a>
+                                `);
+                            }
                         });
                     } else {
-                        $('#filesList').append('<li><span class="text-muted">ไม่มีเอกสาร</span></li>');
+                        modalBody.append('<p class="text-muted">ไม่มีเอกสาร</p>');
                     }
                     $('#filesModal').modal('show');
                 },
