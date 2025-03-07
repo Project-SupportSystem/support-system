@@ -22,7 +22,7 @@ class UploadDocController extends Controller
     {
         $request->validate([
             'titles.*' => 'required|in:สหกิจศึกษา,โปรเจค,internship',
-            'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'files.*.*' => 'required|file|mimes:pdf,jpg,jpeg,png,docx|max:10240',
         ]);
 
         $studentId = Auth::user()->student->id;

@@ -56,7 +56,7 @@
         }
         .sidebar a:hover {
             background-color: #e9ecef;
-            color: #f36d21; /* เปลี่ยนเป็นสีส้มของ KKU */
+            color: #f36d21;
         }
         .content {
             margin-left: 240px;
@@ -82,6 +82,7 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             background-color: #ffffff;
+            margin-bottom: 30px; /* เพิ่มระยะห่างระหว่างกรอบ */
         }
         .form-label {
             font-weight: 500;
@@ -96,11 +97,11 @@
             border-radius: 8px;
         }
         .btn-primary {
-            background-color: #f36d21; /* เปลี่ยนเป็นสีส้มของ KKU */
+            background-color: #f36d21;
             border: none;
         }
         .btn-primary:hover {
-            background-color: #d85b1b; /* สีส้มเข้มเมื่อ hover */
+            background-color: #d85b1b;
         }
         .btn-success {
             background-color: #28a745;
@@ -156,20 +157,11 @@
             cursor: pointer;
             color: #dc3545;
         }
-        .nav-tabs .nav-link {
-            color: #495057;
-        }
-        .nav-tabs .nav-link.active {
-            color: #f36d21; /* เปลี่ยนเป็นสีส้มของ KKU */
-            font-weight: bold;
-        }
-        /* ปรับแต่งสไตล์สำหรับข้อความกำกับไฟล์ */
         .file-hint {
             font-size: 14px;
             color: #6c757d;
             margin-top: 5px;
         }
-        /* Dark Mode */
         @media (prefers-color-scheme: dark) {
             body {
                 background-color: #1e1e1e;
@@ -220,12 +212,6 @@
             .alert-danger {
                 background-color: #dc3545;
                 color: #ffffff;
-            }
-            .nav-tabs .nav-link {
-                color: #adb5bd;
-            }
-            .nav-tabs .nav-link.active {
-                color: #f36d21;
             }
             .file-hint {
                 color: #adb5bd;
@@ -299,37 +285,150 @@
 
             <!-- Section for Uploading Documents -->
             <div class="section-title">อัปโหลดเอกสาร</div>
-            <form action="{{ route('upload.doc') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
-                @csrf
-                <div class="card p-3 mb-4">
+
+            <!-- กรอบสำหรับสหกิจศึกษา -->
+            <div class="card">
+                <h5 class="mb-3">สหกิจศึกษา</h5>
+                <form action="{{ route('upload.doc') }}" method="POST" enctype="multipart/form-data" class="upload-form" data-type="coop">
+                    @csrf
+                    <input type="hidden" name="titles[]" value="สหกิจศึกษา">
                     <div class="mb-3">
-                        <label for="docTypeSelect" class="form-label">เลือกประเภทเอกสาร</label>
-                        <select name="titles[]" class="form-select" id="docTypeSelect">
-                            <option value="" selected>-- เลือกประเภทเอกสาร --</option>
-                            <option value="สหกิจศึกษา">สหกิจศึกษา</option>
-                            <option value="โปรเจค">โปรเจค</option>
-                            <option value="internship">ฝึกงาน</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="docUpload" class="form-label">เลือกไฟล์</label>
-                        <input type="file" name="files[0][]" id="docUpload" class="form-control" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple>
+                        <label class="form-label">อัปโหลดไฟล์</label>
+                        <input type="file" name="files[0][]" class="form-control doc-upload" accept=".pdf,.docx" multiple>
                         <div class="file-hint">
-                            <p>ไฟล์ที่ยอมรับได้: <strong>.pdf, .docx, .jpeg, .jpg, .png</strong></p>
-                            <p>สำหรับประเภทเอกสาร:</p>
-                            <ul>
-                                <li>สหกิจศึกษา: รองรับ <strong>.pdf, .docx</strong> (รายงานสหกิจศึกษา)</li>
-                                <li>โปรเจค: รองรับ <strong>.pdf, .docx, .jpeg, .jpg, .png</strong> (เอกสารหรือภาพประกอบ)</li>
-                                <li>ฝึกงาน: รองรับ <strong>.pdf, .docx</strong> (รายงานฝึกงาน)</li>
-                            </ul>
+                            <p>ไฟล์ที่ยอมรับได้: <strong>.pdf, .docx</strong> (รายงานสหกิจศึกษา)</p>
+                            <p>ขนาดสูงสุด: <strong>10 MB</strong></p>
                         </div>
                     </div>
-                    <div id="fileList0" class="file-list"></div>
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary btn-custom">อัปโหลด</button>
+                    <div id="fileListCoop" class="file-list"></div>
+                    <!-- ตารางแสดงไฟล์ที่อัปโหลดแล้วสำหรับสหกิจศึกษา -->
+                    <div class="table-responsive mt-3">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>ชื่อไฟล์</th>
+                                    <th>การดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php
+                                    $uploadedFiles = Cache::get('uploaded_files', []);
+                                @endphp
+                                @foreach ($documents->where('document_type', 'coop_project') as $document)
+                                    <tr>
+                                        <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
+                                        <td>
+                                            <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom delete-btn" data-id="{{ $document->id }}">ลบ</a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                @if ($documents->where('document_type', 'coop_project')->isEmpty())
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted">ไม่มีเอกสาร</td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-            </form>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary btn-custom">อัปโหลดสหกิจศึกษา</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- กรอบสำหรับโปรเจค -->
+            <div class="card">
+                <h5 class="mb-3">โปรเจค</h5>
+                <form action="{{ route('upload.doc') }}" method="POST" enctype="multipart/form-data" class="upload-form" data-type="project">
+                    @csrf
+                    <input type="hidden" name="titles[]" value="โปรเจค">
+                    <div class="mb-3">
+                        <label class="form-label">อัปโหลดไฟล์</label>
+                        <input type="file" name="files[0][]" class="form-control doc-upload" accept=".pdf,.docx,.jpeg,.jpg,.png" multiple>
+                        <div class="file-hint">
+                            <p>ไฟล์ที่ยอมรับได้: <strong>.pdf, .docx, .jpeg, .jpg, .png</strong> (เอกสารหรือภาพประกอบ)</p>
+                            <p>ขนาดสูงสุด: <strong>10 MB</strong></p>
+                        </div>
+                    </div>
+                    <div id="fileListProject" class="file-list"></div>
+                    <!-- ตารางแสดงไฟล์ที่อัปโหลดแล้วสำหรับโปรเจค -->
+                    <div class="table-responsive mt-3">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>ชื่อไฟล์</th>
+                                    <th>การดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($documents->where('document_type', 'project') as $document)
+                                    <tr>
+                                        <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
+                                        <td>
+                                            <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom delete-btn" data-id="{{ $document->id }}">ลบ</a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                @if ($documents->where('document_type', 'project')->isEmpty())
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted">ไม่มีเอกสาร</td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary btn-custom">อัปโหลดโปรเจค</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- กรอบสำหรับฝึกงาน -->
+            <div class="card">
+                <h5 class="mb-3">ฝึกงาน</h5>
+                <form action="{{ route('upload.doc') }}" method="POST" enctype="multipart/form-data" class="upload-form" data-type="internship">
+                    @csrf
+                    <input type="hidden" name="titles[]" value="internship">
+                    <div class="mb-3">
+                        <label class="form-label">อัปโหลดไฟล์</label>
+                        <input type="file" name="files[0][]" class="form-control doc-upload" accept=".pdf,.docx" multiple>
+                        <div class="file-hint">
+                            <p>ไฟล์ที่ยอมรับได้: <strong>.pdf, .docx</strong> (รายงานฝึกงาน)</p>
+                            <p>ขนาดสูงสุด: <strong>10 MB</strong></p>
+                        </div>
+                    </div>
+                    <div id="fileListInternship" class="file-list"></div>
+                    <!-- ตารางแสดงไฟล์ที่อัปโหลดแล้วสำหรับฝึกงาน -->
+                    <div class="table-responsive mt-3">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>ชื่อไฟล์</th>
+                                    <th>การดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($documents->where('document_type', 'internship') as $document)
+                                    <tr>
+                                        <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
+                                        <td>
+                                            <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom delete-btn" data-id="{{ $document->id }}">ลบ</a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                @if ($documents->where('document_type', 'internship')->isEmpty())
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted">ไม่มีเอกสาร</td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary btn-custom">อัปโหลดฝึกงาน</button>
+                    </div>
+                </form>
+            </div>
 
             <!-- Section for Saving Status -->
             <div class="section-title">บันทึกสถานะ</div>
@@ -373,160 +472,32 @@
                     </div>
                 </form>
             </div>
-
-            <!-- Section for Uploaded Files with Tabs -->
-            <div class="section-title">ไฟล์ที่อัปโหลดแล้ว</div>
-            <div class="card p-3">
-                <ul class="nav nav-tabs mb-3" id="docTabs" role="tablist">
-                    <li class="nav-item">
-                        <a class="nav-link active" id="coop-tab" data-bs-toggle="tab" href="#coop" role="tab" aria-controls="coop" aria-selected="true">สหกิจศึกษา</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="project-tab" data-bs-toggle="tab" href="#project" role="tab" aria-controls="project" aria-selected="false">โปรเจค</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="internship-tab" data-bs-toggle="tab" href="#internship" role="tab" aria-controls="internship" aria-selected="false">ฝึกงาน</a>
-                    </li>
-                </ul>
-                <div class="tab-content" id="docTabsContent">
-                    <!-- Tab for สหกิจศึกษา -->
-                    <div class="tab-pane fade show active" id="coop" role="tabpanel" aria-labelledby="coop-tab">
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>ประเภทเอกสาร</th>
-                                        <th>ชื่อไฟล์</th>
-                                        <th>การดำเนินการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php
-                                        $uploadedFiles = Cache::get('uploaded_files', []);
-                                    @endphp
-                                    @foreach ($documents->where('document_type', 'coop_project') as $document)
-                                        <tr>
-                                            <td>สหกิจศึกษา</td>
-                                            <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
-                                            <td>
-                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom delete-btn" data-id="{{ $document->id }}">ลบ</a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                    @if ($documents->where('document_type', 'coop_project')->isEmpty())
-                                        <tr>
-                                            <td colspan="3" class="text-center text-muted">ไม่มีเอกสาร</td>
-                                        </tr>
-                                    @endif
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <!-- Tab for โปรเจค -->
-                    <div class="tab-pane fade" id="project" role="tabpanel" aria-labelledby="project-tab">
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>ประเภทเอกสาร</th>
-                                        <th>ชื่อไฟล์</th>
-                                        <th>การดำเนินการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($documents->where('document_type', 'project') as $document)
-                                        <tr>
-                                            <td>โปรเจค</td>
-                                            <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
-                                            <td>
-                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom delete-btn" data-id="{{ $document->id }}">ลบ</a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                    @if ($documents->where('document_type', 'project')->isEmpty())
-                                        <tr>
-                                            <td colspan="3" class="text-center text-muted">ไม่มีเอกสาร</td>
-                                        </tr>
-                                    @endif
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <!-- Tab for ฝึกงาน -->
-                    <div class="tab-pane fade" id="internship" role="tabpanel" aria-labelledby="internship-tab">
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>ประเภทเอกสาร</th>
-                                        <th>ชื่อไฟล์</th>
-                                        <th>การดำเนินการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($documents->where('document_type', 'internship') as $document)
-                                        <tr>
-                                            <td>ฝึกงาน</td>
-                                            <td><a href="{{ Storage::url($document->file_path) }}" target="_blank">{{ $uploadedFiles[$document->id] ?? basename($document->file_path) }}</a></td>
-                                            <td>
-                                                <a href="{{ route('document.delete', $document->id) }}" class="btn btn-danger btn-sm btn-custom delete-btn" data-id="{{ $document->id }}">ลบ</a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                    @if ($documents->where('document_type', 'internship')->isEmpty())
-                                        <tr>
-                                            <td colspan="3" class="text-center text-muted">ไม่มีเอกสาร</td>
-                                        </tr>
-                                    @endif
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
     <script>
-        let currentSelection = "";
-        document.getElementById("docTypeSelect").addEventListener("change", function() {
-            const selectedOption = this.value;
-            const uploadInput = document.getElementById("docUpload");
-            const fileList = document.getElementById("fileList0");
-
-            if (selectedOption === "") {
-                uploadInput.style.display = "none";
-                uploadInput.value = "";
-                fileList.innerHTML = "";
-            } else {
-                if (selectedOption !== currentSelection) {
-                    uploadInput.value = "";
-                    fileList.innerHTML = "";
-                }
-                uploadInput.style.display = "block";
-            }
-            currentSelection = selectedOption;
-        });
-
-        document.getElementById("docUpload").addEventListener("change", function(e) {
-            addFiles(e.target, "fileList0");
+        document.querySelectorAll('.doc-upload').forEach(input => {
+            input.addEventListener('change', function(e) {
+                const formType = this.closest('form').dataset.type;
+                addFiles(this, `fileList${formType.charAt(0).toUpperCase() + formType.slice(1)}`);
+            });
         });
 
         function addFiles(input, fileListId) {
             const fileList = document.getElementById(fileListId);
-            fileList.innerHTML = "";
+            fileList.innerHTML = '';
             Array.from(input.files).forEach(file => {
-                const fileWrapper = document.createElement("div");
-                fileWrapper.classList.add("file-item");
-                const link = document.createElement("a");
+                const fileWrapper = document.createElement('div');
+                fileWrapper.classList.add('file-item');
+                const link = document.createElement('a');
                 link.href = URL.createObjectURL(file);
-                link.target = "_blank";
+                link.target = '_blank';
                 link.textContent = file.name;
                 fileWrapper.appendChild(link);
 
-                const removeIcon = document.createElement("span");
-                removeIcon.classList.add("remove-icon");
-                removeIcon.innerHTML = "×";
+                const removeIcon = document.createElement('span');
+                removeIcon.classList.add('remove-icon');
+                removeIcon.innerHTML = '×';
                 removeIcon.onclick = () => {
                     fileWrapper.remove();
                     const dt = new DataTransfer();
@@ -534,51 +505,57 @@
                         if (f !== file) dt.items.add(f);
                     });
                     input.files = dt.files;
-                    if (input.files.length === 0) {
-                        document.getElementById("docTypeSelect").value = "";
-                        input.style.display = "none";
-                    }
                 };
                 fileWrapper.appendChild(removeIcon);
                 fileList.appendChild(fileWrapper);
             });
         }
 
-        document.getElementById("uploadForm").addEventListener("submit", function(e) {
-            e.preventDefault(); // ป้องกันการส่งฟอร์มทันที
-
-            const selectedType = document.getElementById("docTypeSelect").value;
-            const filesSelected = document.getElementById("docUpload").files.length > 0;
-
-            if (!selectedType) {
-                Swal.fire('คำเตือน!', 'กรุณาเลือกประเภทเอกสาร', 'warning');
-                return;
-            }
-
-            if (!filesSelected) {
-                Swal.fire('คำเตือน!', 'กรุณาเลือกไฟล์ที่ต้องการอัปโหลด', 'warning');
-                return;
-            }
-
-            Swal.fire({
-                title: 'ยืนยันการอัปโหลด?',
-                text: "คุณต้องการอัปโหลดไฟล์นี้หรือไม่?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#f36d21', // สีส้มของ KKU
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'ใช่, อัปโหลด!',
-                cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    this.submit(); // ส่งฟอร์มเฉพาะเมื่อกด "ใช่"
+        document.querySelectorAll('.upload-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const filesInput = this.querySelector('.doc-upload');
+                if (filesInput.files.length === 0) {
+                    Swal.fire('คำเตือน!', 'กรุณาเลือกไฟล์ที่ต้องการอัปโหลด', 'warning');
+                    return;
                 }
+
+                // แปลง data-type เป็นชื่อที่เหมาะสมสำหรับ SweetAlert
+                const formType = this.dataset.type;
+                let formTitle = '';
+                switch (formType) {
+                    case 'coop':
+                        formTitle = 'สหกิจศึกษา';
+                        break;
+                    case 'project':
+                        formTitle = 'โปรเจค';
+                        break;
+                    case 'internship':
+                        formTitle = 'ฝึกงาน';
+                        break;
+                    default:
+                        formTitle = 'เอกสาร';
+                }
+
+                Swal.fire({
+                    title: 'ยืนยันการอัปโหลด?',
+                    text: `คุณต้องการอัปโหลดไฟล์สำหรับ${formTitle}หรือไม่?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#f36d21',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'ใช่, อัปโหลด!',
+                    cancelButtonText: 'ยกเลิก'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                });
             });
         });
 
         document.getElementById("statusForm").addEventListener("submit", function(e) {
-            e.preventDefault(); // ป้องกันการส่งฟอร์มทันที
-
+            e.preventDefault();
             const kkudqStatus = document.getElementById("kkudqStatus").value;
             const kkuKeptStatus = document.getElementById("kkuKeptStatus").value;
 
@@ -592,18 +569,17 @@
                 text: "คุณต้องการบันทึกสถานะนี้หรือไม่?",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#f36d21', // สีส้มของ KKU
+                confirmButtonColor: '#f36d21',
                 cancelButtonColor: '#6c757d',
                 confirmButtonText: 'ใช่, บันทึก!',
                 cancelButtonText: 'ยกเลิก'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    this.submit(); // ส่งฟอร์มเฉพาะเมื่อกด "ใช่"
+                    this.submit();
                 }
             });
         });
 
-        // การลบไฟล์จากตาราง
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -619,7 +595,7 @@
                     cancelButtonText: 'ยกเลิก'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = this.href;
+                        window.location.href = this.href; // รีเฟรชหน้าเมื่อลบสำเร็จ
                     }
                 });
             });
