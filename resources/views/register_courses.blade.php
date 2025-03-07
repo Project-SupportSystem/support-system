@@ -192,30 +192,6 @@
             color: #dc3545;
             font-weight: bold;
         }
-        .gpa-status {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .gpa-status.good {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .gpa-status.warning {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        .gpa-status.danger {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .repeat-advice {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #f8d7da;
-            color: #721c24;
-            border-radius: 5px;
-        }
         .abbreviations {
             margin-top: 15px;
             padding: 10px;
@@ -300,22 +276,6 @@
             }
             .summary-table th {
                 background-color: #3c3c3c;
-            }
-            .gpa-status.good {
-                background-color: #2f4e3a;
-                color: #d4edda;
-            }
-            .gpa-status.warning {
-                background-color: #4e421e;
-                color: #fff3cd;
-            }
-            .gpa-status.danger {
-                background-color: #4e1f26;
-                color: #f8d7da;
-            }
-            .repeat-advice {
-                background-color: #4e1f26;
-                color: #f8d7da;
             }
             .abbreviations {
                 background-color: #2c2c2c;
@@ -464,7 +424,6 @@
 
                     <div class="gpa-container">
                         <div class="gpa-info">
-                            GPA รวม: <strong id="gpa-total">0.00</strong>
                             <div class="total-credits-added">
                                 หน่วยกิตรวมที่เพิ่ม: <strong id="total-credits-added">0</strong>
                             </div>
@@ -481,17 +440,20 @@
                     <ul class="nav nav-tabs" id="gradeTabs" role="tablist">
                         @for ($year = 2565; $year <= 2570; $year++)
                             <li class="nav-item">
-                                <a class="nav-link" id="tab-1-{{ $year }}" data-bs-toggle="tab" href="#semester-1-{{ $year }}" role="tab">1/{{ $year }}</a>
+                                <a class="nav-link {{ $year == 2565 ? 'active' : '' }}" id="tab-1-{{ $year }}" data-bs-toggle="tab" href="#semester-1-{{ $year }}" role="tab">1/{{ $year }}</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" id="tab-2-{{ $year }}" data-bs-toggle="tab" href="#semester-2-{{ $year }}" role="tab">2/{{ $year }}</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="tab-3-{{ $year }}" data-bs-toggle="tab" href="#semester-3-{{ $year }}" role="tab">3/{{ $year }}</a>
                             </li>
                         @endfor
                     </ul>
                     <div class="tab-content" id="gradeTabsContent">
                         @for ($year = 2565; $year <= 2570; $year++)
-                            <!-- Tab for Registered Courses -->
-                            <div class="tab-pane fade" id="semester-1-{{ $year }}" role="tabpanel">
+                            <!-- Tab for Semester 1 -->
+                            <div class="tab-pane fade {{ $year == 2565 ? 'show active' : '' }}" id="semester-1-{{ $year }}" role="tabpanel">
                                 <h5 class="text-center mt-3">ภาคการศึกษา 1/{{ $year }}</h5>
                                 <table class="table table-bordered mt-3">
                                     <thead>
@@ -500,7 +462,6 @@
                                             <th>ชื่อวิชา</th>
                                             <th>หน่วยกิต</th>
                                             <th>เกรด</th>
-                                            <th>คำแนะนำ</th>
                                             <th>การดำเนินการ</th>
                                         </tr>
                                     </thead>
@@ -551,9 +512,8 @@
                                     <p>GPA = เกรดเฉลี่ย (GP / CA) (Grade Point Average)</p>
                                     <p>(T) = เกรดที่โอนมา (Transfer Grade)</p>
                                 </div>
-                                <div id="gpa-status-1-{{ $year }}" class="gpa-status"></div>
-                                <div id="repeat-advice-1-{{ $year }}" class="repeat-advice"></div>
                             </div>
+                            <!-- Tab for Semester 2 -->
                             <div class="tab-pane fade" id="semester-2-{{ $year }}" role="tabpanel">
                                 <h5 class="text-center mt-3">ภาคการศึกษา 2/{{ $year }}</h5>
                                 <table class="table table-bordered mt-3">
@@ -563,7 +523,6 @@
                                             <th>ชื่อวิชา</th>
                                             <th>หน่วยกิต</th>
                                             <th>เกรด</th>
-                                            <th>คำแนะนำ</th>
                                             <th>การดำเนินการ</th>
                                         </tr>
                                     </thead>
@@ -614,28 +573,9 @@
                                     <p>GPA = เกรดเฉลี่ย (GP / CA) (Grade Point Average)</p>
                                     <p>(T) = เกรดที่โอนมา (Transfer Grade)</p>
                                 </div>
-                                <div id="gpa-status-2-{{ $year }}" class="gpa-status"></div>
-                                <div id="repeat-advice-2-{{ $year }}" class="repeat-advice"></div>
                             </div>
-                        @endfor
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section for Summer Semester (ภาคการศึกษาที่ 3) -->
-            <div class="grade-details-tab mt-4">
-                <div class="section-title">ภาคการศึกษาที่ 3 (ภาคฤดูร้อน)</div>
-                <div class="card p-3">
-                    <ul class="nav nav-tabs" id="summerTabs" role="tablist">
-                        @for ($year = 2565; $year <= 2570; $year++)
-                            <li class="nav-item">
-                                <a class="nav-link {{ $year == 2565 ? 'active' : '' }}" id="tab-3-{{ $year }}" data-bs-toggle="tab" href="#semester-3-{{ $year }}" role="tab">3/{{ $year }}</a>
-                            </li>
-                        @endfor
-                    </ul>
-                    <div class="tab-content" id="summerTabsContent">
-                        @for ($year = 2565; $year <= 2570; $year++)
-                            <div class="tab-pane fade {{ $year == 2565 ? 'show active' : '' }}" id="semester-3-{{ $year }}" role="tabpanel">
+                            <!-- Tab for Semester 3 -->
+                            <div class="tab-pane fade" id="semester-3-{{ $year }}" role="tabpanel">
                                 <h5 class="text-center mt-3">ภาคการศึกษา 3/{{ $year }}</h5>
                                 <table class="table table-bordered mt-3">
                                     <thead>
@@ -644,7 +584,6 @@
                                             <th>ชื่อวิชา</th>
                                             <th>หน่วยกิต</th>
                                             <th>เกรด</th>
-                                            <th>คำแนะนำ</th>
                                             <th>การดำเนินการ</th>
                                         </tr>
                                     </thead>
@@ -695,8 +634,6 @@
                                     <p>GPA = เกรดเฉลี่ย (GP / CA) (Grade Point Average)</p>
                                     <p>(T) = เกรดที่โอนมา (Transfer Grade)</p>
                                 </div>
-                                <div id="gpa-status-3-{{ $year }}" class="gpa-status"></div>
-                                <div id="repeat-advice-3-{{ $year }}" class="repeat-advice"></div>
                             </div>
                         @endfor
                     </div>
@@ -754,14 +691,14 @@
                 $('#semester_input').val('');
                 $('#courses-table-body').empty();
                 addEmptyRow();
-                calculateGPA();
+                calculateTotalCredits();
             }
         }
 
         $('#semester_term, #semester_year').on('change', updateSemester);
 
         // ฟังก์ชันดึงข้อมูลประวัติการลงทะเบียนและคำนวณสรุป
-        function loadAcademicRecords(semester, targetTable = '#grade-table-1-2565') {
+        function loadAcademicRecords(semester, targetTable) {
             const tableBody = $(targetTable);
             tableBody.empty();
             $.ajax({
@@ -772,24 +709,15 @@
                     const semesterRecords = data.semester_records;
                     const cumulativeRecords = data.cumulative_records;
 
-                    // เก็บรายวิชาที่ต้องลงซ้ำ
-                    let repeatCourses = [];
-
                     // แสดงข้อมูลรายวิชาในเทอมนี้
                     if (semesterRecords.length > 0) {
                         $.each(semesterRecords, function (index, record) {
-                            let advice = '';
-                            if (record.gpa <= 1.0) { // เกรด F หรือ D
-                                advice = 'ควรลงซ้ำ';
-                                repeatCourses.push(`${record.course.id} (${record.grade})`);
-                            }
                             const row = `
                                 <tr data-record-id="${record.id}">
                                     <td>${record.course.id}</td>
                                     <td>${record.course.course_name}</td>
                                     <td>${record.course.total_credits}</td>
                                     <td>${record.grade}</td>
-                                    <td>${advice}</td>
                                     <td>
                                         <button type="button" class="btn btn-danger btn-remove-course btn-custom">ลบ</button>
                                     </td>
@@ -797,7 +725,7 @@
                             tableBody.append(row);
                         });
                     } else {
-                        tableBody.append('<tr><td colspan="6" class="text-center">ไม่มีข้อมูล</td></tr>');
+                        tableBody.append('<tr><td colspan="5" class="text-center">ไม่มีข้อมูล</td></tr>');
                     }
 
                     // คำนวณสรุปเทอมนี้
@@ -842,32 +770,10 @@
                     $(`#cumulative-ca-${semester.replace('/', '-')}`).text(cumulativeCA);
                     $(`#cumulative-gp-${semester.replace('/', '-')}`).text(cumulativeGP.toFixed(2));
                     $(`#cumulative-gpa-${semester.replace('/', '-')}`).text(cumulativeGPA);
-
-                    // แจ้งเตือนสถานะ GPA
-                    let statusMessage = '';
-                    let statusClass = '';
-                    if (semesterGPA >= 3.0) {
-                        statusMessage = 'สถานะ GPA: ดีมาก! เกรดเฉลี่ยของคุณอยู่ในระดับดีเยี่ยม';
-                        statusClass = 'good';
-                    } else if (semesterGPA >= 2.0) {
-                        statusMessage = 'สถานะ GPA: ปานกลาง โปรดรักษาระดับเกรดเฉลี่ยให้ดีขึ้น';
-                        statusClass = 'warning';
-                    } else {
-                        statusMessage = 'คำเตือน: GPA ของคุณต่ำกว่าเกณฑ์ อาจเสี่ยงต่อการถูกพักการเรียน โปรดปรึกษาอาจารย์ที่ปรึกษา';
-                        statusClass = 'danger';
-                    }
-                    $(`#gpa-status-${semester.replace('/', '-')}`).text(statusMessage).removeClass('good warning danger').addClass(statusClass);
-
-                    // แจ้งเตือนวิชาที่ต้องลงซ้ำ
-                    if (repeatCourses.length > 0) {
-                        $(`#repeat-advice-${semester.replace('/', '-')}`).text(`วิชาที่ควรลงซ้ำ: ${repeatCourses.join(', ')}`).show();
-                    } else {
-                        $(`#repeat-advice-${semester.replace('/', '-')}`).hide();
-                    }
                 },
                 error: function (xhr) {
                     Swal.fire('ผิดพลาด!', 'ไม่สามารถดึงข้อมูลผลการเรียนได้: ' + (xhr.responseJSON?.message || 'เกิดข้อผิดพลาด'), 'error');
-                    tableBody.append('<tr><td colspan="6" class="text-center">ไม่มีข้อมูล</td></tr>');
+                    tableBody.append('<tr><td colspan="5" class="text-center">ไม่มีข้อมูล</td></tr>');
                     $(`#semester-cr-${semester.replace('/', '-')}`).text('0');
                     $(`#semester-cp-${semester.replace('/', '-')}`).text('0');
                     $(`#semester-ca-${semester.replace('/', '-')}`).text('0');
@@ -878,13 +784,11 @@
                     $(`#cumulative-ca-${semester.replace('/', '-')}`).text('0');
                     $(`#cumulative-gp-${semester.replace('/', '-')}`).text('0.00');
                     $(`#cumulative-gpa-${semester.replace('/', '-')}`).text('0.00');
-                    $(`#gpa-status-${semester.replace('/', '-')}`).hide();
-                    $(`#repeat-advice-${semester.replace('/', '-')}`).hide();
                 }
             });
         }
 
-        // โหลดข้อมูลเริ่มต้นสำหรับทุกภาคการศึกษา
+        // โหลดข้อมูลเริ่มต้นสำหรับทุกภาคการศึกษา (รวมภาค 3)
         @for ($year = 2565; $year <= 2570; $year++)
             loadAcademicRecords('1/{{ $year }}', '#grade-table-1-{{ $year }}');
             loadAcademicRecords('2/{{ $year }}', '#grade-table-2-{{ $year }}');
@@ -943,7 +847,7 @@
                 </tr>`;
             $('#courses-table-body').append(newRow);
             setupAutocomplete();
-            calculateGPA();
+            calculateTotalCredits();
         }
 
         // ฟังก์ชัน Autocomplete สำหรับช่องรหัสวิชา
@@ -970,27 +874,22 @@
                     const row = $(this).closest('tr');
                     row.find('input[name="course_name[]"]').val(ui.item.course_name);
                     row.find('input[name="total_credits[]"]').val(ui.item.total_credits);
-                    calculateGPA();
+                    calculateTotalCredits();
                 },
                 minLength: 1
             });
         }
 
-        // ฟังก์ชันคำนวณ GPA รวมและหน่วยกิตรวม
-        function calculateGPA(targetTable = '#courses-table-body', targetGpa = '#gpa-total') {
+        // ฟังก์ชันคำนวณหน่วยกิตรวม
+        function calculateTotalCredits(targetTable = '#courses-table-body') {
             let totalCredits = 0;
-            let totalWeightedGrades = 0;
 
             $(targetTable + ' tr').each(function () {
                 const credits = parseFloat($(this).find('input[name="total_credits[]"]').val()) || parseFloat($(this).find('td:nth-child(3)').text()) || 0;
-                const grade = parseFloat($(this).find('select[name="grade[]"]').val()) || parseFloat($(this).find('td:nth-child(5)').text()) || 0;
 
                 totalCredits += credits;
-                totalWeightedGrades += grade * credits;
             });
 
-            const gpa = totalCredits > 0 ? (totalWeightedGrades / totalCredits).toFixed(2) : '0.00';
-            $(targetGpa).text(gpa);
             $('#total-credits-added').text(totalCredits);
             return totalCredits;
         }
@@ -1040,23 +939,23 @@
                 });
             } else {
                 row.remove();
-                calculateGPA();
+                calculateTotalCredits();
                 if ($('#courses-table-body tr').length === 0) {
                     addEmptyRow();
                 }
             }
         });
 
-        // คำนวณ GPA เมื่อเปลี่ยนเกรด
+        // คำนวณหน่วยกิตรวมเมื่อเปลี่ยนเกรด (เพื่อให้อัปเดตหน่วยกิตเมื่อเพิ่มแถว)
         $(document).on('change', '.grade-select', function () {
-            calculateGPA();
+            calculateTotalCredits();
         });
 
         // รีเซ็ตตาราง
         $('#resetTable').on('click', function () {
             $('#courses-table-body').empty();
             addEmptyRow();
-            calculateGPA();
+            calculateTotalCredits();
         });
 
         // เพิ่มวิชาใหม่ใน Modal
@@ -1108,7 +1007,7 @@
 
             const courseIds = [];
             let hasDuplicate = false;
-            const totalCredits = calculateGPA();
+            const totalCredits = calculateTotalCredits();
 
             $('#courses-table-body tr').each(function() {
                 const courseId = $(this).find('input[name="id[]"]').val();
