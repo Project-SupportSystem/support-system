@@ -341,7 +341,8 @@
 
             @auth
                 <p class="mb-3">ยินดีต้อนรับ, {{ Auth::user()->username }}</p>
-                <p class="mb-4">รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}</p>
+                <p class="mb-3">รหัสนักศึกษา: {{ Auth::user()->student->id ?? 'ไม่พบรหัสนักศึกษา' }}</p>
+                <p class="mb-4">GPA รวมเกรด = <strong id="total-gpa">0.00</strong></p> <!-- เพิ่มส่วนนี้ -->
             @else
                 <p class="mb-4">กรุณาเข้าสู่ระบบก่อนทำการบันทึกผลการเรียน</p>
             @endauth
@@ -471,15 +472,6 @@
                                     <table class="table table-bordered">
                                         <thead>
                                             <tr>
-                                                <th colspan="5">เทอมนี้</th>
-                                                <th colspan="5">สะสมถึงเทอมนี้</th>
-                                            </tr>
-                                            <tr>
-                                                <th>CR</th>
-                                                <th>CP</th>
-                                                <th>CA</th>
-                                                <th>GP</th>
-                                                <th class="highlight">GPA</th>
                                                 <th>CR</th>
                                                 <th>CP</th>
                                                 <th>CA</th>
@@ -494,11 +486,6 @@
                                                 <td id="semester-ca-1-{{ $year }}">0</td>
                                                 <td id="semester-gp-1-{{ $year }}">0.00</td>
                                                 <td id="semester-gpa-1-{{ $year }}" class="highlight">0.00</td>
-                                                <td id="cumulative-cr-1-{{ $year }}">0</td>
-                                                <td id="cumulative-cp-1-{{ $year }}">0</td>
-                                                <td id="cumulative-ca-1-{{ $year }}">0</td>
-                                                <td id="cumulative-gp-1-{{ $year }}">0.00</td>
-                                                <td id="cumulative-gpa-1-{{ $year }}" class="highlight">0.00</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -532,15 +519,6 @@
                                     <table class="table table-bordered">
                                         <thead>
                                             <tr>
-                                                <th colspan="5">เทอมนี้</th>
-                                                <th colspan="5">สะสมถึงเทอมนี้</th>
-                                            </tr>
-                                            <tr>
-                                                <th>CR</th>
-                                                <th>CP</th>
-                                                <th>CA</th>
-                                                <th>GP</th>
-                                                <th class="highlight">GPA</th>
                                                 <th>CR</th>
                                                 <th>CP</th>
                                                 <th>CA</th>
@@ -555,11 +533,6 @@
                                                 <td id="semester-ca-2-{{ $year }}">0</td>
                                                 <td id="semester-gp-2-{{ $year }}">0.00</td>
                                                 <td id="semester-gpa-2-{{ $year }}" class="highlight">0.00</td>
-                                                <td id="cumulative-cr-2-{{ $year }}">0</td>
-                                                <td id="cumulative-cp-2-{{ $year }}">0</td>
-                                                <td id="cumulative-ca-2-{{ $year }}">0</td>
-                                                <td id="cumulative-gp-2-{{ $year }}">0.00</td>
-                                                <td id="cumulative-gpa-2-{{ $year }}" class="highlight">0.00</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -593,15 +566,6 @@
                                     <table class="table table-bordered">
                                         <thead>
                                             <tr>
-                                                <th colspan="5">เทอมนี้</th>
-                                                <th colspan="5">สะสมถึงเทอมนี้</th>
-                                            </tr>
-                                            <tr>
-                                                <th>CR</th>
-                                                <th>CP</th>
-                                                <th>CA</th>
-                                                <th>GP</th>
-                                                <th class="highlight">GPA</th>
                                                 <th>CR</th>
                                                 <th>CP</th>
                                                 <th>CA</th>
@@ -616,11 +580,6 @@
                                                 <td id="semester-ca-3-{{ $year }}">0</td>
                                                 <td id="semester-gp-3-{{ $year }}">0.00</td>
                                                 <td id="semester-gpa-3-{{ $year }}" class="highlight">0.00</td>
-                                                <td id="cumulative-cr-3-{{ $year }}">0</td>
-                                                <td id="cumulative-cp-3-{{ $year }}">0</td>
-                                                <td id="cumulative-ca-3-{{ $year }}">0</td>
-                                                <td id="cumulative-gp-3-{{ $year }}">0.00</td>
-                                                <td id="cumulative-gpa-3-{{ $year }}" class="highlight">0.00</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -683,11 +642,9 @@
             const term = $('#semester_term').val();
             const year = $('#semester_year').val();
             if (term && year) {
-                $('#semester').val(`${term}/${year}`);
                 $('#semester_input').val(`${term}/${year}`);
                 loadAcademicRecords(`${term}/${year}`, `#grade-table-${term}-${year}`);
             } else {
-                $('#semester').val('');
                 $('#semester_input').val('');
                 $('#courses-table-body').empty();
                 addEmptyRow();
@@ -707,7 +664,6 @@
                 data: { semester: semester },
                 success: function (data) {
                     const semesterRecords = data.semester_records;
-                    const cumulativeRecords = data.cumulative_records;
 
                     // แสดงข้อมูลรายวิชาในเทอมนี้
                     if (semesterRecords.length > 0) {
@@ -746,30 +702,6 @@
                     $(`#semester-ca-${semester.replace('/', '-')}`).text(semesterCA);
                     $(`#semester-gp-${semester.replace('/', '-')}`).text(semesterGP.toFixed(2));
                     $(`#semester-gpa-${semester.replace('/', '-')}`).text(semesterGPA);
-
-                    // คำนวณสะสมจนถึงเทอมนี้
-                    let cumulativeCR = 0, cumulativeCP = 0, cumulativeCA = 0, cumulativeGP = 0;
-                    $.each(cumulativeRecords, function (index, record) {
-                        const credits = record.course.total_credits;
-                        const gpa = record.gpa;
-
-                        cumulativeCR += credits;
-                        if (gpa >= 1.0) cumulativeCP += credits;
-                        cumulativeCA += credits;
-                        cumulativeGP += gpa * credits;
-                    });
-                    // รวมข้อมูลของเทอมนี้ด้วย
-                    cumulativeCR += semesterCR;
-                    cumulativeCP += semesterCP;
-                    cumulativeCA += semesterCA;
-                    cumulativeGP += semesterGP;
-                    const cumulativeGPA = cumulativeCA > 0 ? (cumulativeGP / cumulativeCA).toFixed(2) : '0.00';
-
-                    $(`#cumulative-cr-${semester.replace('/', '-')}`).text(cumulativeCR);
-                    $(`#cumulative-cp-${semester.replace('/', '-')}`).text(cumulativeCP);
-                    $(`#cumulative-ca-${semester.replace('/', '-')}`).text(cumulativeCA);
-                    $(`#cumulative-gp-${semester.replace('/', '-')}`).text(cumulativeGP.toFixed(2));
-                    $(`#cumulative-gpa-${semester.replace('/', '-')}`).text(cumulativeGPA);
                 },
                 error: function (xhr) {
                     Swal.fire('ผิดพลาด!', 'ไม่สามารถดึงข้อมูลผลการเรียนได้: ' + (xhr.responseJSON?.message || 'เกิดข้อผิดพลาด'), 'error');
@@ -779,46 +711,51 @@
                     $(`#semester-ca-${semester.replace('/', '-')}`).text('0');
                     $(`#semester-gp-${semester.replace('/', '-')}`).text('0.00');
                     $(`#semester-gpa-${semester.replace('/', '-')}`).text('0.00');
-                    $(`#cumulative-cr-${semester.replace('/', '-')}`).text('0');
-                    $(`#cumulative-cp-${semester.replace('/', '-')}`).text('0');
-                    $(`#cumulative-ca-${semester.replace('/', '-')}`).text('0');
-                    $(`#cumulative-gp-${semester.replace('/', '-')}`).text('0.00');
-                    $(`#cumulative-gpa-${semester.replace('/', '-')}`).text('0.00');
                 }
             });
         }
 
-        // โหลดข้อมูลเริ่มต้นสำหรับทุกภาคการศึกษา (รวมภาค 3)
+        // โหลดข้อมูลเริ่มต้นสำหรับทุกภาคการศึกษา
         @for ($year = 2565; $year <= 2570; $year++)
             loadAcademicRecords('1/{{ $year }}', '#grade-table-1-{{ $year }}');
             loadAcademicRecords('2/{{ $year }}', '#grade-table-2-{{ $year }}');
             loadAcademicRecords('3/{{ $year }}', '#grade-table-3-{{ $year }}');
         @endfor
 
-        // เพิ่มการจัดการเมื่อคลิกแท็บเพื่อเปิด/ปิด (toggle)
-        let lastClickedTab = null;
+        // ฟังก์ชันคำนวณ GPA รวมจากทุกเทอม
+        function calculateTotalGPA() {
+            let totalGradePoints = 0;
+            let totalCreditsAttempted = 0;
 
-        $('a[data-bs-toggle="tab"]').on('click', function (e) {
-            e.preventDefault();
+            @for ($year = 2565; $year <= 2570; $year++)
+                ['1/{{ $year }}', '2/{{ $year }}', '3/{{ $year }}'].forEach(function(semester) {
+                    $.ajax({
+                        url: '{{ route("report.academic.records") }}',
+                        method: 'GET',
+                        data: { semester: semester },
+                        async: false, // รอผลลัพธ์ก่อนคำนวณต่อ
+                        success: function(data) {
+                            const semesterRecords = data.semester_records;
+                            $.each(semesterRecords, function(index, record) {
+                                const credits = record.course.total_credits;
+                                const gpa = record.gpa;
+                                totalCreditsAttempted += credits;
+                                totalGradePoints += gpa * credits;
+                            });
+                        },
+                        error: function(xhr) {
+                            console.error('ไม่สามารถดึงข้อมูลผลการเรียนสำหรับ ' + semester + ': ' + (xhr.responseJSON?.message || 'เกิดข้อผิดพลาด'));
+                        }
+                    });
+                });
+            @endfor
 
-            const $this = $(this);
-            const target = $this.attr('href');
-            const $targetPane = $(target);
-            const tabGroup = $this.closest('.nav-tabs').attr('id');
+            const totalGPA = totalCreditsAttempted > 0 ? (totalGradePoints / totalCreditsAttempted).toFixed(2) : '0.00';
+            $('#total-gpa').text(totalGPA); // อัปเดตค่า GPA รวมใน UI
+        }
 
-            if ($this.hasClass('active') && lastClickedTab === target) {
-                $this.removeClass('active');
-                $targetPane.removeClass('show active');
-                lastClickedTab = null;
-            } else {
-                $(`#${tabGroup} .nav-link`).removeClass('active');
-                $(`#${tabGroup} + .tab-content .tab-pane`).removeClass('show active');
-
-                $this.addClass('active');
-                $targetPane.addClass('show active');
-                lastClickedTab = target;
-            }
-        });
+        // เรียกคำนวณ GPA รวมเมื่อโหลดหน้า
+        calculateTotalGPA();
 
         // ฟังก์ชันเพิ่มแถวเปล่าสำหรับกรอกข้อมูลใหม่
         function addEmptyRow() {
@@ -883,13 +820,10 @@
         // ฟังก์ชันคำนวณหน่วยกิตรวม
         function calculateTotalCredits(targetTable = '#courses-table-body') {
             let totalCredits = 0;
-
             $(targetTable + ' tr').each(function () {
-                const credits = parseFloat($(this).find('input[name="total_credits[]"]').val()) || parseFloat($(this).find('td:nth-child(3)').text()) || 0;
-
+                const credits = parseFloat($(this).find('input[name="total_credits[]"]').val()) || 0;
                 totalCredits += credits;
             });
-
             $('#total-credits-added').text(totalCredits);
             return totalCredits;
         }
@@ -905,7 +839,7 @@
                     text: "คุณต้องการลบวิชานี้หรือไม่?",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#f36d21', /* เปลี่ยนเป็นสีส้มของ KKU */
+                    confirmButtonColor: '#f36d21',
                     cancelButtonColor: '#dc3545',
                     confirmButtonText: 'ใช่, ลบ!'
                 }).then((result) => {
@@ -922,11 +856,7 @@
                                     Swal.fire('สำเร็จ!', response.message, 'success');
                                     const semester = row.closest('.tab-pane').attr('id').replace('semester-', '');
                                     loadAcademicRecords(semester, `#grade-table-${semester}`);
-                                    @for ($year = 2565; $year <= 2570; $year++)
-                                        loadAcademicRecords('1/{{ $year }}', '#grade-table-1-{{ $year }}');
-                                        loadAcademicRecords('2/{{ $year }}', '#grade-table-2-{{ $year }}');
-                                        loadAcademicRecords('3/{{ $year }}', '#grade-table-3-{{ $year }}');
-                                    @endfor
+                                    calculateTotalGPA(); // อัปเดต GPA หลังลบ
                                 } else {
                                     Swal.fire('ผิดพลาด!', response.message, 'error');
                                 }
@@ -946,11 +876,6 @@
             }
         });
 
-        // คำนวณหน่วยกิตรวมเมื่อเปลี่ยนเกรด (เพื่อให้อัปเดตหน่วยกิตเมื่อเพิ่มแถว)
-        $(document).on('change', '.grade-select', function () {
-            calculateTotalCredits();
-        });
-
         // รีเซ็ตตาราง
         $('#resetTable').on('click', function () {
             $('#courses-table-body').empty();
@@ -966,7 +891,7 @@
                 text: "คุณต้องการเพิ่มวิชาใหม่หรือไม่?",
                 icon: 'info',
                 showCancelButton: true,
-                confirmButtonColor: '#f36d21', /* เปลี่ยนเป็นสีส้มของ KKU */
+                confirmButtonColor: '#f36d21',
                 cancelButtonColor: '#dc3545',
                 confirmButtonText: 'ใช่, เพิ่ม!'
             }).then((result) => {
@@ -981,6 +906,7 @@
                             Swal.fire('สำเร็จ!', 'วิชาใหม่ถูกเพิ่มแล้ว!', 'success');
                             $('.course-id').autocomplete('destroy');
                             setupAutocomplete();
+                            calculateTotalGPA(); // อัปเดต GPA หลังเพิ่มวิชา
                         },
                         error: function(xhr) {
                             const errors = xhr.responseJSON?.errors;
@@ -996,7 +922,7 @@
             });
         });
 
-        // เพิ่มการยืนยันเมื่อบันทึกผลการเรียน (ตรวจสอบวิชาซ้ำและหน่วยกิต)
+        // ยืนยันการบันทึกผลการเรียน
         $('#reportForm').on('submit', function(e) {
             e.preventDefault();
             const semester = $('#semester_input').val();
@@ -1035,7 +961,7 @@
                 text: "คุณต้องการบันทึกผลการเรียนนี้หรือไม่?",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#f36d21', /* เปลี่ยนเป็นสีส้มของ KKU */
+                confirmButtonColor: '#f36d21',
                 cancelButtonColor: '#dc3545',
                 confirmButtonText: 'ใช่, บันทึก!'
             }).then((result) => {
@@ -1043,6 +969,7 @@
                     this.submit();
                     $('#courses-table-body').empty();
                     addEmptyRow();
+                    calculateTotalGPA(); // อัปเดต GPA หลังบันทึก
                 }
             });
         });
@@ -1053,6 +980,11 @@
         // เพิ่มแถวใหม่เมื่อกดปุ่ม +
         $(document).on('click', '.btn-add-course', function () {
             addEmptyRow();
+        });
+
+        // เรียกคำนวณ GPA รวมทุกครั้งที่โหลดหน้าใหม่หรืออัปเดตข้อมูล
+        $('a[data-bs-toggle="tab"]').on('click', function () {
+            calculateTotalGPA();
         });
     });
     </script>
