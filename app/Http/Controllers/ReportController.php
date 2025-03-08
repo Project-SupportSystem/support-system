@@ -7,71 +7,95 @@ use App\Models\Course;
 use App\Models\AcademicRecord;
 use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // ต้องมีการใช้ DB
+use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
     public function index()
     {
-        // ดึงรายวิชาทั้งหมดมาแสดงในฟอร์ม
         $courses = Course::all();
         return view('register_courses', compact('courses'));
     }
+
     public function getAcademicRecords(Request $request)
     {
         $request->validate(['semester' => 'required|string']);
 
-        // ดึงข้อมูลประวัติการลงทะเบียนจาก AcademicRecords ตามนักเรียนและภาคการศึกษาที่เลือก
         $records = AcademicRecord::where('student_id', Auth::user()->student->id)
             ->where('semester', $request->semester)
-            ->with('course') // ร่วมข้อมูลวิชา
+            ->with('course')
             ->get();
-        return response()->json($records);
+
+        $semesterParts = explode('/', $request->semester);
+        $term = (int)$semesterParts[0];
+        $year = (int)$semesterParts[1];
+
+        $cumulativeRecords = AcademicRecord::where('student_id', Auth::user()->student->id)
+            ->where(function ($query) use ($term, $year) {
+                $query->whereRaw('CAST(SUBSTRING(semester, 1, 1) AS UNSIGNED) < ?', [$term])
+                      ->whereRaw('CAST(SUBSTRING(semester, 3) AS UNSIGNED) <= ?', [$year])
+                      ->orWhereRaw('CAST(SUBSTRING(semester, 3) AS UNSIGNED) < ?', [$year]);
+            })
+            ->with('course')
+            ->get();
+
+        return response()->json([
+            'semester_records' => $records,
+            'cumulative_records' => $cumulativeRecords,
+        ]);
     }
 
     public function submit(Request $request)
     {
-        // dd($request->all());
-        
-        // ปรับปรุง validation
         $request->validate([
             'semester' => 'required|string',
-            'course_code.*' => 'required|string|exists:courses,course_code',
+            'id' => 'required|array',
+            'id.*' => 'required|string|exists:courses,id',
+            'grade' => 'required|array',
             'grade.*' => 'required|numeric|between:0,4.0',
-            'total_credits.*' => 'required|numeric|min:1',
-            'course_name.*' => 'required|string'
         ]);
 
         try {
             DB::beginTransaction();
 
             $student = Student::where('id', Auth::user()->student->id)->firstOrFail();
+            $existingCourses = AcademicRecord::where('student_id', $student->id)
+                ->where('semester', $request->semester)
+                ->pluck('course_id')
+                ->toArray();
 
-            foreach ($request->id as $index => $id) {
-                $course = Course::where('id', $id)->firstOrFail();
-                
-                // ตรวจสอบข้อมูลซ้ำ
-                $existingRecord = AcademicRecord::where([
-                    'student_id' => $student->id,
-                    'id' => $course->id,
-                    'semester' => $request->semester
-                ])->first();
+            $existingCredits = AcademicRecord::where('student_id', $student->id)
+                ->where('semester', $request->semester)
+                ->join('courses', 'academic_records.course_id', '=', 'courses.id')
+                ->sum('courses.total_credits');
 
-                if ($existingRecord) {
-                    throw new \Exception("วิชา {$id} มีการลงทะเบียนในภาคการศึกษา {$request->semester} แล้ว");
+            $newCredits = 0;
+            foreach ($request->id as $courseId) {
+                $course = Course::where('id', $courseId)->firstOrFail();
+                $newCredits += $course->total_credits;
+            }
+
+            if ($existingCredits + $newCredits > 22) {
+                throw new \Exception("หน่วยกิตรวม ($existingCredits + $newCredits) เกิน 22 หน่วยกิต");
+            }
+
+            foreach ($request->id as $index => $courseId) {
+                if (in_array($courseId, $existingCourses)) {
+                    throw new \Exception("วิชารหัส $courseId มีอยู่ในระบบแล้วในภาคการศึกษา " . $request->semester);
                 }
 
-                // คำนวณ GPA จากเกรดที่ส่งมา
+                $course = Course::where('id', $courseId)->firstOrFail();
                 $grade = $request->grade[$index];
-                
-                // บันทึกข้อมูล
+
                 AcademicRecord::create([
                     'student_id' => $student->id,
                     'course_id' => $course->id,
                     'semester' => $request->semester,
-                    'grade' => $this->convertGPAtoGrade($grade), // แปลงกลับเป็นเกรดตัวอักษร
+                    'grade' => $this->convertGPAtoGrade($grade),
                     'gpa' => $grade
                 ]);
+
+                $existingCourses[] = $courseId;
             }
 
             DB::commit();
@@ -79,49 +103,113 @@ class ReportController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            return redirect()->back()
-                ->withInput()
-                ->with('error', $e->getMessage());
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
+
     public function updateCourse(Request $request, $id)
     {
         $request->validate([
-            'course_code' => 'required|string|exists:courses,course_code',
+            'course_id' => 'required|string|exists:courses,id',
             'grade' => 'required|numeric|between:0,4.0'
         ]);
 
         try {
             $record = AcademicRecord::where('student_id', Auth::user()->student->id)
                 ->where('id', $id)
-                ->firstOrFail();
+                ->first();
 
-            $record->course_code = $request->course_code;
+            if (!$record) {
+                return response()->json(['success' => false, 'message' => 'ไม่พบข้อมูลวิชาที่ต้องการแก้ไข หรือคุณไม่มีสิทธิ์แก้ไข'], 404);
+            }
+
+            $record->course_id = $request->course_id;
             $record->gpa = $request->grade;
             $record->grade = $this->convertGPAtoGrade($request->grade);
             $record->save();
 
             return response()->json(['success' => true, 'message' => 'แก้ไขข้อมูลเรียบร้อย']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล'], 500);
+            return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล: ' . $e->getMessage()], 500);
         }
     }
+
     public function deleteCourse($id)
     {
         try {
             $record = AcademicRecord::where('student_id', Auth::user()->student->id)
                 ->where('id', $id)
-                ->firstOrFail();
+                ->first();
+
+            if (!$record) {
+                return response()->json(['success' => false, 'message' => 'ไม่พบข้อมูลวิชาที่ต้องการลบ หรือคุณไม่มีสิทธิ์ลบ'], 404);
+            }
 
             $record->delete();
 
             return response()->json(['success' => true, 'message' => 'ลบข้อมูลเรียบร้อย']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการลบข้อมูล'], 500);
+            return response()->json(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการลบข้อมูล: ' . $e->getMessage()], 500);
         }
     }
 
-    // เพิ่มฟังก์ชันแปลง GPA เป็นเกรด
+    public function getStudentAcademicRecords($studentId)
+    {
+        try {
+            // ดึงข้อมูลจาก academic_records โดยใช้ leftJoin กับ courses
+            $records = AcademicRecord::select(
+                'academic_records.id',
+                'academic_records.student_id',
+                'academic_records.course_id',
+                'academic_records.semester',
+                'academic_records.grade',
+                'academic_records.gpa',
+                'academic_records.created_at',
+                'academic_records.updated_at',
+                'courses.course_name',
+                'courses.total_credits'
+            )
+            ->leftJoin('courses', 'academic_records.course_id', '=', 'courses.id')
+            ->where('academic_records.student_id', $studentId)
+            ->orderBy('academic_records.semester')
+            ->get();
+
+            if ($records->isEmpty()) {
+                return response()->json([
+                    'academic_records' => [],
+                    'message' => 'ไม่มีข้อมูลผลการเรียนสำหรับนักศึกษาคนนี้'
+                ], 200);
+            }
+
+            // แปลงข้อมูลให้สอดคล้องกับ frontend
+            $formattedRecords = $records->map(function ($record) {
+                return [
+                    'id' => $record->id,
+                    'student_id' => $record->student_id,
+                    'course_id' => $record->course_id,
+                    'semester' => $record->semester,
+                    'grade' => $record->grade,
+                    'gpa' => $record->gpa,
+                    'course' => (object) [ // ใช้ object เพื่อให้เข้ากับ JavaScript
+                        'id' => $record->course_id,
+                        'course_name' => $record->course_name ?? 'ไม่พบชื่อวิชา',
+                        'total_credits' => $record->total_credits ?? 3,
+                    ],
+                    'created_at' => $record->created_at,
+                    'updated_at' => $record->updated_at,
+                ];
+            });
+
+            return response()->json([
+                'academic_records' => $formattedRecords,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'ไม่สามารถดึงข้อมูลผลการเรียนได้: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     private function convertGPAtoGrade($gpa)
     {
         if ($gpa == 4.0) return 'A';

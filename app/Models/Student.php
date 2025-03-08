@@ -19,6 +19,7 @@ class Student extends Model
         'first_name',
         'phone',
         'school_location',
+        'province', // เพิ่มคอลัมน์ใหม่
         'advisor_id',
     ];
 
